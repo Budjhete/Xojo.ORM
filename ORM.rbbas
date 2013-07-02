@@ -1,6 +1,77 @@
 #tag Class
 Protected Class ORM
-Inherits QueryBuilder
+Inherits ORMEvents
+	#tag Event
+		Sub Created()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Created()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Creating()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Creating()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Deleted()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Deleted()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Deleting()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Deleting()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Finding()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Finding()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Found()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Found()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Updated()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Updated()
+		  Next
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Updating()
+		  For Each pORMListener As ORMListener In mORMListeners
+		    pORMListener.Updating()
+		  Next
+		End Sub
+	#tag EndEvent
+
+
+	#tag Method, Flags = &h0
+		Sub AddORMListener(pORMListerer As ORMListener)
+		  mORMListeners.Append(pORMListerer)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function AndHaving(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  AndHaving(pColumn, pOperator, pValue)
@@ -31,6 +102,7 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = new Dictionary()
 		  mChanged = new Dictionary()
+		  
 		End Sub
 	#tag EndMethod
 
@@ -138,9 +210,7 @@ Inherits QueryBuilder
 		  
 		  // If it is different than the original data, it has changed
 		  If mData.Value(pColumn) <> pValue Then
-		    RaiseEvent Changing(pColumn, pValue)
 		    mChanged.Value(pColumn) = pValue
-		    RaiseEvent Changed(pColumn, pValue)
 		  End If
 		  
 		End Sub
@@ -315,10 +385,34 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		 Shared Function Pool(pTableName As String, pPrimaryKey As Integer) As ORM
+		  If mPool Is Nil Then
+		    mPool = New Dictionary
+		  End If
+		  
+		  Dim pKey As String = Str(pPrimaryKey) + "@" + pTableName
+		  
+		  If mPool.HasKey(pKey) Then
+		    Return mPool.Value
+		  End If
+		  
+		  // Fetch a new instance
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub RemoveORMListener(pORMListener As ORMListener)
+		  mORMListeners.Remove(pORMListener)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -440,47 +534,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 
-	#tag Hook, Flags = &h0
-		Event Changed(pColumn As String, pValue As Variant)
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Changing(pColumn As String, pValue As Variant)
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Created()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Creating()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Deleted()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Deleting()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Finding()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Found()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Updated()
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event Updating()
-	#tag EndHook
-
-
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
@@ -505,6 +558,14 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h21
 		Private Shared mDatabase As Database
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mORMListeners() As ORMListener
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private Shared mPool As Dictionary
 	#tag EndProperty
 
 

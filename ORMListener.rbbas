@@ -1,18 +1,6 @@
 #tag Interface
 Protected Interface ORMListener
 	#tag Method, Flags = &h0
-		Sub Changed(pColumn As String, pValue As Variant)
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Changing(pColumn As String, pValue As Variant)
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Created()
 		  
 		End Sub
