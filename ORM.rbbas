@@ -132,6 +132,10 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String) As Variant
+		  If mChanged.HasKey(pColumn) Then
+		    Return mChanged.Value(pColumn)
+		  End If
+		  
 		  Return mData.Value(pColumn)
 		End Function
 	#tag EndMethod
@@ -536,6 +540,7 @@ Inherits QueryBuilder
 			Visible=true
 			Group="ID"
 			InitialValue="-2147483648"
+			Type="Integer"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -543,18 +548,21 @@ Inherits QueryBuilder
 			Visible=true
 			Group="Position"
 			InitialValue="0"
+			Type="Integer"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			Type="String"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			Type="String"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -562,6 +570,7 @@ Inherits QueryBuilder
 			Visible=true
 			Group="Position"
 			InitialValue="0"
+			Type="Integer"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
