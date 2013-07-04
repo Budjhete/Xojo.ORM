@@ -6,7 +6,6 @@ Inherits TestGroup
 		  // Calling the overridden superclass constructor.
 		  Super.Constructor(controller, groupName)
 		  
-		  ORM.Database = ORMTestDatabase
 		  mModel = New ModelORMTest()
 		End Sub
 	#tag EndMethod
@@ -19,7 +18,7 @@ Inherits TestGroup
 		  Dim pValues As New Dictionary()
 		  pValues.Value("nom") = "Jean"
 		  
-		  mModel.Data(pValues).Create()
+		  mModel.Data(pValues).Create(ORMTestDatabase)
 		  
 		  Assert.IsTrue mModel.Loaded()
 		  Assert.IsFalse mModel.Changed()
@@ -30,7 +29,7 @@ Inherits TestGroup
 		Sub DeleteTest()
 		  Assert.IsTrue  mModel.Loaded()
 		  
-		  mModel.Delete()
+		  mModel.Delete(ORMTestDatabase)
 		  
 		  Assert.IsFalse  mModel.Loaded()
 		  Assert.IsFalse  mModel.Changed()
@@ -48,7 +47,7 @@ Inherits TestGroup
 		  
 		  Assert.IsTrue mModel.Changed()
 		  
-		  mModel.Update()
+		  mModel.Update(ORMTestDatabase)
 		  
 		  Assert.IsFalse mModel.Changed()
 		  Assert.IsTrue mModel.Loaded()

@@ -2,18 +2,8 @@
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Column(pColumn As String) As String
-		  Dim pRegEx As New RegEx
-		  
-		  pRegEx.SearchPattern = "^\w+$"
-		  
 		  // Ensure that column respects constraints
-		  If pRegEx.Search <> Nil Then
-		    Return "`" + pColumn + "`"
-		  End If
-		  
-		  // It can be something like COUNT(*) or other fancy functions
-		  Return pColumn
-		  
+		  Return "`" + pColumn + "`"
 		  
 		End Function
 	#tag EndMethod
@@ -28,14 +18,14 @@ Protected Module QueryCompiler
 		    pQuery = pQuery + QueryCompiler.Column(pColumn)
 		    
 		    If i < pColumns.Ubound Then
-		      pQuery = pQuery + ","
+		      pQuery = pQuery + ", "
 		    End If
 		    
 		    i = i + 1
 		    
 		  Next
 		  
-		  Return "(" + pQuery + ")"
+		  Return pQuery
 		End Function
 	#tag EndMethod
 
@@ -91,7 +81,7 @@ Protected Module QueryCompiler
 		    pQuery = pQuery + QueryCompiler.Value(pValue)
 		    
 		    If i < pValues.Ubound Then
-		      pQuery = pQuery + ","
+		      pQuery = pQuery + ", "
 		    End If
 		    
 		    i = i + 1

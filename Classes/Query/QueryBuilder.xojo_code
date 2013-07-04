@@ -124,6 +124,21 @@ Protected Class QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Having(pValues As Dictionary)
+		  For Each pKey As Variant In pValues.Keys()
+		    Where(pKey.StringValue, "=", pValues.Value(pKey))
+		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Having(pValues As Dictionary) As QueryBuilder
+		  Having(pValues)
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Having(pColumn As String, pOperator As String, pValue As Variant)
 		  mQuery.Append(new HavingQueryExpression(pColumn, pOperator, pValue))
 		End Sub
@@ -288,6 +303,21 @@ Protected Class QueryBuilder
 	#tag Method, Flags = &h0
 		Function Values(pValues() As Variant) As QueryBuilder
 		  Values(pValues)
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Where(pValues As Dictionary)
+		  For Each pKey As Variant In pValues.Keys()
+		    Where(pKey.StringValue, "=", pValues.Value(pKey))
+		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pValues As Dictionary) As QueryBuilder
+		  Where(pValues)
 		  Return Me
 		End Function
 	#tag EndMethod

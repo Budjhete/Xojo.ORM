@@ -5,9 +5,8 @@ Inherits Application
 		Sub Open()
 		  App.AutoQuit = True
 		  
-		  Dim mModel As New ModelORMTest
+		  ORMTestWindow.Show()
 		  
-		  MsgBox Str(mModel.CountAll(ORMTestDatabase))
 		  
 		  
 		  

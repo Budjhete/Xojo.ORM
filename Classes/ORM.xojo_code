@@ -29,28 +29,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor()
-		  mData = new Dictionary()
-		  mChanged = new Dictionary()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Constructor(mValues As Dictionary)
-		  Constructor()
-		  
-		  For Each pKey As String In mValues.Keys()
-		    Where(pKey, "=", mValues.Value(pKey))
-		  Next
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1000
-		Sub Constructor(pk as Integer)
-		  Constructor()
-		  
-		  Where(PrimaryKey(), "=", pk)
-		  
+		  mData = New Dictionary()
+		  mChanged = New Dictionary()
 		End Sub
 	#tag EndMethod
 
@@ -71,7 +51,7 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
 		  end
 		  
-		  RaiseEvent Creating()
+		  RaiseEvent Creating(Me)
 		  
 		  Dim pColumns() As String
 		  
@@ -90,7 +70,7 @@ Inherits QueryBuilder
 		  // Update primary key from the last row inserted in this table
 		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
 		  
-		  RaiseEvent Created()
+		  RaiseEvent Created(Me)
 		  
 		End Sub
 	#tag EndMethod
@@ -141,7 +121,9 @@ Inherits QueryBuilder
 		  
 		  // If it is different than the original data, it has changed
 		  If mData.Value(pColumn) <> pValue Then
+		    RaiseEvent Changing(pColumn, pValue)
 		    mChanged.Value(pColumn) = pValue
+		    RaiseEvent Changed(pColumn, pValue)
 		  End If
 		  
 		End Sub
@@ -160,7 +142,7 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
 		  
-		  RaiseEvent Deleting()
+		  RaiseEvent Deleting(Me)
 		  
 		  mQuery.Append(new DeleteQueryExpression(TableName()))
 		  Where(PrimaryKey(), "=", Pk())
@@ -170,7 +152,7 @@ Inherits QueryBuilder
 		  mData.Clear()
 		  mChanged.Clear()
 		  
-		  RaiseEvent Deleted()
+		  RaiseEvent Deleted(Me)
 		End Sub
 	#tag EndMethod
 
@@ -183,7 +165,7 @@ Inherits QueryBuilder
 		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns()))
 		  mQuery.Append(new LimitQueryExpression(1))
 		  
-		  RaiseEvent Finding()
+		  RaiseEvent Finding(Me)
 		  
 		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
@@ -192,7 +174,8 @@ Inherits QueryBuilder
 		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		  Next
 		  
-		  RaiseEvent Found()
+		  RaiseEvent Found(Me)
+		  
 		End Sub
 	#tag EndMethod
 
@@ -213,6 +196,13 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumns() As String) As ORM
 		  GroupBy(pColumns)
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Having(pValues As Dictionary) As ORM
+		  Having(pValues)
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -354,7 +344,7 @@ Inherits QueryBuilder
 		    Return
 		  End If
 		  
-		  RaiseEvent Updating()
+		  RaiseEvent Updating(Me)
 		  
 		  mQuery.Append(new UpdateQueryExpression(TableName()))
 		  Set(mChanged)
@@ -366,7 +356,7 @@ Inherits QueryBuilder
 		    mData.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
-		  RaiseEvent Updated()
+		  RaiseEvent Updated(Me)
 		  
 		  mChanged.Clear()
 		  
@@ -388,6 +378,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Where(pValues As Dictionary) As ORM
+		  Where(pValues)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Where(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Where(pColumn, pOperator, pValue)
 		  Return Me
@@ -396,35 +392,43 @@ Inherits QueryBuilder
 
 
 	#tag Hook, Flags = &h0
-		Event Created()
+		Event Changed(pColumn As String, pValue As Variant)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Creating()
+		Event Changing(pColumn As String, pValue As Variant)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Deleted()
+		Event Created(pORM As ORM)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Deleting()
+		Event Creating(pORM As ORM)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Finding()
+		Event Deleted(pORM As ORM)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Found()
+		Event Deleting(pORM As ORM)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Updated()
+		Event Finding(pORM As ORM)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Updating()
+		Event Found(pORM As ORM)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Updated(pORM As ORM)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Updating(pORM As ORM)
 	#tag EndHook
 
 

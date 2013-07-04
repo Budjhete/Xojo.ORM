@@ -2,3 +2,5 @@
 *.obsolete
 
 *.rbuistate
+*.xojo_uistate
+*.obsolete*

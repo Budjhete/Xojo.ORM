@@ -3,7 +3,7 @@ Protected Class ModelORMTest
 Inherits ORM
 	#tag Method, Flags = &h0
 		Function TableColumns() As String()
-		  Return Array("id")
+		  Return Array("id", "nom")
 		End Function
 	#tag EndMethod
 
