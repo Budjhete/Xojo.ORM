@@ -5,14 +5,9 @@ Inherits Application
 		Sub Open()
 		  App.AutoQuit = True
 		  
-		  ORM.Database = ORMTestDatabase
-		  mModel = New ModelORMTest()
+		  Dim mModel As New ModelORMTest
 		  
-		  TestCreate()
-		  
-		  TestUpdate()
-		  
-		  TestDelete()
+		  MsgBox Str(mModel.CountAll(ORMTestDatabase))
 		  
 		  
 		  
@@ -33,78 +28,6 @@ Inherits Application
 		  
 		End Sub
 	#tag EndEvent
-
-
-	#tag Method, Flags = &h0
-		Sub AssertEquals(pValue As Variant, pExpected As Variant)
-		  If Not pValue = pExpected Then
-		    Raise New RuntimeException()
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub AssertFalse(pExpression As Boolean)
-		  If pExpression Then
-		    Raise New RuntimeException()
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub AssertTrue(pExpression As Boolean)
-		  If Not pExpression Then
-		    Raise New RuntimeException()
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub TestCreate()
-		  AssertFalse mModel.Loaded()
-		  AssertFalse mModel.Changed()
-		  
-		  Dim pValues As New Dictionary()
-		  pValues.Value("nom") = "Jean"
-		  
-		  mModel.Data(pValues).Create()
-		  
-		  AssertTrue mModel.Loaded()
-		  AssertFalse mModel.Changed()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub TestDelete()
-		  AssertTrue mModel.Loaded()
-		  
-		  mModel.Delete()
-		  
-		  AssertFalse mModel.Loaded()
-		  AssertFalse mModel.Changed()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub TestUpdate()
-		  AssertFalse mModel.Changed()
-		  AssertTrue mModel.Loaded()
-		  
-		  mModel.Data("nom", "Jean Dupont")
-		  
-		  AssertEquals(mModel.Data("nom"), "Jean Dupont")
-		  
-		  AssertTrue mModel.Changed()
-		  
-		  mModel.Update()
-		  
-		  AssertFalse mModel.Changed()
-		  AssertTrue mModel.Loaded()
-		  
-		  
-		  
-		End Sub
-	#tag EndMethod
 
 
 	#tag Property, Flags = &h21

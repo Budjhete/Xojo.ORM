@@ -2,7 +2,19 @@
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Column(pColumn As String) As String
-		  return "`" + pColumn + "`"
+		  Dim pRegEx As New RegEx
+		  
+		  pRegEx.SearchPattern = "^\w+$"
+		  
+		  // Ensure that column respects constraints
+		  If pRegEx.Search <> Nil Then
+		    Return "`" + pColumn + "`"
+		  End If
+		  
+		  // It can be something like COUNT(*) or other fancy functions
+		  Return pColumn
+		  
+		  
 		End Function
 	#tag EndMethod
 
@@ -98,6 +110,7 @@ Protected Module QueryCompiler
 			Visible=true
 			Group="ID"
 			InitialValue="-2147483648"
+			Type="Integer"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -105,18 +118,21 @@ Protected Module QueryCompiler
 			Visible=true
 			Group="Position"
 			InitialValue="0"
+			Type="Integer"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			Type="String"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			Type="String"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
@@ -124,6 +140,7 @@ Protected Module QueryCompiler
 			Visible=true
 			Group="Position"
 			InitialValue="0"
+			Type="Integer"
 			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior

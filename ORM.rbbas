@@ -2,12 +2,6 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
-		Sub AddORMListener(pORMListener As ORMListener)
-		  mORMListeners.Append(pORMListener)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function AndHaving(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  AndHaving(pColumn, pOperator, pValue)
 		  Return Me
@@ -48,7 +42,6 @@ Inherits QueryBuilder
 		    Where(pKey, "=", mValues.Value(pKey))
 		  Next
 		  
-		  Find()
 		End Sub
 	#tag EndMethod
 
@@ -58,22 +51,22 @@ Inherits QueryBuilder
 		  
 		  Where(PrimaryKey(), "=", pk)
 		  
-		  Find()
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CountAll() As Integer
-		  // Compte les résultats
+		Function CountAll(pDatabase As Database) As Integer
+		  mQuery.Append(new SelectQueryExpression(TableName(), "COUNT(*)"))
 		  
-		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns()))
+		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
+		  Return pRecordSet.Field("(COUNT(*))").IntegerValue()
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Create()
+		Sub Create(pDatabase As Database)
 		  if Loaded() then
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
 		  end
@@ -90,9 +83,9 @@ Inherits QueryBuilder
 		  mQuery.Append(new InsertQueryExpression(TableName(), pColumns))
 		  mQuery.Append(new ValuesQueryExpression(mData.Values()))
 		  
-		  Execute(mDatabase)
+		  Execute(pDatabase)
 		  
-		  Dim pRecordSet As RecordSet = DB.Find(TableName(), Array("id")).OrderBy(PrimaryKey(), "DESC").Execute(mDatabase)
+		  Dim pRecordSet As RecordSet = DB.Find(TableName(), Array("id")).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		  
 		  // Update primary key from the last row inserted in this table
 		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
@@ -103,8 +96,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Create() As ORM
-		  Create()
+		Function Create(pDatabase As Database) As ORM
+		  Create(pDatabase)
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -162,7 +155,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Delete()
+		Sub Delete(pDatabase As Database)
 		  if Not Loaded() then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
@@ -172,7 +165,7 @@ Inherits QueryBuilder
 		  mQuery.Append(new DeleteQueryExpression(TableName()))
 		  Where(PrimaryKey(), "=", Pk())
 		  
-		  Execute(mDatabase)
+		  Execute(pDatabase)
 		  
 		  mData.Clear()
 		  mChanged.Clear()
@@ -182,7 +175,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Find()
+		Sub Find(pDatabase As Database)
 		  If Loaded() Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
@@ -192,7 +185,7 @@ Inherits QueryBuilder
 		  
 		  RaiseEvent Finding()
 		  
-		  Dim pRecordSet As RecordSet = Execute(mDatabase)
+		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
 		  // Fetch record set
 		  For Each pColumn As Variant In TableColumns()
@@ -204,16 +197,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find() As ORM
-		  Find()
+		Function Find(pDatabase As Database) As ORM
+		  Find(pDatabase)
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function FindAll() As RecordSet
+		Function FindAll(pDatabase As Database) As RecordSet
 		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns()))
-		  Return Execute(mDatabase)
+		  Return Execute(pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -249,29 +242,6 @@ Inherits QueryBuilder
 		Function Loaded() As Boolean
 		  Return mData.HasKey(PrimaryKey())
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Lock()
-		  // @TODO lock options
-		  Dim pStatement As String = "LOCK TABLE " + QueryCompiler.TableName(TableName()) + " WRITE"
-		  
-		  // Lock table for this model
-		  mDatabase.SQLExecute(pStatement)
-		  
-		  If mDatabase.Error Then
-		    Raise New ORMException(mDatabase.ErrorMessage + " " + pStatement)
-		  Else
-		    mDatabase.Commit()
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Lock() As ORM
-		  Lock()
-		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -323,24 +293,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		 Shared Function Pool(pTableName As String, pPrimaryKey As Integer) As ORM
-		  If mPool Is Nil Then
-		    mPool = New Dictionary
-		  End If
-		  
-		  Dim pKey As String = Str(pPrimaryKey) + "@" + pTableName
-		  
-		  If mPool.HasKey(pKey) Then
-		    // Return mPool.Value(pKey)
-		  End If
-		  
-		  // Fetch a new instance
-		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
@@ -355,18 +307,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Save()
+		Sub Save(pDatabase As Database)
 		  If Loaded() Then
-		    Update()
+		    Update(pDatabase)
 		  Else
-		    Create()
+		    Create(pDatabase)
 		  End
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Save() As ORM
-		  Save()
+		Function Save(pDatabase As Database) As ORM
+		  Save(pDatabase)
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -393,30 +345,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Unlock()
-		  // Unlock table for this model
-		  
-		  Dim pStatement As String = "UNLOCK TABLES"
-		  
-		  mDatabase.SQLExecute(pStatement)
-		  
-		  If mDatabase.Error Then
-		    Raise New ORMException(mDatabase.ErrorMessage + " " + pStatement)
-		  Else
-		    mDatabase.Commit()
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Unlock() As ORM
-		  Unlock()
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Update()
+		Sub Update(pDatabase As Database)
 		  If Not Loaded() then
 		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
 		  End If
@@ -431,7 +360,7 @@ Inherits QueryBuilder
 		  Set(mChanged)
 		  Where(PrimaryKey(), "=", Pk())
 		  
-		  Execute(mDatabase)
+		  Execute(pDatabase)
 		  
 		  For Each pKey As Variant In mChanged.Keys()
 		    mData.Value(pKey) = mChanged.Value(pKey)
@@ -445,8 +374,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Update() As ORM
-		  Update()
+		Function Update(pDatabase As Database) As ORM
+		  Update(pDatabase)
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -499,38 +428,12 @@ Inherits QueryBuilder
 	#tag EndHook
 
 
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  return mDatabase
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  mDatabase = value
-			End Set
-		#tag EndSetter
-		Shared Database As Database
-	#tag EndComputedProperty
-
 	#tag Property, Flags = &h21
 		Private mChanged As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mData As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared mDatabase As Database
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mORMListeners() As ORMListener
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private Shared mPool As Dictionary
 	#tag EndProperty
 
 
