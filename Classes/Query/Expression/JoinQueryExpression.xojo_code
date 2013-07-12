@@ -3,13 +3,22 @@ Protected Class JoinQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  Return mIntersection + " JOIN " + QueryCompiler.TableName(mTableName)
+		  Return mDirection + " JOIN " + QueryCompiler.TableName(mTableName) + " AS " + QueryCompiler.TableName(mAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pIntersection As String = "LEFT")
-		  Constructor(pTableName, pIntersection)
+		Sub Constructor(pDirection As String, pTableName As String)
+		  Constructor(pDirection, pTableName, pTableName)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pDirection As String, pTableName As String, pAlias As String)
+		  mDirection = pDirection
+		  mTableName = pTableName
+		  mAlias = pAlias
+		  
 		End Sub
 	#tag EndMethod
 
@@ -21,7 +30,11 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mIntersection As String
+		Private mAlias As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mDirection As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

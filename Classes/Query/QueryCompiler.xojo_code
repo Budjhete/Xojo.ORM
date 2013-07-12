@@ -2,8 +2,14 @@
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Column(pColumn As String) As String
-		  // Ensure that column respects constraints
 		  Return "`" + pColumn + "`"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Column(pAlias As String, pColumn As String) As String
+		  // Ensure that column respects constraints
+		  Return QueryCompiler.TableName(pAlias) + "." + QueryCompiler.Column(pColumn)
 		  
 		End Function
 	#tag EndMethod
@@ -16,6 +22,27 @@ Protected Module QueryCompiler
 		  For Each pColumn As String In pColumns
 		    
 		    pQuery = pQuery + QueryCompiler.Column(pColumn)
+		    
+		    If i < pColumns.Ubound Then
+		      pQuery = pQuery + ", "
+		    End If
+		    
+		    i = i + 1
+		    
+		  Next
+		  
+		  Return pQuery
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Columns(pAlias As String, pColumns() As String) As String
+		  Dim pQuery As String
+		  Dim i As Integer = 0
+		  
+		  For Each pColumn As String In pColumns
+		    
+		    pQuery = pQuery + QueryCompiler.Column(pAlias, pColumn)
 		    
 		    If i < pColumns.Ubound Then
 		      pQuery = pQuery + ", "

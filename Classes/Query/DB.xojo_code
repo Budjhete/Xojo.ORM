@@ -14,7 +14,7 @@ Protected Module DB
 		Function Find(pTableName As String, pColumns() As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
-		  pQueryBuilder.Append(new SelectQueryExpression(pTableName, pColumns))
+		  pQueryBuilder.Append(new SelectQueryExpression(pColumns, pTableName))
 		  
 		  Return pQueryBuilder
 		End Function

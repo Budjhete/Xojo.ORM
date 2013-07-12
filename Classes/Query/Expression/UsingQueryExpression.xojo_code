@@ -25,16 +25,16 @@ Implements QueryExpression
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h0
-		mColumn As String
+	#tag Property, Flags = &h21
+		Private mColumn As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		mOperator As String
+	#tag Property, Flags = &h21
+		Private mOperator As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		mValue As Variant
+	#tag Property, Flags = &h21
+		Private mValue As Variant
 	#tag EndProperty
 
 

@@ -152,14 +152,14 @@ Protected Class QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Join(pTableName As String)
-		  mQuery.Append(new JoinQueryExpression(pTableName))
+		Sub Join(pTableName As String, pDirection As String ="LEFT")
+		  mQuery.Append(new JoinQueryExpression(pTableName, pDirection))
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As String) As QueryBuilder
-		  Join(pTableName)
+		Function Join(pTableName As String, pDirection As String ="LEFT") As QueryBuilder
+		  Join(pTableName, pDirection)
 		  Return Me
 		End Function
 	#tag EndMethod

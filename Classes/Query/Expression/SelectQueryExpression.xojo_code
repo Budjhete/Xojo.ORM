@@ -3,20 +3,34 @@ Protected Class SelectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  return "SELECT " + QueryCompiler.Columns(mColumns) + " FROM " + QueryCompiler.TableName(mTableName)
+		  return "SELECT " + QueryCompiler.Columns(mAlias, mColumns) + " FROM " + QueryCompiler.TableName(mTableName) + " AS " + QueryCompiler.TableName(mAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pColumn As String = "*")
-		  Constructor(pTableName, Array(pColumn))
+		Sub Constructor(pColumns() As String, pTableName As String)
+		  Constructor(pColumns, pTableName, pTableName)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pColumns() As String)
-		  mTableName = pTableName
+		Sub Constructor(pColumns() As String, pTableName As String, pAlias As String)
 		  mColumns = pColumns
+		  mTableName = pTableName
+		  mAlias = pAlias
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pColumn As String, pTableName As String)
+		  Constructor(pColumn, pTableName, pTableName)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pColumn As String, pTableName As String, pAlias As String)
+		  Constructor(Array(pColumn), pTableName, pAlias)
 		End Sub
 	#tag EndMethod
 
@@ -26,6 +40,10 @@ Implements QueryExpression
 		End Function
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h21
+		Private mAlias As String
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mColumns() As String

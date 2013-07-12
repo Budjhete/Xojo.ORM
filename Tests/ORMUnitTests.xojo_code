@@ -1,52 +1,40 @@
 #tag Class
 Protected Class ORMUnitTests
 Inherits TestGroup
-	#tag Method, Flags = &h1000
-		Sub Constructor(controller As TestController, groupName As String)
-		  // Calling the overridden superclass constructor.
-		  Super.Constructor(controller, groupName)
-		  
-		  mModel = New ModelORMTest()
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Sub CycleTest()
-		  Assert.IsFalse mModel.Loaded()
-		  Assert.IsFalse mModel.Changed()
+		  Dim pModel As New UserTest()
+		  
+		  Assert.IsFalse pModel.Loaded()
+		  Assert.IsFalse pModel.Changed()
 		  
 		  Dim pValues As New Dictionary()
-		  pValues.Value("nom") = "Jean"
+		  pValues.Value("username") = "Jean"
 		  
-		  mModel.Data(pValues).Create(ORMTestDatabase)
+		  pModel.Data(pValues).Create(ORMTestDatabase)
 		  
-		  Assert.IsTrue mModel.Loaded()
-		  Assert.IsFalse mModel.Changed()
+		  Assert.IsTrue pModel.Loaded()
+		  Assert.IsFalse pModel.Changed()
 		  
-		  mModel.Data("nom", "Jean Dupont")
+		  pModel.Data("username", "Jean Dupont")
 		  
-		  Assert.AreEqual(mModel.Data("nom"), "Jean Dupont")
+		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
 		  
-		  Assert.IsTrue mModel.Changed()
+		  Assert.IsTrue pModel.Changed()
 		  
-		  mModel.Update(ORMTestDatabase)
+		  pModel.Update(ORMTestDatabase)
 		  
-		  Assert.IsFalse mModel.Changed()
-		  Assert.IsTrue mModel.Loaded()
+		  Assert.IsFalse pModel.Changed()
+		  Assert.IsTrue pModel.Loaded()
 		  
-		  mModel.Delete(ORMTestDatabase)
+		  pModel.Delete(ORMTestDatabase)
 		  
-		  Assert.IsFalse  mModel.Loaded()
-		  Assert.IsFalse  mModel.Changed()
+		  Assert.IsFalse  pModel.Loaded()
+		  Assert.IsFalse  pModel.Changed()
 		  
 		  
 		End Sub
 	#tag EndMethod
-
-
-	#tag Property, Flags = &h21
-		Private mModel As ModelORMTest
-	#tag EndProperty
 
 
 	#tag ViewBehavior

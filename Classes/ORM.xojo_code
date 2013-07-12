@@ -43,7 +43,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function CountAll(pDatabase As Database) As Integer
-		  mQuery.Append(new SelectQueryExpression(TableName(), "COUNT(*)"))
+		  mQuery.Append(new SelectQueryExpression("COUNT(*)", TableName()))
 		  
 		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
@@ -169,7 +169,7 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns(pDatabase)))
+		  mQuery.Append(new SelectQueryExpression(TableColumns(pDatabase), TableName()))
 		  mQuery.Append(new LimitQueryExpression(1))
 		  
 		  RaiseEvent Finding()
@@ -195,7 +195,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns(pDatabase)))
+		  mQuery.Append(new SelectQueryExpression(TableColumns(pDatabase), TableName()))
 		  Return Execute(pDatabase)
 		End Function
 	#tag EndMethod
@@ -290,8 +290,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function PrimaryKey() As String
+	#tag Method, Flags = &h1
+		Protected Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
 		End Function
@@ -340,8 +340,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function TableColumns(mDatabase As Database) As String()
+	#tag Method, Flags = &h1
+		Protected Function TableColumns(mDatabase As Database) As String()
 		  // Retourne les colonnes de la table
 		  Raise New ORMException("Columns are not declared in " + TableName() + ".")
 		  
@@ -349,8 +349,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function TableName() As String
+	#tag Method, Flags = &h1
+		Protected Function TableName() As String
 		  // Retourne le nom de la table
 		  Raise New ORMException("Table is not declared.")
 		  
