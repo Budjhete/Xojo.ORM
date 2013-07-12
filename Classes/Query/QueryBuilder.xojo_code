@@ -42,24 +42,18 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  // Compile the query
-		  
-		  Dim pStatement As String
+		  Dim pStatements() As String
 		  Dim pNice As Integer
 		  
-		  While mQuery.Ubound >= 0
+		  // Sort statements
+		  While pStatements.Ubound < mQuery.Ubound 
 		    
 		    For i As Integer = 0 To mQuery.Ubound
 		      
 		      Dim pQueryExpression As QueryExpression = mQuery(i)
 		      
 		      If pQueryExpression.Nice() = pNice Then
-		        pStatement = pStatement + pQueryExpression.Compile()
-		        mQuery.Remove(i)
-		      End If
-		      
-		      If i <= mQuery.Ubound Then
-		        pStatement = pStatement + " "
+		        pStatements.Append(pQueryExpression.Compile())
 		      End If
 		      
 		    Next
@@ -68,7 +62,7 @@ Implements QueryExpression
 		    
 		  WEnd
 		  
-		  Return pStatement
+		  Return Join(pStatements, " ")
 		  
 		End Function
 	#tag EndMethod
@@ -83,9 +77,11 @@ Implements QueryExpression
 		  
 		  If pDatabase.Error Then
 		    Raise New ORMException(pDatabase.ErrorMessage + " " + pStatement)
-		  Else
-		    pDatabase.Commit()
 		  End If
+		  
+		  pDatabase.Commit()
+		  
+		  Reset()
 		  
 		  RaiseEvent Executed()
 		End Sub
@@ -101,9 +97,11 @@ Implements QueryExpression
 		  
 		  If pDatabase.Error Then
 		    Raise New ORMException(pDatabase.ErrorMessage + " " + pStatement)
-		  Else
-		    pDatabase.Commit()
 		  End If
+		  
+		  pDatabase.Commit()
+		  
+		  Reset()
 		  
 		  RaiseEvent Executed()
 		  

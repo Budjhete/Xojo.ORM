@@ -17,7 +17,7 @@ Inherits TestGroup
 		Sub WhereTest()
 		  DB.Find("Users").Where("username", "LIKE", "%John%").Execute(ORMTestDatabase)
 		  
-		  DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Execute(ORMTestDatabase)
+		  MsgBox DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile()
 		End Sub
 	#tag EndMethod
 

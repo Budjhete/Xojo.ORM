@@ -5,6 +5,10 @@ Inherits TestGroup
 		Sub CycleTest()
 		  Dim pModel As New UserTest()
 		  
+		  For Each pColumn As String In pModel.TableColumns()
+		    Assert.IsTrue pModel.Data().HasKey(pColumn)
+		  Next
+		  
 		  Assert.IsFalse pModel.Loaded()
 		  Assert.IsFalse pModel.Changed()
 		  

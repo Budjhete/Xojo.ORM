@@ -2,7 +2,7 @@
 Protected Class UserTest
 Inherits ORM
 	#tag Method, Flags = &h0
-		Function TableColumns(mDatabase As Database) As String()
+		Function TableColumns() As String()
 		  Return Array("id", "username", "password")
 		End Function
 	#tag EndMethod

@@ -38,6 +38,10 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = New Dictionary()
 		  mChanged = New Dictionary()
+		  
+		  For Each pColumn As String In TableColumns()
+		    mData.Value(pColumn) = Nil
+		  Next
 		End Sub
 	#tag EndMethod
 
@@ -63,14 +67,22 @@ Inherits QueryBuilder
 		  Dim pColumns() As String
 		  
 		  // Cast columns to string
-		  For Each pKey As Variant In mData.Keys()
+		  For Each pKey As Variant In mChanged.Keys()
 		    pColumns.Append(pKey.StringValue)
 		  Next
 		  
 		  mQuery.Append(new InsertQueryExpression(TableName(), pColumns))
-		  mQuery.Append(new ValuesQueryExpression(mData.Values()))
+		  mQuery.Append(new ValuesQueryExpression(mChanged.Values()))
 		  
 		  Execute(pDatabase)
+		  
+		  // Update data
+		  For Each pKey As Variant In mChanged.Keys()
+		    mData.Value(pKey) = mChanged.Value(pKey)
+		  Next
+		  
+		  // Clear changes, they are saved in mData
+		  Clear()
 		  
 		  Dim pRecordSet As RecordSet = DB.Find(TableName(), Array("id")).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		  
@@ -112,6 +124,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String) As Variant
+		  // Getter for data
 		  If mChanged.HasKey(pColumn) Then
 		    Return mChanged.Value(pColumn)
 		  End If
@@ -122,14 +135,6 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub Data(pColumn As String, pValue As Variant)
-		  // Key does not exists
-		  If Not mData.HasKey(pColumn) Then
-		    RaiseEvent Changing()
-		    mData.Value(pColumn) = pValue
-		    mChanged.Value(pColumn) = pValue
-		    RaiseEvent Changed()
-		  End If
-		  
 		  // If it is different than the original data, it has changed
 		  If mData.Value(pColumn) <> pValue Then
 		    RaiseEvent Changing()
@@ -160,8 +165,8 @@ Inherits QueryBuilder
 		  
 		  Execute(pDatabase)
 		  
-		  mData.Clear()
-		  mChanged.Clear()
+		  Unload()
+		  Clear()
 		  
 		  RaiseEvent Deleted()
 		End Sub
@@ -173,7 +178,7 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  mQuery.Append(new SelectQueryExpression(TableColumns(pDatabase), TableName()))
+		  mQuery.Append(new SelectQueryExpression(TableColumns(), TableName()))
 		  mQuery.Append(new LimitQueryExpression(1))
 		  
 		  RaiseEvent Finding()
@@ -181,7 +186,7 @@ Inherits QueryBuilder
 		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
 		  // Fetch record set
-		  For Each pColumn As Variant In TableColumns(pDatabase)
+		  For Each pColumn As Variant In TableColumns()
 		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		  Next
 		  
@@ -199,7 +204,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  mQuery.Append(new SelectQueryExpression(TableColumns(pDatabase), TableName()))
+		  mQuery.Append(new SelectQueryExpression(TableColumns(), TableName()))
 		  Return Execute(pDatabase)
 		End Function
 	#tag EndMethod
@@ -242,7 +247,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Loaded() As Boolean
 		  // Model must have a primary key and that primary key must not be Nil
-		  Return mData.HasKey(PrimaryKey())
+		  Return Data(PrimaryKey()) <> Nil
 		  
 		End Function
 	#tag EndMethod
@@ -345,7 +350,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function TableColumns(mDatabase As Database) As String()
+		Protected Function TableColumns() As String()
 		  // Retourne les colonnes de la table
 		  Raise New ORMException("Columns are not declared in " + TableName() + ".")
 		  
@@ -364,7 +369,9 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Sub Unload()
 		  // Vide les données, pas les changements
-		  mData.Clear()
+		  For Each pColumn As String In TableColumns()
+		    mData.Value(pColumn) = Nil
+		  Next
 		End Sub
 	#tag EndMethod
 
@@ -393,7 +400,7 @@ Inherits QueryBuilder
 		    mData.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
-		  mChanged.Clear()
+		  Clear()
 		  
 		  RaiseEvent Updated()
 		  
