@@ -3,10 +3,18 @@ Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Column(pColumn As String) As String
 		  // Compile column
+		  
 		  Dim pParts() As String = Split(pColumn, ".")
 		  
 		  For i As Integer = 0 To pParts.Ubound
-		    pParts(i) = "`" + pParts(i)+ "`"
+		    
+		    Select Case pParts(i)
+		    Case "*"
+		      // Do not escape the column
+		    Else
+		      pParts(i) = "`" + pParts(i)+ "`"
+		    End Select
+		    
 		  Next
 		  
 		  Return Join(pParts, ".")
@@ -72,8 +80,14 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Value(pValue As Variant) As String
-		  // @TODO Escape value
-		  return "'" + pValue.StringValue + "'"
+		  Select Case pValue
+		  Case Nil
+		    Return "NULL"
+		  Else
+		    Return "'" + pValue.StringValue + "'"
+		  End Select
+		  
+		  
 		End Function
 	#tag EndMethod
 

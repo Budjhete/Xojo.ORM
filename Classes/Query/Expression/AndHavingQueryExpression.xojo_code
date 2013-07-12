@@ -3,7 +3,8 @@ Protected Class AndHavingQueryExpression
 Inherits HavingQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  Return "AND " + Super.Compile()
+		  return "AND " + Predicate()
+		  
 		End Function
 	#tag EndMethod
 

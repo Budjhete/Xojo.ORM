@@ -3,7 +3,8 @@ Protected Class OrHavingQueryExpression
 Inherits HavingQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  Return "OR " + Super.Compile()
+		  Return "OR " + Predicate()
+		  
 		End Function
 	#tag EndMethod
 

@@ -3,7 +3,7 @@ Protected Class HavingQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  return "HAVING " + QueryCompiler.Column(mColumn) + QueryCompiler.Operator(mOperator) + QueryCompiler.Value(mValue)
+		  return "HAVING " + Predicate()
 		End Function
 	#tag EndMethod
 
@@ -18,6 +18,12 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
 		  Return 8
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Predicate() As String
+		  Return QueryCompiler.Column(mColumn) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Value(mValue)
 		End Function
 	#tag EndMethod
 

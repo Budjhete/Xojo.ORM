@@ -3,7 +3,7 @@ Protected Class OrWhereQueryExpression
 Inherits WhereQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  Return "OR " + Super.Compile()
+		  return "OR " + Predicate()
 		End Function
 	#tag EndMethod
 

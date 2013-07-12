@@ -11,6 +11,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Find(pTableName As String) As QueryBuilder
+		  Return Find(pTableName, Array("*"))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Find(pTableName As String, pColumns() As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
