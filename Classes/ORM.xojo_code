@@ -27,6 +27,13 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Clear()
+		  // Clear changes, not data
+		  mChanged.Clear()
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000
 		Sub Constructor()
 		  mData = New Dictionary()
@@ -51,7 +58,7 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
 		  end
 		  
-		  RaiseEvent Creating(Me)
+		  RaiseEvent Creating()
 		  
 		  Dim pColumns() As String
 		  
@@ -70,7 +77,7 @@ Inherits QueryBuilder
 		  // Update primary key from the last row inserted in this table
 		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
 		  
-		  RaiseEvent Created(Me)
+		  RaiseEvent Created()
 		  
 		End Sub
 	#tag EndMethod
@@ -121,9 +128,9 @@ Inherits QueryBuilder
 		  
 		  // If it is different than the original data, it has changed
 		  If mData.Value(pColumn) <> pValue Then
-		    RaiseEvent Changing(pColumn, pValue)
+		    RaiseEvent Changing()
 		    mChanged.Value(pColumn) = pValue
-		    RaiseEvent Changed(pColumn, pValue)
+		    RaiseEvent Changed()
 		  End If
 		  
 		End Sub
@@ -142,7 +149,7 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
 		  
-		  RaiseEvent Deleting(Me)
+		  RaiseEvent Deleting()
 		  
 		  mQuery.Append(new DeleteQueryExpression(TableName()))
 		  Where(PrimaryKey(), "=", Pk())
@@ -152,7 +159,7 @@ Inherits QueryBuilder
 		  mData.Clear()
 		  mChanged.Clear()
 		  
-		  RaiseEvent Deleted(Me)
+		  RaiseEvent Deleted()
 		End Sub
 	#tag EndMethod
 
@@ -162,19 +169,19 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns()))
+		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns(pDatabase)))
 		  mQuery.Append(new LimitQueryExpression(1))
 		  
-		  RaiseEvent Finding(Me)
+		  RaiseEvent Finding()
 		  
 		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
 		  // Fetch record set
-		  For Each pColumn As Variant In TableColumns()
+		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		  Next
 		  
-		  RaiseEvent Found(Me)
+		  RaiseEvent Found()
 		  
 		End Sub
 	#tag EndMethod
@@ -188,7 +195,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns()))
+		  mQuery.Append(new SelectQueryExpression(TableName(), TableColumns(pDatabase)))
 		  Return Execute(pDatabase)
 		End Function
 	#tag EndMethod
@@ -230,7 +237,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Loaded() As Boolean
-		  Return mData.HasKey(PrimaryKey())
+		  // Model must have a primary key and that primary key must not be Nil
+		  Return mData.HasKey(PrimaryKey()) And Not mData.Value(PrimaryKey()) Is Nil
 		  
 		End Function
 	#tag EndMethod
@@ -290,6 +298,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Reload(pDatabase As Database)
+		  Dim pk As Integer = Pk()
+		  
+		  Unload() // Empty data, not changes
+		  
+		  Where(PrimaryKey(), "=", pk)
+		  
+		  Find(pDatabase) // Reload data
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset() As ORM
 		  Reset()
 		  Return Me
@@ -321,8 +341,10 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableColumns() As String()
+		Function TableColumns(mDatabase As Database) As String()
 		  // Retourne les colonnes de la table
+		  Raise New ORMException("Columns are not declared in " + TableName() + ".")
+		  
 		  
 		End Function
 	#tag EndMethod
@@ -330,7 +352,22 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function TableName() As String
 		  // Retourne le nom de la table
+		  Raise New ORMException("Table is not declared.")
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Unload()
+		  // Vide les données, pas les changements
+		  mData.Clear()
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Unload() As ORM
+		  Unload()
+		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -344,7 +381,7 @@ Inherits QueryBuilder
 		    Return
 		  End If
 		  
-		  RaiseEvent Updating(Me)
+		  RaiseEvent Updating()
 		  
 		  mQuery.Append(new UpdateQueryExpression(TableName()))
 		  Set(mChanged)
@@ -356,7 +393,7 @@ Inherits QueryBuilder
 		    mData.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
-		  RaiseEvent Updated(Me)
+		  RaiseEvent Updated()
 		  
 		  mChanged.Clear()
 		  
@@ -392,43 +429,43 @@ Inherits QueryBuilder
 
 
 	#tag Hook, Flags = &h0
-		Event Changed(pColumn As String, pValue As Variant)
+		Event Changed()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Changing(pColumn As String, pValue As Variant)
+		Event Changing()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Created(pORM As ORM)
+		Event Created()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Creating(pORM As ORM)
+		Event Creating()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Deleted(pORM As ORM)
+		Event Deleted()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Deleting(pORM As ORM)
+		Event Deleting()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Finding(pORM As ORM)
+		Event Finding()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Found(pORM As ORM)
+		Event Found()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Updated(pORM As ORM)
+		Event Updated()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Updating(pORM As ORM)
+		Event Updating()
 	#tag EndHook
 
 

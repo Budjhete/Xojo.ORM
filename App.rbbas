@@ -5,6 +5,10 @@ Inherits Application
 		Sub Open()
 		  App.AutoQuit = True
 		  
+		  Dim pModelORMTest As New ModelORMTest()
+		  
+		  Dim pStrings() As String = pModelORMTest.TableColumns(ORMTestDatabase)
+		  
 		  ORMTestWindow.Show()
 		  
 		  
