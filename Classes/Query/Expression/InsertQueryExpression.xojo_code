@@ -3,7 +3,7 @@ Protected Class InsertQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  return "INSERT INTO " + QueryCompiler.TableName(mTableName) + " " + QueryCompiler.Columns(mColumns)
+		  return "INSERT INTO " + QueryCompiler.TableName(mTableName) + " (" + QueryCompiler.Columns(mColumns) + ")"
 		End Function
 	#tag EndMethod
 

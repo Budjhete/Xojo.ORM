@@ -88,7 +88,7 @@ Protected Module QueryCompiler
 		    
 		  Next
 		  
-		  Return "(" + pQuery + ")"
+		  Return pQuery
 		  
 		End Function
 	#tag EndMethod

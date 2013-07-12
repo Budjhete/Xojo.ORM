@@ -4,7 +4,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
 		  // Part of the QueryExpression interface.
-		  Return "VALUES " + QueryCompiler.Values(mValues)
+		  Return "VALUES (" + QueryCompiler.Values(mValues) + ")"
 		  
 		  
 		End Function
