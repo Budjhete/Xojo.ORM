@@ -11,7 +11,7 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub CreateTest()
+		Sub CycleTest()
 		  Assert.IsFalse mModel.Loaded()
 		  Assert.IsFalse mModel.Changed()
 		  
@@ -22,24 +22,6 @@ Inherits TestGroup
 		  
 		  Assert.IsTrue mModel.Loaded()
 		  Assert.IsFalse mModel.Changed()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub DeleteTest()
-		  Assert.IsTrue  mModel.Loaded()
-		  
-		  mModel.Delete(ORMTestDatabase)
-		  
-		  Assert.IsFalse  mModel.Loaded()
-		  Assert.IsFalse  mModel.Changed()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub UpdateTest()
-		  Assert.IsFalse mModel.Changed()
-		  Assert.IsTrue mModel.Loaded()
 		  
 		  mModel.Data("nom", "Jean Dupont")
 		  
@@ -51,6 +33,12 @@ Inherits TestGroup
 		  
 		  Assert.IsFalse mModel.Changed()
 		  Assert.IsTrue mModel.Loaded()
+		  
+		  mModel.Delete(ORMTestDatabase)
+		  
+		  Assert.IsFalse  mModel.Loaded()
+		  Assert.IsFalse  mModel.Changed()
+		  
 		  
 		End Sub
 	#tag EndMethod

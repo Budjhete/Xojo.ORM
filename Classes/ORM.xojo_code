@@ -238,7 +238,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Loaded() As Boolean
 		  // Model must have a primary key and that primary key must not be Nil
-		  Return mData.HasKey(PrimaryKey()) And Not mData.Value(PrimaryKey()) Is Nil
+		  Return mData.HasKey(PrimaryKey())
 		  
 		End Function
 	#tag EndMethod
@@ -377,10 +377,6 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
 		  End If
 		  
-		  If Not Changed() Then
-		    Return
-		  End If
-		  
 		  RaiseEvent Updating()
 		  
 		  mQuery.Append(new UpdateQueryExpression(TableName()))
@@ -393,9 +389,10 @@ Inherits QueryBuilder
 		    mData.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
+		  mChanged.Clear()
+		  
 		  RaiseEvent Updated()
 		  
-		  mChanged.Clear()
 		  
 		End Sub
 	#tag EndMethod
