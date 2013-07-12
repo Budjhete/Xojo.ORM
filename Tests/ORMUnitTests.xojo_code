@@ -28,7 +28,7 @@ Inherits TestGroup
 		  Assert.IsFalse pModel.Changed()
 		  Assert.IsTrue pModel.Loaded()
 		  
-		  // Modifie le modele
+		  // Modifie le modele et l'enregistre avec Save
 		  pModel.Data("username","Paul-Willy Jean")
 		  Assert.AreEqual(pModel.Data("username"), "Paul-Willy Jean")
 		  Assert.IsTrue pModel.Changed
@@ -38,6 +38,19 @@ Inherits TestGroup
 		  NewModel.Where("id","=", Str(pModel.Pk)).Find(ORMTestDatabase)
 		  Assert.AreEqual(pModel.Data("username").StringValue,NewModel.Data("username").StringValue)
 		  
+		  // Cree le modele et l'enregistre avec Save
+		  NewModel = New UserTest()
+		  Assert.IsFalse NewModel.Loaded
+		  Assert.IsFalse NewModel.Changed
+		  NewModel.Data("username", "Guillaume Poirier-Morency")
+		  NewModel.Data("password", "pile4626")
+		  'Assert.IsTrue NewModel.Changed, "Le modele n'a pas change"
+		  NewModel.Save(ORMTestDatabase)
+		  Assert.IsFalse NewModel.Changed
+		  Assert.IsTrue NewModel.Loaded
+		  Assert.IsTrue((NewModel.Pk <> 0), "La cle primaire egale " + Str(NewModel.Pk))
+		  
+		  // Supprime le modele et verifie l'etat de l'ORM
 		  pModel.Delete(ORMTestDatabase)
 		  
 		  Assert.IsFalse  pModel.Loaded()
