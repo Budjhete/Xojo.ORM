@@ -122,8 +122,12 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub Data(pColumn As String, pValue As Variant)
+		  // Key does not exists
 		  If Not mData.HasKey(pColumn) Then
+		    RaiseEvent Changing()
 		    mData.Value(pColumn) = pValue
+		    mChanged.Value(pColumn) = pValue
+		    RaiseEvent Changed()
 		  End If
 		  
 		  // If it is different than the original data, it has changed
@@ -408,12 +412,6 @@ Inherits QueryBuilder
 		Function Values(pValues() As Variant) As ORM
 		  Values(pValues)
 		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Where(pValues As Dictionary) As ORM
-		  Where(pValues)
 		End Function
 	#tag EndMethod
 

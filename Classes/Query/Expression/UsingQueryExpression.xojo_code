@@ -19,7 +19,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return 3
+		  Return 4
 		  
 		End Function
 	#tag EndMethod

@@ -18,8 +18,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  // Part of the QueryExpression interface.
-		  Return 1
+		  Return 2
 		  
 		End Function
 	#tag EndMethod
