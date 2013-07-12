@@ -28,11 +28,20 @@ Inherits TestGroup
 		  Assert.IsFalse pModel.Changed()
 		  Assert.IsTrue pModel.Loaded()
 		  
+		  // Modifie le modele
+		  pModel.Data("username","Paul-Willy Jean")
+		  Assert.AreEqual(pModel.Data("username"), "Paul-Willy Jean")
+		  Assert.IsTrue pModel.Changed
+		  pModel.Save(ORMTestDatabase)
+		  Assert.IsFalse pModel.Changed
+		  Dim NewModel As New UserTest()
+		  NewModel.Where("id","=", Str(pModel.Pk)).Find(ORMTestDatabase)
+		  Assert.AreEqual(pModel.Data("username").StringValue,NewModel.Data("username").StringValue)
+		  
 		  pModel.Delete(ORMTestDatabase)
 		  
 		  Assert.IsFalse  pModel.Loaded()
 		  Assert.IsFalse  pModel.Changed()
-		  
 		  
 		End Sub
 	#tag EndMethod
