@@ -222,8 +222,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As String) As ORM
-		  Join(pTableName)
+		Function Join(pDirection As String, pTableName As String) As ORM
+		  Join(pDirection, pTableName)
 		  Return Me
 		End Function
 	#tag EndMethod

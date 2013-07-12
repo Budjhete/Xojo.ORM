@@ -2,57 +2,36 @@
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Column(pColumn As String) As String
-		  Return "`" + pColumn + "`"
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Column(pAlias As String, pColumn As String) As String
-		  // Ensure that column respects constraints
-		  Return QueryCompiler.TableName(pAlias) + "." + QueryCompiler.Column(pColumn)
+		  // Compile column
+		  Dim pParts() As String = Split(pColumn, ".")
 		  
+		  For i As Integer = 0 To pParts.Ubound
+		    pParts(i) = "`" + pParts(i)+ "`"
+		  Next
+		  
+		  Return Join(pParts, ".")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Columns(pColumns() As String) As String
-		  Dim pQuery As String
-		  Dim i As Integer = 0
-		  
-		  For Each pColumn As String In pColumns
-		    
-		    pQuery = pQuery + QueryCompiler.Column(pColumn)
-		    
-		    If i < pColumns.Ubound Then
-		      pQuery = pQuery + ", "
-		    End If
-		    
-		    i = i + 1
-		    
+		  For i As Integer = 0 To pColumns.Ubound
+		    pColumns(i) = QueryCompiler.Column(pColumns(i))
 		  Next
 		  
-		  Return pQuery
+		  Return Join(pColumns, ", ")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Columns(pAlias As String, pColumns() As String) As String
-		  Dim pQuery As String
-		  Dim i As Integer = 0
+		  // Compile columns and prepend an alias
 		  
-		  For Each pColumn As String In pColumns
-		    
-		    pQuery = pQuery + QueryCompiler.Column(pAlias, pColumn)
-		    
-		    If i < pColumns.Ubound Then
-		      pQuery = pQuery + ", "
-		    End If
-		    
-		    i = i + 1
-		    
+		  For i As Integer = 0 To pColumns.Ubound
+		    pColumns(i) = pAlias + "." + pColumns(i)
 		  Next
 		  
-		  Return pQuery
+		  Return QueryCompiler.Columns(pColumns)
 		End Function
 	#tag EndMethod
 
@@ -100,22 +79,15 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Values(pValues() As Variant) As String
-		  Dim pQuery As String
-		  Dim i As Integer = 0
+		  // Compile values
+		  Dim pCompiledValues() As String
 		  
-		  For Each pValue As Variant In pValues
-		    
-		    pQuery = pQuery + QueryCompiler.Value(pValue)
-		    
-		    If i < pValues.Ubound Then
-		      pQuery = pQuery + ", "
-		    End If
-		    
-		    i = i + 1
-		    
+		  For i As Integer = 0 To pValues.Ubound
+		    pCompiledValues.Append(QueryCompiler.Value(pValues(i)))
 		  Next
 		  
-		  Return pQuery
+		  Return Join(pCompiledValues, ", ")
+		  
 		  
 		End Function
 	#tag EndMethod

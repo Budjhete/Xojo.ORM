@@ -10,6 +10,7 @@ Inherits TestGroup
 		  
 		  Dim pValues As New Dictionary()
 		  pValues.Value("username") = "Jean"
+		  pValues.Value("password") = "LOL"
 		  
 		  pModel.Data(pValues).Create(ORMTestDatabase)
 		  
