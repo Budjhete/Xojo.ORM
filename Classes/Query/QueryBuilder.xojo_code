@@ -46,7 +46,7 @@ Implements QueryExpression
 		  Dim pNice As Integer
 		  
 		  // Sort statements
-		  While pStatements.Ubound < mQuery.Ubound 
+		  While pStatements.Ubound < mQuery.Ubound
 		    
 		    For i As Integer = 0 To mQuery.Ubound
 		      

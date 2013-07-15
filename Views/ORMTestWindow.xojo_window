@@ -25,14 +25,13 @@ Begin Window ORMTestWindow
    Title           =   "Tests for ORM"
    Visible         =   True
    Width           =   488
-   Begin ModelORMTest mORMTest
+   Begin UserTest mUserTest
       Height          =   32
       Index           =   -2147483648
-      Left            =   40
+      Left            =   "40"
       LockedInPosition=   False
-      Scope           =   0
       TabPanelIndex   =   0
-      Top             =   40
+      Top             =   "40"
       Width           =   32
    End
    Begin PushButton bFind
@@ -359,7 +358,7 @@ End
 #tag WindowCode
 #tag EndWindowCode
 
-#tag Events mORMTest
+#tag Events mUserTest
 	#tag Event
 		Sub Created()
 		  
@@ -373,12 +372,12 @@ End
 	#tag Event
 		Sub Found()
 		  MsgBox "Found"
-		  tNom.Text = mORMTest.Data("nom")
+		  tNom.Text = mUserTest.Data("nom")
 		End Sub
 	#tag EndEvent
 	#tag Event
 		Sub Changed()
-		  bUpdate.Enabled = mORMTest.Changed
+		  bUpdate.Enabled = mUserTest.Changed
 		End Sub
 	#tag EndEvent
 	#tag Event
@@ -391,46 +390,46 @@ End
 #tag Events bFind
 	#tag Event
 		Sub Action()
-		  mORMTest.Where("id", "=", tSearch.Text).Find(ORMTestDatabase)
+		  mUserTest.Where("id", "=", tSearch.Text).Find(ORMTestDatabase)
 		  
-		  bFind.Enabled = Not mORMTest.Loaded()
-		  bCreate.Enabled = Not mORMTest.Loaded()
-		  bDelete.Enabled = mORMTest.Loaded()
+		  bFind.Enabled = Not mUserTest.Loaded()
+		  bCreate.Enabled = Not mUserTest.Loaded()
+		  bDelete.Enabled = mUserTest.Loaded()
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events bDelete
 	#tag Event
 		Sub Action()
-		  mORMTest.Delete(ORMTestDatabase)
+		  mUserTest.Delete(ORMTestDatabase)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events bUpdate
 	#tag Event
 		Sub Action()
-		  mORMTest.Save(ORMTestDatabase)
+		  mUserTest.Save(ORMTestDatabase)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events bCreate
 	#tag Event
 		Sub Action()
-		  mORMTest.Create(ORMTestDatabase)
+		  mUserTest.Create(ORMTestDatabase)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events tNom
 	#tag Event
 		Sub TextChange()
-		  mORMTest.Data("nom", Me.Text)
+		  mUserTest.Data("nom", Me.Text)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events tPrimaryKey
 	#tag Event
 		Sub TextChange()
-		  mORMTest.Data("id", Me.Text)
+		  mUserTest.Data("id", Me.Text)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
