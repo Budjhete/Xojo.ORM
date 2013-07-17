@@ -98,6 +98,8 @@ Inherits TestGroup
 		  
 		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
 		  
+		  pModel.Data("password", "paul2012")
+		  
 		  Assert.IsTrue pModel.Changed()
 		  
 		  pModel.Update(ORMTestDatabase)
