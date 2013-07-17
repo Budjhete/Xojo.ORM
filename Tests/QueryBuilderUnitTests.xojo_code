@@ -8,8 +8,6 @@ Inherits TestGroup
 		  Dim recordSet As RecordSet = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Execute(ORMTestDatabase)
 		  
 		  DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Where("Users.username", "LIKE", "%John%").Execute(ORMTestDatabase)
-		  
-		  
 		End Sub
 	#tag EndMethod
 
@@ -27,12 +25,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -61,16 +61,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -83,6 +86,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
