@@ -13,8 +13,17 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SetTest()
+		  Dim valeurs() As Variant
+		  valeurs.Append("Paul-willy Jean")
+		  valeurs.Append("paulwillyjean")
+		  Dim Record As RecordSet = DB.Insert("Users", Array("username", "password")).Values(valeurs).Execute(ORMTestDatabase)
+		  Dim UpdateRecord As RecordSet = DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
 		  
-		  Dim Record As RecordSet = DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("username", "=", "Paul-Willy Jean").Execute(ORMTestDatabase)
+		  Assert.IsFalse(Record.Field("username").StringValue = UpdateRecord.Field("username").StringValue)
+		  
+		  Record = DB.Find("Users").Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
+		  
+		  Assert.AreEqual(Record.Field("username").StringValue, UpdateRecord.Field("username").StringValue)
 		End Sub
 	#tag EndMethod
 
