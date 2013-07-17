@@ -2,7 +2,7 @@
 Protected Class ORMUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
-		Sub CycleTest()
+		Sub CreateTest()
 		  Dim pModel As New UserTest()
 		  
 		  For Each pColumn As String In pModel.TableColumns()
