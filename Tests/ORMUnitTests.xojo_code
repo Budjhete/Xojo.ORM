@@ -19,21 +19,16 @@ Inherits TestGroup
 		  pModel.Data(pValues).Create(ORMTestDatabase)
 		  
 		  Assert.IsTrue pModel.Loaded()
-		  Assert.IsFalse pModel.Changed()
-		  
-		  pModel.Data("username", "Jean Dupont")
-		  
-		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
-		  
-		  Assert.IsTrue pModel.Changed()
-		  
-		  pModel.Update(ORMTestDatabase)
-		  
-		  Assert.IsFalse pModel.Changed()
-		  Assert.IsTrue pModel.Loaded()
-		  
+		  Assert.IsFalse pModel.Changed(), "L'ORM a change"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub CycleTest()
+		  Dim pModel As New UserTest()
 		  // Modifie le modele et l'enregistre avec Save
 		  pModel.Data("username","Paul-Willy Jean")
+		  pModel.Data("password", "pile4626")
 		  Assert.AreEqual(pModel.Data("username"), "Paul-Willy Jean")
 		  Assert.IsTrue pModel.Changed
 		  pModel.Save(ORMTestDatabase)
@@ -48,7 +43,7 @@ Inherits TestGroup
 		  Assert.IsFalse NewModel.Changed
 		  NewModel.Data("username", "Guillaume Poirier-Morency")
 		  NewModel.Data("password", "pile4626")
-		  'Assert.IsTrue NewModel.Changed, "Le modele n'a pas change"
+		  Assert.IsTrue NewModel.Changed, "Le modele n'a pas change"
 		  NewModel.Save(ORMTestDatabase)
 		  Assert.IsFalse NewModel.Changed
 		  Assert.IsTrue NewModel.Loaded
