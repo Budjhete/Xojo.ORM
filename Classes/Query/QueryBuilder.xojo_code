@@ -283,6 +283,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Set(pValues As Dictionary) As QueryBuilder
 		  Set(pValues)
+		  Return Me
 		End Function
 	#tag EndMethod
 

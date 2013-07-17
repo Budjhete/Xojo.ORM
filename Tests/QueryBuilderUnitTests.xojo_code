@@ -12,6 +12,12 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SetTest()
+		  Dim query As QueryBuilder = DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("username", "=", "Paul-Willy Jean").Execute(ORMTestDatabase)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub WhereTest()
 		  DB.Find("Users").Where("username", "LIKE", "%John%").Execute(ORMTestDatabase)
 		  
