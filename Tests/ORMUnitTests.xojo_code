@@ -5,10 +5,6 @@ Inherits TestGroup
 		Sub CreateTest()
 		  Dim pModel As New UserTest()
 		  
-		  For Each pColumn As String In pModel.TableColumns()
-		    Assert.IsTrue pModel.Data().HasKey(pColumn)
-		  Next
-		  
 		  Assert.IsFalse pModel.Loaded()
 		  Assert.IsFalse pModel.Changed()
 		  
@@ -25,36 +21,46 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub CycleTest()
-		  Dim pModel As New UserTest()
-		  // Modifie le modele et l'enregistre avec Save
-		  pModel.Data("username","Paul-Willy Jean")
-		  pModel.Data("password", "pile4626")
-		  Assert.AreEqual(pModel.Data("username"), "Paul-Willy Jean")
-		  Assert.IsTrue pModel.Changed
-		  pModel.Save(ORMTestDatabase)
-		  Assert.IsFalse pModel.Changed
-		  Dim NewModel As New UserTest()
-		  NewModel.Where("id","=", Str(pModel.Pk)).Find(ORMTestDatabase)
-		  Assert.AreEqual(pModel.Data("username").StringValue,NewModel.Data("username").StringValue)
-		  
-		  // Cree le modele et l'enregistre avec Save
-		  NewModel = New UserTest()
-		  Assert.IsFalse NewModel.Loaded
-		  Assert.IsFalse NewModel.Changed
-		  NewModel.Data("username", "Guillaume Poirier-Morency")
-		  NewModel.Data("password", "pile4626")
-		  Assert.IsTrue NewModel.Changed, "Le modele n'a pas change"
-		  NewModel.Save(ORMTestDatabase)
-		  Assert.IsFalse NewModel.Changed
-		  Assert.IsTrue NewModel.Loaded
-		  Assert.IsTrue((NewModel.Pk <> 0), "La cle primaire egale " + Str(NewModel.Pk))
+		  Dim DeleteModel As New UserTest()
+		  DeleteModel.Data("username", "Paul-Willy Jean")
+		  DeleteModel.Data("password", "Jean")
+		  DeleteModel.Create(ORMTestDatabase)
+		  Assert.IsTrue(DeleteModel.Loaded())
+		  Assert.IsFalse(DeleteModel.Changed())
 		  
 		  // Supprime le modele et verifie l'etat de l'ORM
-		  pModel.Delete(ORMTestDatabase)
+		  DeleteModel.Delete(ORMTestDatabase)
 		  
-		  'Assert.IsFalse  pModel.Loaded()
-		  'Assert.IsFalse  pModel.Changed()
+		  Assert.IsFalse  DeleteModel.Loaded()
+		  Assert.IsFalse  DeleteModel.Changed()
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub SaveTest()
+		  Dim SaveModel As New UserTest()
+		  // Modifie le modele et l'enregistre avec Save
+		  SaveModel.Data("username","Paul-Willy Jean")
+		  SaveModel.Data("password", "pile4626")
+		  Assert.AreEqual(SaveModel.Data("username"), "Paul-Willy Jean")
+		  Assert.IsTrue SaveModel.Changed
+		  SaveModel.Save(ORMTestDatabase)
+		  Assert.IsFalse SaveModel.Changed
+		  Dim NewSaveModel As New UserTest()
+		  NewSaveModel.Where("id","=", Str(SaveModel.Pk)).Find(ORMTestDatabase)
+		  Assert.AreEqual(SaveModel.Data("username").StringValue,NewSaveModel.Data("username").StringValue)
 		  
+		  // Cree le modele et l'enregistre avec Save
+		  NewSaveModel = New UserTest()
+		  Assert.IsFalse NewSaveModel.Loaded
+		  Assert.IsFalse NewSaveModel.Changed
+		  NewSaveModel.Data("username", "Guillaume Poirier-Morency")
+		  NewSaveModel.Data("password", "pile4626")
+		  Assert.IsTrue NewSaveModel.Changed, "Le modele n'a pas change"
+		  NewSaveModel.Save(ORMTestDatabase)
+		  Assert.IsFalse NewSaveModel.Changed
+		  Assert.IsTrue NewSaveModel.Loaded
+		  Assert.IsTrue((NewSaveModel.Pk <> 0), "La cle primaire egale " + Str(NewSaveModel.Pk))
 		End Sub
 	#tag EndMethod
 
@@ -111,12 +117,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -145,16 +153,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -167,6 +178,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
