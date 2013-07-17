@@ -20,19 +20,19 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub CycleTest()
+		Sub DeleteTest()
 		  Dim DeleteModel As New UserTest()
 		  DeleteModel.Data("username", "Paul-Willy Jean")
 		  DeleteModel.Data("password", "Jean")
 		  DeleteModel.Create(ORMTestDatabase)
 		  Assert.IsTrue(DeleteModel.Loaded())
-		  Assert.IsFalse(DeleteModel.Changed())
+		  Assert.IsFalse(DeleteModel.Changed()), "Le modele est enregistre, mais il a quand-meme change"
 		  
 		  // Supprime le modele et verifie l'etat de l'ORM
 		  DeleteModel.Delete(ORMTestDatabase)
 		  
-		  Assert.IsFalse  DeleteModel.Loaded()
-		  Assert.IsFalse  DeleteModel.Changed()
+		  Assert.IsFalse  DeleteModel.Loaded(), "Le modele reste tout de meme charge"
+		  Assert.IsFalse  DeleteModel.Changed(), "L'ORM a change, mais il n'existe plus."
 		End Sub
 	#tag EndMethod
 
