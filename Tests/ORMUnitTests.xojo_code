@@ -66,12 +66,13 @@ Inherits TestGroup
 		  SaveModel.Data("username","Paul-Willy Jean")
 		  SaveModel.Data("password", "pile4626")
 		  Assert.AreEqual(SaveModel.Data("username"), "Paul-Willy Jean")
+		  Assert.AreEqual(SaveModel.Data("password"), "pile4626")
 		  Assert.IsTrue SaveModel.Changed
 		  SaveModel.Save(ORMTestDatabase)
 		  Assert.IsFalse SaveModel.Changed
 		  Dim NewSaveModel As New UserTest()
-		  NewSaveModel.Where("id","=", Str(SaveModel.Pk)).Find(ORMTestDatabase)
-		  Assert.AreEqual(SaveModel.Data("username").StringValue,NewSaveModel.Data("username").StringValue)
+		  NewSaveModel.Where("id","=", SaveModel.Pk).Find(ORMTestDatabase)
+		  Assert.AreEqual(SaveModel.Data("username").StringValue,NewSaveModel.Data("username").StringValue), "SaveModel = " + SaveModel.Data("username") + ", NewSaveModel = " + NewSaveModel.Data("username")
 		  
 		  // Cree le modele et l'enregistre avec Save
 		  NewSaveModel = New UserTest()
@@ -82,8 +83,7 @@ Inherits TestGroup
 		  Assert.IsTrue NewSaveModel.Changed, "Le modele n'a pas change"
 		  NewSaveModel.Save(ORMTestDatabase)
 		  Assert.IsFalse NewSaveModel.Changed
-		  Assert.IsTrue NewSaveModel.Loaded
-		  Assert.IsTrue((NewSaveModel.Pk <> 0), "La cle primaire egale " + Str(NewSaveModel.Pk))
+		  Assert.IsTrue NewSaveModel.Loaded, "La cle primaire egale " + Str(NewSaveModel.Pk)
 		End Sub
 	#tag EndMethod
 
