@@ -37,6 +37,29 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ReloadTest()
+		  Dim ReloadModel As New UserTest()
+		  ReloadModel.Data("username", "Paul-Willy Jean")
+		  ReloadModel.Data("password", "pile4626")
+		  ReloadModel.Save(ORMTestDatabase)
+		  Dim NewReloadModel As New UserTest()
+		  NewReloadModel.Where("id", "=", ReloadModel.Pk()).Find(ORMTestDatabase)
+		  
+		  // S'assure qu'on aie repris la bonne entree en BD
+		  Assert.AreEqual(ReloadModel.Data("username").StringValue, NewReloadModel.Data("username").StringValue)
+		  
+		  ReloadModel.Data("username", "Paul")
+		  // Les deux objets ne doivent pas avoir le meme username
+		  Assert.IsFalse(ReloadModel.Data("username").StringValue = NewReloadModel.Data("username").StringValue)
+		  ReloadModel.Save(ORMTestDatabase)
+		  // Recharge du modele copie pour qu'il reprenne les valeurs de la BD
+		  NewReloadModel.Reload(ORMTestDatabase)
+		  // Les deux objects devraient avoir le meme username
+		  Assert.AreEqual(ReloadModel.Data("username").StringValue, NewReloadModel.Data("username").StringValue)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SaveTest()
 		  Dim SaveModel As New UserTest()
 		  // Modifie le modele et l'enregistre avec Save
