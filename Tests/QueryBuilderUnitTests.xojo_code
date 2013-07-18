@@ -109,6 +109,8 @@ Inherits TestGroup
 		  // Looks up a record where the username contains "John" and where
 		  // the password is NULL or where the username contains "John" and where the password is "1234"
 		  Record = DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "IS", Nil).OrWhere("password", "=", "1234").Execute(ORMTestDatabase)
+		  Assert.IsNotNil(Record, "We should have at least one entry where the username contains"+_
+		  "John and where the password is NULL or where the username is anything and the password equals ""1234""")
 		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile())
 		  System.DebugLog(ShowSelect(Record))
 		  
