@@ -16,14 +16,31 @@ Inherits TestGroup
 		  Dim valeurs() As Variant
 		  valeurs.Append("Paul-willy Jean")
 		  valeurs.Append("paulwillyjean")
-		  Dim Record As RecordSet = DB.Insert("Users", Array("username", "password")).Values(valeurs).Execute(ORMTestDatabase)
-		  Dim UpdateRecord As RecordSet = DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
 		  
+		  // Creates a new entry in the database
+		  DB.Insert("Users", Array("username", "password")).Values(valeurs).Execute(ORMTestDatabase)
+		  
+		  // Fetches the new entry in the database
+		  Dim Record As RecordSet = DB.Find("Users").Where("username", "=", valeurs(0).StringValue).OrderBy("id").Execute(ORMTestDatabase)
+		  Record.MoveLast()
+		  
+		  // Updates the entry in the database
+		  DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
+		  
+		  // Fetches the modified entry int the database
+		  Dim UpdateRecord As RecordSet = DB.Find("Users").Where("id", "=", Record.Field("id")).Execute(ORMTestDatabase)
+		  
+		  // Compares the old and the new entry to make sure that the values are indeed different
 		  Assert.IsFalse(Record.Field("username").StringValue = UpdateRecord.Field("username").StringValue)
 		  
+		  // Updates @Record to reflect the modification in the DB
 		  Record = DB.Find("Users").Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
 		  
+		  // Compares @Record and @UpdateRecord to make sure that they are both the same
 		  Assert.AreEqual(Record.Field("username").StringValue, UpdateRecord.Field("username").StringValue)
+		  
+		  // In order not to pollute the DB
+		  DB.Delete("Users").Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
 
@@ -41,12 +58,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -75,16 +94,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -97,6 +119,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
