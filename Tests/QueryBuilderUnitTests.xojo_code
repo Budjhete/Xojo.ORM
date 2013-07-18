@@ -71,6 +71,27 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub ValuesTest()
+		  Dim Record As RecordSet
+		  Dim MyValues() As Variant
+		  
+		  // Inserts a new entry with ParamArrays in Values
+		  DB.Insert("Users", Array("username", "password")).Values("Hete", ".ca").Execute(ORMTestDatabase)
+		  
+		  Record = DB.Find("Users").Where("username", "=", "Hete").OrderBy("id", "DESC").Limit(1).Execute(ORMTestDatabase)
+		  Assert.IsNotNil(Record, "We should have found at least one entry where the username is Hete")
+		  
+		  // Inserts a new entry with a Variant Array in Values
+		  MyValues.Append("Hete.ca")
+		  MyValues.Append(".ca")
+		  DB.Insert("Users", Array("username", "password")).Values(MyValues).Execute(ORMTestDatabase)
+		  
+		  Record = DB.Find("Users").Where("username", "=", "Hete.ca").OrderBy("id", "DESC").Limit(1).Execute(ORMTestDatabase)
+		  Assert.IsNotNil(Record, "We should have found at least one entry where the username is Hete.ca")
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub WhereTest()
 		  System.DebugLog("BEGINS TESTS QueryBuilder.Where()")
 		  Dim Record As RecordSet
