@@ -314,6 +314,25 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Values(ParamArray pValues As Variant)
+		  Dim VariantArray() As Variant
+		  
+		  For Each pValuesElement As Variant in pValues
+		    VariantArray.Append(pValuesElement)
+		  Next
+		  
+		  Values(VariantArray)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Values(ParamArray pValues As Variant) As QueryBuilder
+		  Values(pValues)
+		  return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Where(pColumn As String, pOperator As String, pValue As Variant)
 		  mQuery.Append(new WhereQueryExpression(pColumn, pOperator, pValue))
 		End Sub

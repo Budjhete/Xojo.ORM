@@ -13,16 +13,98 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SetTest()
+		  Dim valeurs() As Variant
+		  valeurs.Append("Paul-willy Jean")
+		  valeurs.Append("paulwillyjean")
 		  
-		  Dim Record As RecordSet = DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("username", "=", "Paul-Willy Jean").Execute(ORMTestDatabase)
+		  // Creates a new entry in the database
+		  DB.Insert("Users", Array("username", "password")).Values(valeurs).Execute(ORMTestDatabase)
+		  
+		  // Fetches the new entry in the database
+		  Dim Record As RecordSet = DB.Find("Users").Where("username", "=", valeurs(0).StringValue).OrderBy("id").Execute(ORMTestDatabase)
+		  Record.MoveLast()
+		  
+		  // Updates the entry in the database
+		  DB.Update("Users").Set(New Dictionary("username": "P-Dob", "password": "paul")).Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
+		  
+		  // Fetches the modified entry int the database
+		  Dim UpdateRecord As RecordSet = DB.Find("Users").Where("id", "=", Record.Field("id")).Execute(ORMTestDatabase)
+		  
+		  // Compares the old and the new entry to make sure that the values are indeed different
+		  Assert.IsFalse(Record.Field("username").StringValue = UpdateRecord.Field("username").StringValue)
+		  
+		  // Updates @Record to reflect the modification in the DB
+		  Record = DB.Find("Users").Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
+		  
+		  // Compares @Record and @UpdateRecord to make sure that they are both the same
+		  Assert.AreEqual(Record.Field("username").StringValue, UpdateRecord.Field("username").StringValue)
+		  
+		  // In order not to pollute the DB
+		  DB.Delete("Users").Where("id", "=", Record.Field("id").StringValue).Execute(ORMTestDatabase)
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function ShowSelect(pRecord As RecordSet) As String
+		  If pRecord Is Nil Then
+		    return ""
+		  End If
+		  
+		  Dim StringRecord As String = ""
+		  
+		  While Not pRecord.EOF
+		    Dim FieldCount As Integer = pRecord.FieldCount
+		    StringRecord = StringRecord + "{"
+		    For Field As Integer = 1 To FieldCount
+		      StringRecord = StringRecord + pRecord.IdxField(Field).Name + " : """ + pRecord.IdxField(Field).Value + """"
+		      
+		      If Field <> FieldCount Then
+		        StringRecord = StringRecord + ", "
+		      End If
+		    Next
+		    StringRecord = StringRecord + "}\n"
+		    pRecord.MoveNext
+		  Wend
+		  
+		  return StringRecord
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub WhereTest()
-		  DB.Find("Users").Where("username", "LIKE", "%John%").Execute(ORMTestDatabase)
+		  System.DebugLog("BEGINS TESTS QueryBuilder.Where()")
+		  Dim Record As RecordSet
 		  
-		  MsgBox DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile()
+		  // Creates a new entry in the Database
+		  DB.Insert("Users", Array("username", "password")).Values("Paul", "Willy").Execute(ORMTestDatabase)
+		  DB.Insert("Users", Array("username", "password")).Values("Paul", "1234").Execute(ORMTestDatabase)
+		  
+		  // Creates a second entry with an empty field in the Database
+		  DB.Insert("Users", Array("username")).Values("John Lajoie").Execute(ORMTestDatabase)
+		  
+		  // Create a third entry with all fields set
+		  DB.Insert("Users", Array("username", "password")).Values("John Lajoie", "1234").Execute(ORMTestDatabase)
+		  
+		  // Looks up a record where the username contains "John" and where
+		  // the password is NULL or where the username contains "John" and where the password is "1234"
+		  Record = DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "IS", Nil).OrWhere("password", "=", "1234").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile())
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  // Looks up a record where the username is Paul
+		  Record = DB.Find("Users").Where("username", "=", "Paul").OrderBy("id").Execute(ORMTestDatabase)
+		  // Logs the new Entry
+		  System.DebugLog(DB.Find("Users").Where("username", "=", "Paul").OrderBy("id").Compile())
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  // Tests a where using a LIKE comparison
+		  Record = DB.Find("Users").Where("username", "LIKE", "Pau%").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "Pau%").Compile())
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  Assert.IsNotNil(Record)
+		  
+		  System.DebugLog("ENDS TESTS QueryBuilder.Where()")
 		End Sub
 	#tag EndMethod
 
