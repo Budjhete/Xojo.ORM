@@ -72,9 +72,46 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub WhereTest()
-		  DB.Find("Users").Where("username", "LIKE", "%John%").Execute(ORMTestDatabase)
+		  System.DebugLog("BEGINS TESTS QueryBuilder.Where()")
+		  Dim Record As RecordSet
+		  Dim InsertValeurs() As Variant = Array("Paul", "Willy", 0)
+		  InsertValeurs.Remove(2)
+		  // Creates a new entry in the Database
+		  DB.Insert("Users", Array("username", "password")).Values(InsertValeurs).Execute(ORMTestDatabase)
+		  InsertValeurs = Array("Paul", "1234", 0)
+		  InsertValeurs.Remove(2)
+		  DB.Insert("Users", Array("username", "password")).Values(InsertValeurs).Execute(ORMTestDatabase)
 		  
-		  MsgBox DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile()
+		  // Creates a second entry with an empty field in the Database
+		  InsertValeurs = Array("John Lajoie", 0)
+		  InsertValeurs.Remove(1)
+		  DB.Insert("Users", Array("username")).Values(InsertValeurs).Execute(ORMTestDatabase)
+		  
+		  // Create a third entry with all fields set
+		  InsertValeurs = Array("John Lajoie", "1234", 0)
+		  InsertValeurs.Remove(2)
+		  DB.Insert("Users", Array("username", "password")).Values(InsertValeurs).Execute(ORMTestDatabase)
+		  
+		  // Looks up a record where the username contains "John" and where
+		  // the password is NULL or where the username contains "John" and where the password is "1234"
+		  Record = DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "IS", Nil).OrWhere("password", "=", "1234").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile())
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  // Looks up a record where the username is Paul
+		  Record = DB.Find("Users").Where("username", "=", "Paul").OrderBy("id").Execute(ORMTestDatabase)
+		  // Logs the new Entry
+		  System.DebugLog(DB.Find("Users").Where("username", "=", "Paul").OrderBy("id").Compile())
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  // Tests a where using a LIKE comparison
+		  Record = DB.Find("Users").Where("username", "LIKE", "Pau%").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "Pau%").Compile())
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  Assert.IsNotNil(Record)
+		  
+		  System.DebugLog("ENDS TESTS QueryBuilder.Where()")
 		End Sub
 	#tag EndMethod
 
