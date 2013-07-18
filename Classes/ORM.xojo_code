@@ -84,7 +84,7 @@ Inherits QueryBuilder
 		  // Clear changes, they are saved in mData
 		  Clear()
 		  
-		  Dim pRecordSet As RecordSet = DB.Find(TableName(), Array("id")).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
+		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey(), TableName()).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		  
 		  // Update primary key from the last row inserted in this table
 		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
