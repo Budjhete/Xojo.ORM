@@ -62,7 +62,7 @@ Inherits TestGroup
 		        StringRecord = StringRecord + ", "
 		      End If
 		    Next
-		    StringRecord = StringRecord + "}\n"
+		    StringRecord = StringRecord + "}" + EndOfLine
 		    pRecord.MoveNext
 		  Wend
 		  
