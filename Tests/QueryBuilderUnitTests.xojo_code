@@ -3,11 +3,33 @@ Protected Class QueryBuilderUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub JoinTest()
-		  DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Execute(ORMTestDatabase)
+		  System.DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
+		  Dim Record As RecordSet
 		  
-		  Dim recordSet As RecordSet = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Execute(ORMTestDatabase)
+		  DB.Delete("Groups").Execute(ORMTestDatabase)
+		  DB.Delete("Users").Execute(ORMTestDatabase)
 		  
-		  DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Where("Users.username", "LIKE", "%John%").Execute(ORMTestDatabase)
+		  DB.Insert("Users", Array("username", "password")).Values("Hete.ca", "hete").Execute(ORMTestDatabase)
+		  DB.Insert("Groups", Array("name", "userId")).Values("Developpeur", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", Array("name")).Values("Gestionnaire").Execute(ORMTestDatabase)
+		  
+		  System.DebugLog(DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
+		  Record = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
+		  System.DebugLog(ShowSelect(Record))
+		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
+		  
+		  System.DebugLog(DB.Find("Groups").Join("LEFT", "Users").On("Groups.userId", "=", "Users.id").Compile())
+		  Record = DB.Find("Groups").Join("LEFT", "Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
+		  System.DebugLog(ShowSelect(Record))
+		  Assert.IsTrue(Record.RecordCount = 2, "We should have exactly two records")
+		  
+		  System.DebugLog(DB.Find("Groups").Join("","Users").On("Groups.userId", "=", "Users.id").Compile())
+		  Record = DB.Find("Groups").Join("","Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
+		  System.DebugLog(ShowSelect(Record))
+		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
+		  
+		  Record = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  System.DebugLog("ENDS TESTS FOR QueryBuilder.Join()")
 		End Sub
 	#tag EndMethod
 
