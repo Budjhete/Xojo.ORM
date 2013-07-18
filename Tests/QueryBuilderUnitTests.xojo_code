@@ -74,23 +74,16 @@ Inherits TestGroup
 		Sub WhereTest()
 		  System.DebugLog("BEGINS TESTS QueryBuilder.Where()")
 		  Dim Record As RecordSet
-		  Dim InsertValeurs() As Variant = Array("Paul", "Willy", 0)
-		  InsertValeurs.Remove(2)
+		  
 		  // Creates a new entry in the Database
-		  DB.Insert("Users", Array("username", "password")).Values(InsertValeurs).Execute(ORMTestDatabase)
-		  InsertValeurs = Array("Paul", "1234", 0)
-		  InsertValeurs.Remove(2)
-		  DB.Insert("Users", Array("username", "password")).Values(InsertValeurs).Execute(ORMTestDatabase)
+		  DB.Insert("Users", Array("username", "password")).Values("Paul", "Willy").Execute(ORMTestDatabase)
+		  DB.Insert("Users", Array("username", "password")).Values("Paul", "1234").Execute(ORMTestDatabase)
 		  
 		  // Creates a second entry with an empty field in the Database
-		  InsertValeurs = Array("John Lajoie", 0)
-		  InsertValeurs.Remove(1)
-		  DB.Insert("Users", Array("username")).Values(InsertValeurs).Execute(ORMTestDatabase)
+		  DB.Insert("Users", Array("username")).Values("John Lajoie").Execute(ORMTestDatabase)
 		  
 		  // Create a third entry with all fields set
-		  InsertValeurs = Array("John Lajoie", "1234", 0)
-		  InsertValeurs.Remove(2)
-		  DB.Insert("Users", Array("username", "password")).Values(InsertValeurs).Execute(ORMTestDatabase)
+		  DB.Insert("Users", Array("username", "password")).Values("John Lajoie", "1234").Execute(ORMTestDatabase)
 		  
 		  // Looks up a record where the username contains "John" and where
 		  // the password is NULL or where the username contains "John" and where the password is "1234"
@@ -121,14 +114,12 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -157,19 +148,16 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -182,7 +170,6 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
