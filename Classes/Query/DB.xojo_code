@@ -11,12 +11,32 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pColumns() As String, pTableName As String) As QueryBuilder
+		Function Find(pTablesColumns() As JSONItem, pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
+		  Dim SelectPredicate As JSONItem
 		  
-		  pQueryBuilder.Append(new SelectQueryExpression(pColumns, pTableName))
+		  pQueryBuilder.Append(new SelectQueryExpression(pTablesColumns, pTableName))
 		  
 		  Return pQueryBuilder
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Find(pColumns() As String, pTableName As String) As QueryBuilder
+		  Dim pTableColumns As New JSONItem
+		  Dim child As New JSONItem
+		  
+		  pTableColumns.Value("TableName") = pTableName
+		  pTableColumns.Value("Alias") = pTableName
+		  
+		  // Sets the columns in a child JSONItem
+		  For i As Integer = 0 To pColumns.Ubound
+		    child.Append(pColumns(i))
+		  Next
+		  
+		  pTableColumns.Child("Columns") = child
+		  
+		  return Find(Array(pTableColumns), pTableName)
 		End Function
 	#tag EndMethod
 

@@ -3,8 +3,22 @@ Protected Class SelectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  return "SELECT " + QueryCompiler.Columns(mAlias, mColumns) + " FROM " + QueryCompiler.TableName(mTableName) + " AS " + QueryCompiler.TableName(mAlias)
+		  return "SELECT " + QueryCompiler.Columns(mTableNameColumns) + " FROM " + QueryCompiler.TableName(mTableName) + " AS " + QueryCompiler.TableName(mAlias)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pColumns() As JSONItem, pTableName As String)
+		  mTableNameColumns = pColumns
+		  mTableName = pTableName
+		  For i As Integer = 0 To mTableNameColumns.Ubound
+		    If mTableNameColumns(i).Value("TableName") = mTableName Then
+		      mAlias = mTableNameColumns(i).Lookup("Alias", pTableName)
+		      
+		      return
+		    End If
+		  Next
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -19,6 +33,14 @@ Implements QueryExpression
 		  mTableName = pTableName
 		  mAlias = pAlias
 		  
+		  Dim child As New JSONItem
+		  mTableNameColumns = Array(New JSONItem("{""TableName"":""" + mTableName + """,""Alias"":""" + pAlias + """}"))
+		  
+		  For i As Integer = 0 To pColumns.Ubound
+		    child.Append(pColumns(i))
+		  Next
+		  
+		  mTableNameColumns(0).Child("Columns") = child
 		End Sub
 	#tag EndMethod
 
@@ -51,6 +73,10 @@ Implements QueryExpression
 
 	#tag Property, Flags = &h21
 		Private mTableName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mTableNameColumns() As JSONItem
 	#tag EndProperty
 
 

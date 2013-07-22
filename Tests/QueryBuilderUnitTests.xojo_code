@@ -13,8 +13,14 @@ Inherits TestGroup
 		  DB.Insert("Groups", Array("name", "userId")).Values("Developpeur", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", Array("name")).Values("Gestionnaire").Execute(ORMTestDatabase)
 		  
-		  System.DebugLog(DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
-		  Record = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find(Array(_
+		  New JSONItem("{""TableName"":""Users"",""Columns"":[""*""]}"),_
+		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""*""]}")_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
+		  Record = DB.Find(Array(_
+		  New JSONItem("{""TableName"":""Users"",""Columns"":[""*""]}"),_
+		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""*""]}")_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
 		  
@@ -159,12 +165,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -193,16 +201,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -215,6 +226,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
