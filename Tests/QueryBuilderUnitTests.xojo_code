@@ -22,7 +22,7 @@ Inherits TestGroup
 		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""*""]}")_
 		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
-		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
+		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
 		  
 		  System.DebugLog(DB.Find("Groups").Join("LEFT", "Users").On("Groups.userId", "=", "Users.id").Compile())
 		  Record = DB.Find("Groups").Join("LEFT", "Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
