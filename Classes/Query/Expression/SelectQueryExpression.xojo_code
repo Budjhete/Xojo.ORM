@@ -14,7 +14,6 @@ Implements QueryExpression
 		  For i As Integer = 0 To mTableNameColumns.Ubound
 		    If mTableNameColumns(i).Value("TableName") = mTableName Then
 		      mAlias = mTableNameColumns(i).Lookup("Alias", pTableName)
-		      
 		      return
 		    End If
 		  Next
