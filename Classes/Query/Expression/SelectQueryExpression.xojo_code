@@ -8,7 +8,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumns() As JSONItem, pTableName As String)
+		Sub Constructor(pColumns() As Dictionary, pTableName As String)
 		  mTableNameColumns = pColumns
 		  mTableName = pTableName
 		  For i As Integer = 0 To mTableNameColumns.Ubound
@@ -29,18 +29,13 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Sub Constructor(pColumns() As String, pTableName As String, pAlias As String)
-		  mColumns = pColumns
-		  mTableName = pTableName
-		  mAlias = pAlias
-		  
-		  Dim child As New JSONItem
-		  mTableNameColumns = Array(New JSONItem("{""TableName"":""" + mTableName + """,""Alias"":""" + pAlias + """}"))
+		  mTableNameColumns = Array(New Dictionary("TableName": pTableName, "Alias": pAlias, "Columns": New Dictionary))
 		  
 		  For i As Integer = 0 To pColumns.Ubound
-		    child.Append(pColumns(i))
+		    mTableNameColumns(0).Value("Columns").Value(pColumns(i)) = pColumns(i)
 		  Next
 		  
-		  mTableNameColumns(0).Child("Columns") = child
+		  Constructor(mTableNameColumns, pTableName)
 		End Sub
 	#tag EndMethod
 
@@ -82,7 +77,7 @@ Implements QueryExpression
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableNameColumns() As JSONItem
+		Private mTableNameColumns() As Dictionary
 	#tag EndProperty
 
 

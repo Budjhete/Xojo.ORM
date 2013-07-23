@@ -17,30 +17,23 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pTablesColumns() As JSONItem, pTableName As String) As QueryBuilder
+		Function Find(pTablesColumns() As Dictionary, pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
-		  Dim SelectPredicate As JSONItem
 		  
 		  pQueryBuilder.Append(new SelectQueryExpression(pTablesColumns, pTableName))
 		  
-		  Return pQueryBuilder
+		  return pQueryBuilder
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Find(pColumns() As String, pTableName As String) As QueryBuilder
-		  Dim pTableColumns As New JSONItem
-		  Dim child As New JSONItem
-		  
-		  pTableColumns.Value("TableName") = pTableName
-		  pTableColumns.Value("Alias") = pTableName
+		  Dim pTableColumns As New Dictionary("TableName": pTableName, "Alias": pTableName, "Columns": New Dictionary)
 		  
 		  // Sets the columns in a child JSONItem
 		  For i As Integer = 0 To pColumns.Ubound
-		    child.Append(pColumns(i))
+		    pTableColumns.Value("Columns").Value(pColumns(i)) = pColumns(i)
 		  Next
-		  
-		  pTableColumns.Child("Columns") = child
 		  
 		  return Find(Array(pTableColumns), pTableName)
 		End Function

@@ -22,31 +22,29 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Columns(pTablesColumns() As JSONItem) As String
+		Function Columns(pTablesColumns() As Dictionary) As String
 		  Dim pColumns() As String
-		  Dim TableColumn As JSONItem
+		  Dim TableColumn As Dictionary
 		  
 		  For i As Integer = 0 To pTablesColumns.Ubound
-		    // FIX ME!
+		    // @FIXME
 		    // The condition can change latter. This is a draft
-		    If Not pTablesColumns(i).HasName("Columns") Then
+		    If Not pTablesColumns(i).HasKey("Columns") Then
 		      return ""
 		    End If
 		    
 		    // Gives the Alias the table name if it does not exist
-		    If Not pTablesColumns(i).HasName("Alias") Then
+		    If Not pTablesColumns(i).HasKey("Alias") Then
 		      pTablesColumns(i).Value("Alias") = pTablesColumns(i).Value("TableName")
 		    End If
 		    
-		    TableColumn = pTablesColumns(i).Child("Columns")
+		    TableColumn = pTablesColumns(i).Value("Columns")
 		    
 		    // Sets each column's full name for the query
-		    If TableColumn.IsArray Then
-		      For j As Integer = 0 To TableColumn.Count - 1
-		        // Should make <tableAlias>.<tableColumn>
-		        pColumns.Append(pTablesColumns(i).Value("Alias").StringValue + "." + TableColumn.Value(j).StringValue)
-		      Next
-		    End If
+		    For Each key As Variant In TableColumn.Keys
+		      // Should make <tableAlias>.<tableColumn>
+		      pColumns.Append(pTablesColumns(i).Value("Alias").StringValue + "." + key.StringValue)
+		    Next
 		  Next
 		  
 		  return QueryCompiler.Columns(pColumns)
