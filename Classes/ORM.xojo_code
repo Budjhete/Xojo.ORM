@@ -16,6 +16,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub BelongsTo(pTableName As String, pForeignKey As Integer)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub BelongsTo(pTableName As String, pForeignKey As Integer, pORM As ORM)
+		  p
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Changed() As Boolean
 		  return mChanged.Keys().Ubound >= 0
 		End Function
@@ -214,6 +226,18 @@ Inherits QueryBuilder
 		  GroupBy(pColumns)
 		  Return Me
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function HasOne(pTableName As String, pFarKey As String) As RecordSet
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasOne(pTableName As String, pFarKey As String, pORM As ORM)
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0

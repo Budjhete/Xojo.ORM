@@ -11,6 +11,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Expression(pExpression As String) As ExpressionQueryExpression
+		  Return new ExpressionQueryExpression(pExpression)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Find(pTablesColumns() As JSONItem, pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  Dim SelectPredicate As JSONItem
