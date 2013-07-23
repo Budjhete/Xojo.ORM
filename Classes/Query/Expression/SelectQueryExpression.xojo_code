@@ -45,6 +45,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Constructor(pTableName As String)
+		  Constructor(Array("*"), pTableName)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(pColumn As String, pTableName As String)
 		  Constructor(pColumn, pTableName, pTableName)
 		End Sub

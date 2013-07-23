@@ -16,14 +16,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub BelongsTo(pTableName As String, pForeignKey As Integer)
+		Function BelongsTo(pTableName As String, pForeignKey As Integer) As ORM
 		  
-		End Sub
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub BelongsTo(pTableName As String, pForeignKey As Integer, pORM As ORM)
-		  p
+		  
 		End Sub
 	#tag EndMethod
 
@@ -50,10 +50,6 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = New Dictionary()
 		  mChanged = New Dictionary()
-		  
-		  For Each pColumn As String In TableColumns()
-		    mData.Value(pColumn) = Nil
-		  Next
 		End Sub
 	#tag EndMethod
 
@@ -115,7 +111,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Data() As Dictionary
-		  return mData
+		  // @TODO merger mChanged sur mData
+		  Return mData
 		End Function
 	#tag EndMethod
 
@@ -190,7 +187,7 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  mQuery.Append(new SelectQueryExpression(TableColumns(), TableName()))
+		  mQuery.Append(new SelectQueryExpression(TableName()))
 		  mQuery.Append(new LimitQueryExpression(1))
 		  
 		  RaiseEvent Finding()
@@ -198,7 +195,7 @@ Inherits QueryBuilder
 		  Dim pRecordSet As RecordSet = Execute(pDatabase)
 		  
 		  // Fetch record set
-		  For Each pColumn As Variant In TableColumns()
+		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		  Next
 		  
@@ -216,7 +213,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  mQuery.Append(new SelectQueryExpression(TableColumns(), TableName()))
+		  mQuery.Append(new SelectQueryExpression(TableColumns(pDatabase), TableName()))
 		  Return Execute(pDatabase)
 		End Function
 	#tag EndMethod
@@ -225,6 +222,12 @@ Inherits QueryBuilder
 		Function GroupBy(pColumns() As String) As ORM
 		  GroupBy(pColumns)
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pTableName As String, pForeignKey As Variant, pFarTable As String, pFarKey As Variant) As Boolean
+		  
 		End Function
 	#tag EndMethod
 
@@ -250,6 +253,25 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Having(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Having(pColumn, pOperator, pValue)
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Initial() As Dictionary
+		  Return mData
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Initial(pColumn As String) As Variant
+		  Return mData.Value(pColumn)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Initial(pColumn As String, pValue As Variant) As ORM
+		  Data(pColumn, pValue)
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -323,8 +345,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function PrimaryKey() As String
+	#tag Method, Flags = &h0
+		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
 		End Function
@@ -373,19 +395,19 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function TableColumns() As String()
-		  // Retourne les colonnes de la table
-		  Raise New ORMException("Columns are not declared in " + TableName() + ".")
+	#tag Method, Flags = &h0
+		Function TableColumns(pDatabase As Database) As String()
+		  Dim pColumns() As String
 		  
+		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function TableName() As String
-		  // Retourne le nom de la table
-		  Raise New ORMException("Table is not declared.")
+		  While Not pRecordSet.EOF
+		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
+		    pRecordSet.MoveNext()
+		  WEnd
+		  
+		  Return pColumns
+		  
 		  
 		End Function
 	#tag EndMethod
@@ -393,9 +415,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Sub Unload()
 		  // Vide les données, pas les changements
-		  For Each pColumn As String In TableColumns()
-		    mData.Value(pColumn) = Nil
-		  Next
+		  mData.Clear()
 		End Sub
 	#tag EndMethod
 
@@ -503,6 +523,10 @@ Inherits QueryBuilder
 		Private mData As Dictionary
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		TableName As String
+	#tag EndProperty
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
@@ -534,6 +558,12 @@ Inherits QueryBuilder
 			Group="ID"
 			Type="String"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TableName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
