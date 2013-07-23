@@ -34,7 +34,7 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
 		  
-		  Record = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.user").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  Record = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
 		  System.DebugLog("ENDS TESTS FOR QueryBuilder.Join()")
 		End Sub
 	#tag EndMethod
