@@ -152,7 +152,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Sub Join(pDirection As String, pTableName As String)
-		  mQuery.Append(new JoinQueryExpression(pDirection, pTableName))
+		  Join(pDirection, pTableName, pTableName)
 		End Sub
 	#tag EndMethod
 
@@ -160,6 +160,19 @@ Implements QueryExpression
 		Function Join(pDirection As String, pTableName As String) As QueryBuilder
 		  Join(pDirection, pTableName)
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Join(pDirection As String, pTableName As String, pAlias As String)
+		  mQuery.Append(new JoinQueryExpression(pDirection, pTableName, pAlias))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Join(pDirection As String, pTableName As String, pAlias As String) As QueryBuilder
+		  Join(pDirection, pTableName, pAlias)
+		  return Me
 		End Function
 	#tag EndMethod
 
