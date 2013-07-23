@@ -79,7 +79,7 @@ Inherits QueryBuilder
 		    pColumns.Append(pKey.StringValue)
 		  Next
 		  
-		  mQuery.Append(new InsertQueryExpression(TableName(), pColumns))
+		  mQuery.Append(new InsertQueryExpression(Me.TableName, pColumns))
 		  mQuery.Append(new ValuesQueryExpression(mChanged.Values()))
 		  
 		  Execute(pDatabase)
@@ -92,7 +92,7 @@ Inherits QueryBuilder
 		  // Clear changes, they are saved in mData
 		  Clear()
 		  
-		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey(), TableName()).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
+		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey(), Me.TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		  
 		  // Update primary key from the last row inserted in this table
 		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
@@ -138,14 +138,14 @@ Inherits QueryBuilder
 		    Return mChanged.Value(pColumn)
 		  End If
 		  
-		  Return mData.Value(pColumn)
+		  Return mData.Value(pColumn, Nil)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Data(pColumn As String, pValue As Variant)
 		  // If it is different than the original data, it has changed
-		  If mData.Value(pColumn) <> pValue Then
+		  If Initial(pColumn) <> pValue Then
 		    RaiseEvent Changing()
 		    mChanged.Value(pColumn) = pValue
 		    RaiseEvent Changed()
@@ -187,7 +187,8 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  mQuery.Append(new SelectQueryExpression(TableName()))
+		  
+		  mQuery.Append(new SelectQueryExpression(Me.TableName))
 		  mQuery.Append(new LimitQueryExpression(1))
 		  
 		  RaiseEvent Finding()
@@ -264,15 +265,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Initial(pColumn As String) As Variant
-		  Return mData.Value(pColumn)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Initial(pColumn As String, pValue As Variant) As ORM
-		  Data(pColumn, pValue)
-		  Return Me
+		Function Initial(pColumn As String, pDefault As Variant = Nil) As Variant
+		  Return mData.Value(pColumn, pDefault)
 		End Function
 	#tag EndMethod
 
@@ -413,6 +407,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function TableName() As String
+		  Return Introspection.GetType(Me).Name
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Unload()
 		  // Vide les données, pas les changements
 		  mData.Clear()
@@ -434,7 +434,7 @@ Inherits QueryBuilder
 		  
 		  RaiseEvent Updating()
 		  
-		  mQuery.Append(new UpdateQueryExpression(TableName()))
+		  mQuery.Append(new UpdateQueryExpression(TableName))
 		  Set(mChanged)
 		  Where(PrimaryKey(), "=", Pk())
 		  
@@ -521,10 +521,6 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h21
 		Private mData As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		TableName As String
 	#tag EndProperty
 
 

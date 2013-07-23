@@ -113,11 +113,16 @@ Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Value(pValue As Variant) As String
 		  Select Case pValue
+		    
+		  Case IsA QueryExpression
+		    Return "(" + QueryExpression(pValue).Compile + ")"
+		    
 		  Case Nil
 		    Return "NULL"
-		  Else
-		    Return "'" + pValue.StringValue + "'"
+		    
 		  End Select
+		  
+		  Return "'" + pValue.StringValue + "'"
 		  
 		  
 		End Function

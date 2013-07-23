@@ -2,12 +2,6 @@
 Protected Class GroupTest
 Inherits ORM
 	#tag Method, Flags = &h0
-		Function TableColumns() As String()
-		  Return Array("id", "user", "name")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function TableName() As String
 		  Return "Groups"
 		End Function
@@ -44,6 +38,12 @@ Inherits ORM
 			Group="ID"
 			Type="String"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TableName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

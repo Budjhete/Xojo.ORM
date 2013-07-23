@@ -8,6 +8,12 @@ Implements QueryExpression
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(pColumn As String, pOperator As String, pQueryExpression As QueryExpression)
+		  Constructor(pColumn, pOperator, pQueryExpression)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000
 		Sub Constructor(pColumn As String, pOperator As String, pValue As Variant)
 		  mColumn = pColumn
