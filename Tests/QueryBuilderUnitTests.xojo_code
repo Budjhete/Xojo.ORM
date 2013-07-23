@@ -37,9 +37,15 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
 		  
-		  
-		  System.DebugLog(DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Where("Users.username", "LIKE", "%ete%").Compile())
-		  Record = DB.Find("Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  // Tests for a left Join on the Users table with a Where condition
+		  System.DebugLog(DB.Find(Array(_
+		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
+		  New JSONItem("{""TableName"":""Groups"",""Alias"":""G"",""Columns"":[""*""]}")_
+		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Compile())
+		  Record = DB.Find(Array(_
+		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
+		  New JSONItem("{""TableName"":""Groups"",""Alias"":""G"",""Columns"":[""*""]}")_
+		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  
 		  DB.Insert("Users", Array("username", "password")).Values("Hete", ".ca").Execute(ORMTestDatabase)
