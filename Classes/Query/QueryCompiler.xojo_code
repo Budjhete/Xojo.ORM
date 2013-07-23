@@ -1,9 +1,12 @@
 #tag Module
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
-		Function Column(pColumn As String) As String
-		  // Compile column
+		Function Column(pColumn As Variant) As String
+		  If pColumn IsA QueryExpression Then
+		    Return QueryExpression(pColumn).Compile()
+		  End If
 		  
+		  // Compile column
 		  Dim pParts() As String = Split(pColumn, ".")
 		  
 		  For i As Integer = 0 To pParts.Ubound
@@ -22,38 +25,6 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Columns(pTablesColumns() As JSONItem) As String
-		  Dim pColumns() As String
-		  Dim TableColumn As JSONItem
-		  
-		  For i As Integer = 0 To pTablesColumns.Ubound
-		    // FIX ME!
-		    // The condition can change latter. This is a draft
-		    If Not pTablesColumns(i).HasName("Columns") Then
-		      return ""
-		    End If
-		    
-		    // Gives the Alias the table name if it does not exist
-		    If Not pTablesColumns(i).HasName("Alias") Then
-		      pTablesColumns(i).Value("Alias") = pTablesColumns(i).Value("TableName")
-		    End If
-		    
-		    TableColumn = pTablesColumns(i).Child("Columns")
-		    
-		    // Sets each column's full name for the query
-		    If TableColumn.IsArray Then
-		      For j As Integer = 0 To TableColumn.Count - 1
-		        // Should make <tableAlias>.<tableColumn>
-		        pColumns.Append(pTablesColumns(i).Value("Alias").StringValue + "." + TableColumn.Value(j).StringValue)
-		      Next
-		    End If
-		  Next
-		  
-		  return QueryCompiler.Columns(pColumns)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Columns(pColumns() As String) As String
 		  For i As Integer = 0 To pColumns.Ubound
 		    pColumns(i) = QueryCompiler.Column(pColumns(i))
@@ -64,14 +35,15 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Columns(pAlias As String, pColumns() As String) As String
-		  // Compile columns and prepend an alias
+		Function Columns(pColumns() As Variant) As String
+		  // Compile values
+		  Dim pCompiledColumns() As String
 		  
 		  For i As Integer = 0 To pColumns.Ubound
-		    pColumns(i) = pAlias + "." + pColumns(i)
+		    pCompiledColumns.Append(QueryCompiler.Value(pColumns(i)))
 		  Next
 		  
-		  Return QueryCompiler.Columns(pColumns)
+		  Return Join(pCompiledColumns, ", ")
 		End Function
 	#tag EndMethod
 
@@ -106,7 +78,36 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function TableName(pTableName As String) As String
+		  // Table name without alias
 		  Return "`" + pTableName + "`"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableName(pTableName As String, pAlias As String) As String
+		  Return "`" + pTableName + "` AS `" + pAlias + "`"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableNames(pTableNames() As String) As String
+		  // Table names without alias
+		  
+		  For i As Integer = 0 To pTableNames.Ubound
+		    pTableNames(i) = QueryCompiler.TableName(pTableNames(i))
+		  Next
+		  
+		  Return Join(pTableNames, ", ")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableNames(pTableNames() As String, pAlias() As String) As String
+		  For i As Integer = 0 To pTableNames.Ubound
+		    pTableNames(i) = QueryCompiler.TableName(pTableNames(i), pAlias(i))
+		  Next
+		  
+		  Return Join(pTableNames, ", ")
 		End Function
 	#tag EndMethod
 
@@ -117,7 +118,7 @@ Protected Module QueryCompiler
 		  Case IsA QueryExpression
 		    Return "(" + QueryExpression(pValue).Compile + ")"
 		    
-		  Case Nil
+		  Case pValue.IsNull, Nil
 		    Return "NULL"
 		    
 		  End Select
