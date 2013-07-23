@@ -29,11 +29,12 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Sub Constructor(pColumns() As String, pTableName As String, pAlias As String)
 		  mTableNameColumns = Array(New Dictionary("TableName": pTableName, "Alias": pAlias, "Columns": New Dictionary))
-		  
+		  Dim pTableColumn As New Dictionary
 		  For i As Integer = 0 To pColumns.Ubound
-		    mTableNameColumns(0).Value("Columns").Value(pColumns(i)) = pColumns(i)
+		    pTableColumn.Value(pColumns(i)) = pColumns(i)
 		  Next
 		  
+		  mTableNameColumns(0).Value("Columns") = pTableColumn
 		  Constructor(mTableNameColumns, pTableName)
 		End Sub
 	#tag EndMethod

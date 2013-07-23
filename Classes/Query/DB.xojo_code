@@ -30,10 +30,13 @@ Protected Module DB
 		Function Find(pColumns() As String, pTableName As String) As QueryBuilder
 		  Dim pTableColumns As New Dictionary("TableName": pTableName, "Alias": pTableName, "Columns": New Dictionary)
 		  
-		  // Sets the columns in a child JSONItem
+		  Dim pTableColumn As New Dictionary
+		  // Sets the columns in a child Dictionary
 		  For i As Integer = 0 To pColumns.Ubound
-		    pTableColumns.Value("Columns").Value(pColumns(i)) = pColumns(i)
+		    pTableColumn.Value(pColumns(i)) = pColumns(i)
 		  Next
+		  
+		  pTableColumns.Value("Columns") = pTableColumn
 		  
 		  return Find(Array(pTableColumns), pTableName)
 		End Function
