@@ -13,6 +13,7 @@ Inherits TestGroup
 		  DB.Insert("Groups", Array("name", "userId")).Values("Developpeur", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", Array("name")).Values("Gestionnaire").Execute(ORMTestDatabase)
 		  
+		  // Tests for a simple left join on the Users table. The syntax is likely to change very soon
 		  System.DebugLog(DB.Find(Array(_
 		  New JSONItem("{""TableName"":""Users"",""Columns"":[""*""]}"),_
 		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""*""]}")_
@@ -24,11 +25,13 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
 		  
+		  // Tests for a simple left join on the Groups table.
 		  System.DebugLog(DB.Find("Groups").Join("LEFT", "Users").On("Groups.userId", "=", "Users.id").Compile())
 		  Record = DB.Find("Groups").Join("LEFT", "Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 2, "We should have exactly two records")
 		  
+		  // Tests for an inner Join on the Groups table
 		  System.DebugLog(DB.Find("Groups").Join("","Users").On("Groups.userId", "=", "Users.id").Compile())
 		  Record = DB.Find("Groups").Join("","Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
