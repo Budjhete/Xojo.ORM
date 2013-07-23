@@ -196,13 +196,13 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub On(pColumn As String, pOperator As String, pValue As Variant)
+		Sub On(pColumn As String, pOperator As String, pValue As String)
 		  mQuery.Append(new OnQueryExpression(pColumn, pOperator, pValue))
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
+		Function On(pColumn As String, pOperator As String, pValue As String) As QueryBuilder
 		  On(pColumn, pOperator, pValue)
 		  Return Me
 		End Function

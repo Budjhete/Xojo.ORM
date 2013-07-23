@@ -3,16 +3,17 @@ Protected Class OnQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  return "ON " + QueryCompiler.Column(mColumn) + QueryCompiler.Operator(mOperator) + QueryCompiler.Value(mValue)
+		  return "ON " + QueryCompiler.Column(mLeftColumn) + QueryCompiler.Operator(mOperator) + QueryCompiler.Column(mRightColumn)
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumn As String, pOperator As String, pValue As Variant)
-		  mColumn = pColumn
+		Sub Constructor(pLeftColumn As String, pOperator As String, pRightColumn As String)
+		  mLeftColumn = pLeftColumn
 		  mOperator = pOperator
-		  mValue = pValue
+		  mRightColumn = pRightColumn
+		  
 		End Sub
 	#tag EndMethod
 
@@ -26,7 +27,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumn As String
+		Private mLeftColumn As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -34,7 +35,7 @@ Implements QueryExpression
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mValue As Variant
+		Private mRightColumn As String
 	#tag EndProperty
 
 
