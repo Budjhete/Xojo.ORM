@@ -61,6 +61,18 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 4, "We should have exactly four records on this cross join")
 		  
+		  // Tests for a LEFT JOIN on the User table with just a select amount of columns on both sides
+		  System.DebugLog(DB.Find(Array(_
+		  New JSONItem("{""TableName"":""Users"",""Columns"":[""id"",""username"",""password""]}"),_
+		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""name""]}")_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
+		  Record = DB.Find(Array(_
+		  New JSONItem("{""TableName"":""Users"",""Columns"":[""id"",""username"",""password""]}"),_
+		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""name""]}")_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
+		  System.DebugLog(ShowSelect(Record))
+		  Assert.IsTrue(Record.RecordCount = 2, "We should have exactly two record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
+		  
 		  System.DebugLog("ENDS TESTS FOR QueryBuilder.Join()")
 		End Sub
 	#tag EndMethod
