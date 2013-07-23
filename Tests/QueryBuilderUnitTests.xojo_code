@@ -48,6 +48,7 @@ Inherits TestGroup
 		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  
+		  // Tests for a CROSS JOIN on the Users table
 		  DB.Insert("Users", Array("username", "password")).Values("Hete", ".ca").Execute(ORMTestDatabase)
 		  System.DebugLog(DB.Find(Array(_
 		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
@@ -58,7 +59,7 @@ Inherits TestGroup
 		  New JSONItem("{""TableName"":""Groups"",""Alias"":""Groups"",""Columns"":[""*""]}")_
 		  ), "Users").Join("CROSS", "Groups").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
-		  Assert.IsTrue(Record.RecordCount = 4, "We should have exactlu four records on this cross join")
+		  Assert.IsTrue(Record.RecordCount = 4, "We should have exactly four records on this cross join")
 		  
 		  System.DebugLog("ENDS TESTS FOR QueryBuilder.Join()")
 		End Sub
