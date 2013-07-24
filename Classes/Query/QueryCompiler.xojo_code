@@ -1,7 +1,20 @@
 #tag Module
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
-		Function Column(pColumn As String) As String
+		Function Column(pColumn As Variant) As String
+		  Select Case pColumn
+		    
+		  Case IsA ExpressionQueryExpression
+		    Return ExpressionQueryExpression(pColumn).Compile
+		    
+		  Case IsA QueryExpression
+		    Return "(" + QueryExpression(pColumn).Compile + ")"
+		    
+		  Case Nil
+		    Return "NULL"
+		    
+		  End Select
+		  
 		  // Compile column
 		  Dim pParts() As String = Split(pColumn, ".")
 		  
@@ -21,34 +34,12 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Columns(pColumns() As String) As String
-		  For i As Integer = 0 To pColumns.Ubound
-		    pColumns(i) = QueryCompiler.Column(pColumns(i))
-		  Next
-		  
-		  Return Join(pColumns, ", ")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Columns(pColumns() As Variant) As String
+		  // Compile values
 		  Dim pCompiledColumns() As String
 		  
-		  For Each pColumn As Variant In pColumns
-		    
-		    Select Case pColumn
-		      
-		    Case IsA QueryExpression
-		      
-		      pCompiledColumns.Append(QueryExpression(pColumn).Compile)
-		      
-		    Else
-		      
-		      pCompiledColumns.Append(QueryCompiler.Column(pColumn.StringValue))
-		      
-		      
-		    End Select
-		    
+		  For i As Integer = 0 To pColumns.Ubound
+		    pCompiledColumns.Append(QueryCompiler.Column(pColumns(i)))
 		  Next
 		  
 		  Return Join(pCompiledColumns, ", ")
@@ -100,15 +91,14 @@ Protected Module QueryCompiler
 		Function Value(pValue As Variant) As String
 		  Select Case pValue
 		    
+		  Case IsA ExpressionQueryExpression
+		    Return ExpressionQueryExpression(pValue).Compile
+		    
 		  Case IsA QueryExpression
 		    Return "(" + QueryExpression(pValue).Compile + ")"
 		    
-		  Case pValue.IsNull, Nil
+		  Case Nil
 		    Return "NULL"
-		    
-		  Case pValue.IsNumeric
-		    // Do not quote numeric value
-		    Return pValue.StringValue
 		    
 		  End Select
 		  

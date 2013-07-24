@@ -8,7 +8,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pColumns() As String)
+		Sub Constructor(pTableName As String, pColumns() As Variant)
 		  mTableName = pTableName
 		  mColumns = pColumns
 		End Sub
@@ -22,7 +22,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumns() As String
+		Private mColumns() As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

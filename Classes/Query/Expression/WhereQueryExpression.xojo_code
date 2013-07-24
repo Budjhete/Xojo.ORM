@@ -9,10 +9,10 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pColumn As String, pOperator As String, pValue As Variant)
-		  mColumn = pColumn
+		Sub Constructor(pLeft As Variant, pOperator As String, pRight As Variant)
+		  mLeft = pLeft
 		  mOperator = pOperator
-		  mValue = pValue
+		  mRight = pRight
 		End Sub
 	#tag EndMethod
 
@@ -24,13 +24,13 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  Return QueryCompiler.Column(mColumn) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Value(mValue)
+		  Return QueryCompiler.Column(mLeft) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Value(mRight)
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mColumn As String
+		Private mLeft As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -38,7 +38,7 @@ Implements QueryExpression
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mValue As Variant
+		Private mRight As Variant
 	#tag EndProperty
 
 

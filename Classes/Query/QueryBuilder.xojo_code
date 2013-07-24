@@ -2,40 +2,25 @@
 Protected Class QueryBuilder
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Sub AndHaving(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new AndHavingQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function AndHaving(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  AndHaving(pColumn, pOperator, pValue)
+		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new AndHavingQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub AndWhere(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new AndWhereQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function AndWhere(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  AndWhere(pColumn, pOperator, pValue)
+		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new AndWhereQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Append(pQueryExpression As QueryExpression)
-		  mQuery.Append(pQueryExpression)
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Append(pQueryExpression As QueryExpression) As QueryBuilder
-		  Append(pQueryExpression)
+		  mQuery.Append(pQueryExpression)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -81,7 +66,7 @@ Implements QueryExpression
 		  
 		  pDatabase.Commit()
 		  
-		  Reset()
+		  Call Reset()
 		  
 		  RaiseEvent Executed()
 		End Sub
@@ -101,7 +86,7 @@ Implements QueryExpression
 		  
 		  pDatabase.Commit()
 		  
-		  Reset()
+		  Call Reset()
 		  
 		  RaiseEvent Executed()
 		  
@@ -110,107 +95,71 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub From(pTableName As String)
-		  From(pTableName, pTableName)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function From(pTableName As String) As QueryBuilder
-		  From(pTableName)
-		  Return Me
+		  Return From(pTableName, pTableName)
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub From(pTableName As String, pTableAlias As String)
-		  mQuery.Append(new FromQueryExpression(pTableName, pTableAlias))
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function From(pTableName As String, pTableAlias As String) As QueryBuilder
-		  From(pTableName, pTableAlias)
+		  mQuery.Append(new FromQueryExpression(pTableName, pTableAlias))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub GroupBy(pColumns() As String)
+		Function GroupBy(pColumns() As Variant) As QueryBuilder
 		  mQuery.Append(new GroupByQueryExpression(pColumns))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function GroupBy(pColumns() As String) As QueryBuilder
-		  GroupBy(pColumns)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Having(pValues As Dictionary)
-		  For Each pKey As Variant In pValues.Keys()
-		    Where(pKey.StringValue, "=", pValues.Value(pKey))
+		Function GroupBy(pColumn As Variant) As QueryBuilder
+		  Return GroupBy(Array(pColumn))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Having(pCriterias As Dictionary) As QueryBuilder
+		  // Applies a dictionary of criterias
+		  
+		  For Each pKey As Variant In pCriterias.Keys()
+		    Call Having(pKey, "=", pCriterias.Value(pKey))
 		  Next
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Having(pValues As Dictionary) As QueryBuilder
-		  Having(pValues)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Having(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new HavingQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Having(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  Having(pColumn, pOperator, pValue)
+		Function Having(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new HavingQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Join(pTableName As String)
-		  Join(pTableName, pTableName)
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Join(pTableName As String) As QueryBuilder
-		  Join(pTableName)
-		  Return Me
+		  Return Join(pTableName, pTableName)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Join(pTableName As String, pAlias As String)
-		  mQuery.Append(new JoinQueryExpression(pTableName, pAlias))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Join(pTableName As String, pAlias As String) As QueryBuilder
-		  Join(pTableName, pAlias)
+		  mQuery.Append(new JoinQueryExpression(pTableName, pAlias))
+		  
 		  return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Limit(pLimit As Integer)
-		  mQuery.Append(new LimitQueryExpression(pLimit))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Limit(pLimit As Integer) As QueryBuilder
-		  Limit(pLimit)
+		  mQuery.Append(new LimitQueryExpression(pLimit))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -222,158 +171,120 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Offset(pOffset As Integer)
-		  mQuery.Append(new OffsetQueryExpression(pOffset))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As QueryBuilder
-		  Offset(pOffset)
+		  mQuery.Append(new OffsetQueryExpression(pOffset))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub On(pColumn As String, pOperator As String, pValue As String)
-		  mQuery.Append(new OnQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function On(pColumn As String, pOperator As String, pValue As String) As QueryBuilder
-		  On(pColumn, pOperator, pValue)
+		Function On(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new OnQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub OrderBy(pColumns() As String, pDirection As String = "ASC")
-		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirection))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function OrderBy(pColumns() As String, pDirection As String = "ASC") As QueryBuilder
-		  OrderBy(pColumns, pDirection)
+		Function OrderBy(pColumns() As Variant, pDirections() As String) As QueryBuilder
+		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub OrderBy(pColumn As String, pDirection As String = "ASC")
-		  mQuery.Append(new OrderByQueryExpression(pColumn, pDirection))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function OrderBy(pColumn As String, pDirection As String = "ASC") As QueryBuilder
-		  OrderBy(pColumn, pDirection)
+		Function OrderBy(pColumn As Variant, pDirection As String = "ASC") As QueryBuilder
+		  mQuery.Append(new OrderByQueryExpression(Array(pColumn), Array(pDirection)))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub OrHaving(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new OrHavingQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function OrHaving(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  OrHaving(pColumn, pOperator, pValue)
+		Function OrHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new OrHavingQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub OrWhere(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new OrWhereQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function OrWhere(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  OrWhere(pColumn, pOperator, pValue)
+		Function OrWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new OrWhereQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Reset()
-		  // Réinitalise le Query Builder
-		  Redim mQuery(-1)
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Reset() As QueryBuilder
-		  Reset()
+		  // Réinitalise le Query Builder
+		  Redim mQuery(-1)
+		  
 		  Return Me
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Set(pValues As Dictionary)
-		  mQuery.Append(new SetQueryExpression(pValues))
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Set(pValues As Dictionary) As QueryBuilder
-		  Set(pValues)
+		  mQuery.Append(new SetQueryExpression(pValues))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Using(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new UsingQueryExpression(pColumn, pOperator, pValue))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Using(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  Using(pColumn, pOperator, pValue)
-		  Return Me
+		Function Set(ParamArray pValues As Pair) As QueryBuilder
+		  Dim pDictionary As Dictionary
+		  
+		  For Each pValue As Pair In pValues
+		    pDictionary.Value(pValue.Left) = pValue.Right
+		  Next
+		  
+		  Return Set(pDictionary)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Values(pValues() As Variant)
-		  mQuery.Append(new ValuesQueryExpression(pValues))
-		End Sub
+		Function Using(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new UsingQueryExpression(pLeft, pOperator, pRight))
+		  
+		  Return Me
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Values(pValues() As Variant) As QueryBuilder
-		  Values(pValues)
+		  mQuery.Append(new ValuesQueryExpression(pValues))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Values(ParamArray pValues As Variant)
-		  Values(pValues)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues As Variant) As QueryBuilder
-		  Values(pValues)
-		  return Me
+		  Return Values(pValues)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Where(pColumn As String, pOperator As String, pValue As Variant)
-		  mQuery.Append(new WhereQueryExpression(pColumn, pOperator, pValue))
-		End Sub
+		Function Where(pCriterias As Dictionary) As QueryBuilder
+		  // Applies a dictionary of criterias
+		  
+		  For Each pKey As Variant In pCriterias.Keys()
+		    Call Having(pKey, "=", pCriterias.Value(pKey))
+		  Next
+		  
+		  Return Me
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pColumn As String, pOperator As String, pValue As Variant) As QueryBuilder
-		  Where(pColumn, pOperator, pValue)
+		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new WhereQueryExpression(pLeft, pOperator, pRight))
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -388,8 +299,8 @@ Implements QueryExpression
 	#tag EndHook
 
 
-	#tag Property, Flags = &h1
-		Protected mQuery() As QueryExpression
+	#tag Property, Flags = &h21
+		Private mQuery() As QueryExpression
 	#tag EndProperty
 
 

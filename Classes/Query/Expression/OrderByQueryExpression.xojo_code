@@ -3,22 +3,23 @@ Protected Class OrderByQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  return "ORDER BY " + QueryCompiler.Columns(mColumns) + " " + mDirection
+		  Dim pCompiledColumns() As String
+		  
+		  // Compile each column and add its direction
+		  For i As Integer = 0 To mColumns.UBound
+		    pCompiledColumns.Append QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
+		  Next
+		  
+		  Return "ORDER BY " + Join(pCompiledColumns, ", ")
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumns() As String, pDirection As String = "ASC")
+		Sub Constructor(pColumns() As Variant, pDirections() As String)
 		  mColumns = pColumns
-		  mDirection = pDirection
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Constructor(pColumn As String, pDirection As String = "ASC")
-		  Constructor(Array(pColumn), pDirection)
+		  mDirections = pDirections
 		End Sub
 	#tag EndMethod
 
@@ -30,11 +31,11 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumns() As String
+		Private mColumns() As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mDirection As String
+		Private mDirections() As String
 	#tag EndProperty
 
 

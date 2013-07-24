@@ -2,15 +2,17 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
-		Function AndHaving(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  AndHaving(pColumn, pOperator, pValue)
+		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
+		  Call Super.AndHaving(pLeft, pOperator, pRight)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function AndWhere(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  AndWhere(pColumn, pOperator, pValue)
+		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
+		  Call Super.AndWhere(pLeft, pOperator, pRight)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -40,16 +42,32 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Clear()
+		Function Clear() As ORM
 		  // Clear changes, not data
 		  mChanged.Clear()
-		End Sub
+		  
+		  Return Me
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
 		Sub Constructor()
 		  mData = New Dictionary()
 		  mChanged = New Dictionary()
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pORM As ORM)
+		  // Use a copy of mData to avoid external changes
+		  For Each pKey As Variant In pORM.mData.Keys()
+		    mData.Value(pKey) = pORM.mData.Value(pKey)
+		  Next
+		  
+		  // Use a copy of mChanged to avoid external changes
+		  For Each pKey As Variant In pORM.mChanged.Keys()
+		    mChanged.Value(pKey) = pORM.mChanged.Value(pKey)
+		  Next
 		End Sub
 	#tag EndMethod
 
@@ -62,32 +80,25 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Create(pDatabase As Database)
+		Function Create(pDatabase As Database) As ORM
 		  if Loaded() then
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
 		  end
 		  
 		  RaiseEvent Creating()
 		  
-		  Dim pColumns() As String
-		  
-		  // Cast columns to string
-		  For Each pKey As Variant In mChanged.Keys()
-		    pColumns.Append(pKey.StringValue)
-		  Next
-		  
-		  mQuery.Append(new InsertQueryExpression(Me.TableName, pColumns))
-		  mQuery.Append(new ValuesQueryExpression(mChanged.Values()))
-		  
-		  Execute(pDatabase)
+		  DB.Insert(TableName(), mChanged.Keys()).Values(mChanged.Values()).Execute(pDatabase)
 		  
 		  // Update data
 		  For Each pKey As Variant In mChanged.Keys()
 		    mData.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
+		  // Reset QueryBuilder
+		  Call Reset()
+		  
 		  // Clear changes, they are saved in mData
-		  Clear()
+		  Call Clear()
 		  
 		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		  
@@ -96,34 +107,29 @@ Inherits QueryBuilder
 		  
 		  RaiseEvent Created()
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Create(pDatabase As Database) As ORM
-		  Create(pDatabase)
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Data() As Dictionary
-		  // @TODO merger mChanged sur mData
-		  Return mData
+		  Dim pData As Dictionary = Initial()
+		  
+		  // Merge mChanged over mData
+		  For Each pKey As Variant In mChanged.Keys()
+		    pData.Value(pKey) = mChanged.Value(pKey)
+		  Next
+		  
+		  Return pData
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Data(pData as Dictionary)
-		  For Each pKey As Variant In pData.Keys()
-		    Data(pKey, pData.Value(pKey))
-		  Next
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Data(pData as Dictionary) As ORM
-		  Data(pData)
+		  For Each pKey As Variant In pData.Keys()
+		    Call Data(pKey, pData.Value(pKey))
+		  Next
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -135,12 +141,12 @@ Inherits QueryBuilder
 		    Return mChanged.Value(pColumn)
 		  End If
 		  
-		  Return mData.Value(pColumn, Nil)
+		  Return mData.Lookup(pColumn, Nil)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Data(pColumn As String, pValue As Variant)
+		Function Data(pColumn As String, pValue As Variant) As ORM
 		  // If it is different than the original data, it has changed
 		  If Initial(pColumn) <> pValue Then
 		    RaiseEvent Changing()
@@ -148,13 +154,8 @@ Inherits QueryBuilder
 		    RaiseEvent Changed()
 		  End If
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Data(pColumn As String, pValue As Variant) As ORM
-		  Data(pColumn, pValue)
 		  Return Me
+		  
 		End Function
 	#tag EndMethod
 
@@ -166,37 +167,26 @@ Inherits QueryBuilder
 		  
 		  RaiseEvent Deleting()
 		  
-		  mQuery.Append(new DeleteQueryExpression(TableName()))
-		  Where(PrimaryKey(), "=", Pk())
+		  Append(new DeleteQueryExpression(TableName())).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
 		  
-		  Execute(pDatabase)
+		  Call Unload()
 		  
-		  Unload()
-		  Clear()
+		  Call Clear()
 		  
 		  RaiseEvent Deleted()
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Find(pDatabase As Database)
+		Function Find(pDatabase As Database) As ORM
 		  If Loaded() Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  Dim pVariantColumns() As Variant
-		  
-		  For Each pColumn As String In TableColumns(pDatabase)
-		    pVariantColumns.Append(pColumn)
-		  Next
-		  
-		  mQuery.Append(new SelectQueryExpression(pVariantColumns))
-		  
-		  From(TableName).Limit(1)
-		  
 		  RaiseEvent Finding()
 		  
-		  Dim pRecordSet As RecordSet = Execute(pDatabase)
+		  // Add SELECT and LIMIT 1 to the query
+		  Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Limit(1).Execute(pDatabase)
 		  
 		  // Fetch record set
 		  For Each pColumn As Variant In TableColumns(pDatabase)
@@ -205,41 +195,29 @@ Inherits QueryBuilder
 		  
 		  RaiseEvent Found()
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Find(pDatabase As Database) As ORM
-		  Find(pDatabase)
 		  Return Me
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  Dim pVariantColumns() As Variant
-		  
-		  For Each pColumn As String In TableColumns(pDatabase)
-		    pVariantColumns.Append(pColumn)
-		  Next
-		  
-		  mQuery.Append(new SelectQueryExpression(pVariantColumns))
-		  
-		  From(TableName())
-		  
-		  Return Execute(pDatabase)
+		  Return DB.Find(TableColumns(pDatabase)).From(TableName()).Execute(pDatabase)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub From(pColumn As Variant)
-		  From(pColumn)
-		End Sub
+		Function GroupBy(pColumns() As Variant) As ORM
+		  Call Super.GroupBy(pColumns)
+		  
+		  Return Me
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GroupBy(pColumns() As String) As ORM
-		  GroupBy(pColumns)
+		Function GroupBy(ParamArray pColumns As Variant) As ORM
+		  Call Super.GroupBy(pColumns)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -264,40 +242,59 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Having(pValues As Dictionary) As ORM
-		  Having(pValues)
+		  Call Super.Having(pValues)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Having(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  Having(pColumn, pOperator, pValue)
+		  Call Super.Having(pColumn, pOperator, pValue)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Initial() As Dictionary
-		  Return mData
+		  Dim pData As Dictionary
+		  
+		  // Use a copy of mData to avoid external changes
+		  For Each pKey As Variant In mData.Keys()
+		    pData.Value(pKey) = mData.Value(pKey)
+		  Next
+		  
+		  Return pData
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Initial(pColumn As String, pDefault As Variant = Nil) As Variant
-		  Return mData.Value(pColumn, pDefault)
+		Function Initial(pColumn As String) As Variant
+		  Return mData.Lookup(pColumn, Nil)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pDirection As String, pTableName As String) As ORM
-		  Join(pDirection, pTableName)
+		Function Join(pTableName As String) As ORM
+		  Call Super.Join(pTableName)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Join(pTableName As String, pTableAlias As String) As ORM
+		  Call Super.Join(pTableName, pTableAlias)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Limit(pLimit As Integer) As ORM
-		  Limit(pLimit)
+		  Call Super.Limit(pLimit)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -312,48 +309,56 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As ORM
-		  Offset(pOffset)
+		  Call Super.Offset(pOffset)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function On(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  On(pColumn, pOperator, pValue)
+		  Call Super.On(pColumn, pOperator, pValue)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumns() As String, pDirection As String = "ASC") As ORM
-		  OrderBy(pColumns, pDirection)
+		Function OrderBy(pColumns() As Variant, pDirections() As String) As ORM
+		  Call Super.OrderBy(pColumns, pDirections)
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumn As String, pDirection As String = "ASC") As ORM
-		  OrderBy(pColumn, pDirection)
+		Function OrderBy(pColumn As Variant, pDirection As String = "ASC") As ORM
+		  Call Super.OrderBy(pColumn, pDirection)
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function OrHaving(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  OrHaving(pColumn, pOperator, pValue)
+		  Call Super.OrHaving(pColumn, pOperator, pValue)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function OrWhere(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  OrWhere(pColumn, pOperator, pValue)
+		  Call Super.OrWhere(pColumn, pOperator, pValue)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Pk() As Integer
+		Function Pk() As Variant
 		  // Primary key value
-		  Return Data(PrimaryKey()).IntegerValue
+		  Return Data(PrimaryKey())
 		End Function
 	#tag EndMethod
 
@@ -365,56 +370,66 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Reload(pDatabase As Database)
-		  Dim pk As Integer = Pk()
+		Function Reload(pDatabase As Database) As ORM
+		  // Save primary key, the model will be unloaded
 		  
-		  Unload() // Empty data, not changes
+		  Dim pk As Variant = Pk()
 		  
-		  Where(PrimaryKey(), "=", pk)
+		  Call Unload()
 		  
-		  Find(pDatabase) // Reload data
-		End Sub
+		  // Empty data, not changes and reload data
+		  Return Where(PrimaryKey(), "=", pk).Find(pDatabase)
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Reset() As ORM
-		  Reset()
+		  Call Super.Reset()
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Save(pDatabase As Database)
-		  If Loaded() Then
-		    Update(pDatabase)
-		  Else
-		    Create(pDatabase)
-		  End
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Save(pDatabase As Database) As ORM
-		  Save(pDatabase)
-		  Return Me
+		  If Loaded() Then
+		    Return Update(pDatabase)
+		  Else
+		    Return Create(pDatabase)
+		  End
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Set(pValues As Dictionary) As ORM
-		  Set(pValues)
+		  Call Super.Set(pValues)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableColumns(pDatabase As Database) As String()
-		  Dim pColumns() As String
+		Function Set(ParamArray pValues As Pair) As ORM
+		  Dim pDictionary As Dictionary
+		  
+		  For Each pValue As Pair In pValues
+		    pDictionary.Value(pValue.Left) = pValue.Right
+		  Next
+		  
+		  Call Super.Set(pDictionary)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableColumns(pDatabase As Database) As Variant()
+		  Dim pColumns() As Variant
 		  
 		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
 		  
 		  While Not pRecordSet.EOF
-		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
+		    pColumns.Append(pRecordSet.Field("ColumnName").Value)
 		    pRecordSet.MoveNext()
 		  WEnd
 		  
@@ -431,62 +446,58 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Unload()
+		Function Unload() As ORM
 		  // Vide les données, pas les changements
 		  mData.Clear()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Unload() As ORM
-		  Unload()
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Update(pDatabase As Database)
+		Function Update(pDatabase As Database) As ORM
 		  If Not Loaded() then
 		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
 		  End If
 		  
 		  RaiseEvent Updating()
 		  
-		  mQuery.Append(new UpdateQueryExpression(TableName))
-		  Set(mChanged)
-		  Where(PrimaryKey(), "=", Pk())
-		  
-		  Execute(pDatabase)
+		  Append(new UpdateQueryExpression(TableName)).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
 		  
 		  For Each pKey As Variant In mChanged.Keys()
 		    mData.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
-		  Clear()
+		  // Clear mChanged, they are merged in mData
+		  Call Clear()
 		  
 		  RaiseEvent Updated()
 		  
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Update(pDatabase As Database) As ORM
-		  Update(pDatabase)
 		  Return Me
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues() As Variant) As ORM
-		  Values(pValues)
+		  Call Super.Values(pValues)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Values(pValues() As Variant) As ORM
+		  Call Super.Values(pValues)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Where(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  Where(pColumn, pOperator, pValue)
+		  Call Super.Where(pColumn, pOperator, pValue)
+		  
 		  Return Me
 		End Function
 	#tag EndMethod

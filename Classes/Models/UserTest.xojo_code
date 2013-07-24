@@ -8,6 +8,21 @@ Inherits ORM
 	#tag EndMethod
 
 
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return Data("username")
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Call Data("username", value)
+			End Set
+		#tag EndSetter
+		username As String
+	#tag EndComputedProperty
+
+
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="Index"
@@ -38,13 +53,6 @@ Inherits ORM
 			Group="ID"
 			Type="String"
 			InheritedFrom="Object"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="TableName"
-			Group="Behavior"
-			InitialValue="Users"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

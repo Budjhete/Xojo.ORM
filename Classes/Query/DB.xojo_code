@@ -4,29 +4,13 @@ Protected Module DB
 		Function Delete(pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
-		  pQueryBuilder.Append(new DeleteQueryExpression(pTableName))
-		  
-		  Return pQueryBuilder
+		  Return pQueryBuilder.Append(new DeleteQueryExpression(pTableName))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Expression(pExpression As String) As ExpressionQueryExpression
 		  Return new ExpressionQueryExpression(pExpression)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Find(pColumns() As String) As QueryBuilder
-		  Dim pQueryBuilder As New QueryBuilder
-		  
-		  Dim pVariantColumns() As Variant
-		  
-		  For Each pColumn As String In pColumns
-		    pVariantColumns.Append(pColumn)
-		  Next
-		  
-		  Return pQueryBuilder.Append(new SelectQueryExpression(pVariantColumns))
 		End Function
 	#tag EndMethod
 
@@ -45,20 +29,22 @@ Protected Module DB
 		    Return Find(DB.Expression("*"))
 		  End If
 		  
-		  Dim pQueryBuilder As New QueryBuilder
-		  
-		  Return pQueryBuilder.Append(new SelectQueryExpression(pColumns))
+		  Return Find(pColumns)
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Insert(pTableName As String, pColumns() As String) As QueryBuilder
+		Function Insert(pTableName As String, pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
-		  pQueryBuilder.Append(new InsertQueryExpression(pTableName, pColumns))
-		  
-		  Return pQueryBuilder
+		  Return pQueryBuilder.Append(new InsertQueryExpression(pTableName, pColumns))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Insert(pTableName As String, ParamArray pColumns As Variant) As QueryBuilder
+		  Return Insert(pTableName, pColumns)
 		End Function
 	#tag EndMethod
 
@@ -66,9 +52,7 @@ Protected Module DB
 		Function Update(pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
-		  pQueryBuilder.Append(new UpdateQueryExpression(pTableName))
-		  
-		  Return pQueryBuilder
+		  Return pQueryBuilder.Append(new UpdateQueryExpression(pTableName))
 		End Function
 	#tag EndMethod
 
