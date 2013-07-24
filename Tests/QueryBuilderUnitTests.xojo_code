@@ -13,10 +13,15 @@ Inherits TestGroup
 		  DB.Insert("Groups", Array("name", "userId")).Values("Developpeur", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", Array("name")).Values("Gestionnaire").Execute(ORMTestDatabase)
 		  
-		  DB.Find(Array("Users.*", "Groups.*")).From("Users").Join("LEFT", "Groups")
-		  
-		  System.DebugLog(DB.Find(Array("Users.*", "Groups.*")).From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").Compile())
-		  
+		  // Tests for a simple left join on the Users table. The syntax is likely to change very soon
+		  System.DebugLog(DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Columns": New Dictionary("*":"")),_
+		  New Dictionary("TableName":"Groups", "Columns": New Dictionary("*":""))_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
+		  Record = DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Columns": New Dictionary("*":"")),_
+		  New Dictionary("TableName":"Groups", "Columns": New Dictionary("*":""))_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
 		  
@@ -32,6 +37,39 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
 		  
+		  // Tests for a left Join on the Users table with a Where condition
+		  System.DebugLog(DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Alias":"U","Columns": New Dictionary("*":"")),_
+		  New Dictionary("TableName":"Gropus", "Alias":"G", "Columns": New Dictionary("*":""))_
+		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Compile())
+		  Record = DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Alias":"U","Columns": New Dictionary("*":"")),_
+		  New Dictionary("TableName":"Gropus", "Alias":"G", "Columns": New Dictionary("*":""))_
+		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  System.DebugLog(ShowSelect(Record))
+		  
+		  // Tests for a CROSS JOIN on the Users table
+		  DB.Insert("Users", Array("username", "password")).Values("Hete", ".ca").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Alias":"U", "Columns": New Dictionary("*":"")),_
+		  New Dictionary("TableName":"Groups", "Alias":"Groups", "Columns": New Dictionary("*":""))_
+		  ), "Users").Join("CROSS", "Groups").Compile())
+		  Record = DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Alias":"U", "Columns": New Dictionary("*":"")),_
+		  New Dictionary("TableName":"Groups", "Alias":"Groups", "Columns": New Dictionary("*":""))_
+		  ), "Users").Join("CROSS", "Groups").Execute(ORMTestDatabase)
+		  System.DebugLog(ShowSelect(Record))
+		  Assert.IsTrue(Record.RecordCount = 4, "We should have exactly four records on this cross join")
+		  
+		  // Tests for a LEFT JOIN on the User table with just a select amount of columns on both sides
+		  System.DebugLog(DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Columns": New Dictionary("id":"id", "username":"Nom d'utilisateur", "password":"Mot de passe")),_
+		  New Dictionary("TableName":"Groups", "Columns": New Dictionary("name":"Nom"))_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
+		  Record = DB.Find(Array(_
+		  New Dictionary("TableName":"Users", "Columns": New Dictionary("id":"id", "username":"Nom d'utilisateur", "password":"Mot de passe")),_
+		  New Dictionary("TableName":"Groups", "Columns": New Dictionary("name":"Nom"))_
+		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 2, "We should have exactly two record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
 		  
