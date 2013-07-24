@@ -13,15 +13,10 @@ Inherits TestGroup
 		  DB.Insert("Groups", Array("name", "userId")).Values("Developpeur", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", Array("name")).Values("Gestionnaire").Execute(ORMTestDatabase)
 		  
-		  // Tests for a simple left join on the Users table. The syntax is likely to change very soon
-		  System.DebugLog(DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Columns"":[""*""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""*""]}")_
-		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
-		  Record = DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Columns"":[""*""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""*""]}")_
-		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
+		  DB.Find(Array("Users.*", "Groups.*")).From("Users").Join("LEFT", "Groups")
+		  
+		  System.DebugLog(DB.Find(Array("Users.*", "Groups.*")).From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").Compile())
+		  
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
 		  
@@ -37,39 +32,6 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 1, "We should have exactly one record")
 		  
-		  // Tests for a left Join on the Users table with a Where condition
-		  System.DebugLog(DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Alias"":""G"",""Columns"":[""*""]}")_
-		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Compile())
-		  Record = DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Alias"":""G"",""Columns"":[""*""]}")_
-		  ), "Users").Join("LEFT", "Groups", "G").On("U.id", "=", "G.userId").Where("U.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
-		  System.DebugLog(ShowSelect(Record))
-		  
-		  // Tests for a CROSS JOIN on the Users table
-		  DB.Insert("Users", Array("username", "password")).Values("Hete", ".ca").Execute(ORMTestDatabase)
-		  System.DebugLog(DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Alias"":""Groups"",""Columns"":[""*""]}")_
-		  ), "Users").Join("CROSS", "Groups").Compile())
-		  Record = DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Alias"":""U"",""Columns"":[""*""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Alias"":""Groups"",""Columns"":[""*""]}")_
-		  ), "Users").Join("CROSS", "Groups").Execute(ORMTestDatabase)
-		  System.DebugLog(ShowSelect(Record))
-		  Assert.IsTrue(Record.RecordCount = 4, "We should have exactly four records on this cross join")
-		  
-		  // Tests for a LEFT JOIN on the User table with just a select amount of columns on both sides
-		  System.DebugLog(DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Columns"":[""id"",""username"",""password""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""name""]}")_
-		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Compile())
-		  Record = DB.Find(Array(_
-		  New JSONItem("{""TableName"":""Users"",""Columns"":[""id"",""username"",""password""]}"),_
-		  New JSONItem("{""TableName"":""Groups"",""Columns"":[""name""]}")_
-		  ), "Users").Join("LEFT", "Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
 		  System.DebugLog(ShowSelect(Record))
 		  Assert.IsTrue(Record.RecordCount = 2, "We should have exactly two record on this LEFT JOIN. SQL Query : ""SELECT * FROM `USERS` LEFT JOIN `Groups` ON `Users`.`id` = `Groups`.`userId`""")
 		  
@@ -79,9 +41,9 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub NestedQueryExpressionTest()
-		  MsgBox DB.Find("Groups").Where("name", "IN", DB.Find("name", "Groups")).Compile()
+		  MsgBox DB.Find.From("Groups").Where("name", "IN", DB.Find("name", "Groups")).Compile()
 		  
-		  Dim pResultSet As RecordSet = DB.Find("Groups").Where("name", "IN", DB.Find("name", "Groups")).Execute(ORMTestDatabase)
+		  Dim pResultSet As RecordSet = DB.Find("Groups").Where("name", "IN", DB.Find("name").From("Groups")).Execute(ORMTestDatabase)
 		  
 		  Assert.AreEqual(pResultSet.RecordCount, DB.Find("Groups").Execute(ORMTestDatabase).RecordCount)
 		End Sub
@@ -184,21 +146,21 @@ Inherits TestGroup
 		  
 		  // Looks up a record where the username contains "John" and where
 		  // the password is NULL or where the username contains "John" and where the password is "1234"
-		  Record = DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "IS", Nil).OrWhere("password", "=", "1234").Execute(ORMTestDatabase)
+		  Record = DB.Find().From("Users").Where("username", "LIKE", "%John%").AndWhere("password", "IS", Nil).OrWhere("password", "=", "1234").Execute(ORMTestDatabase)
 		  Assert.IsNotNil(Record, "We should have at least one entry where the username contains"+_
 		  "John and where the password is NULL or where the username is anything and the password equals ""1234""")
-		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile())
+		  System.DebugLog(DB.Find().From("Users").Where("username", "LIKE", "%John%").AndWhere("password", "=", Nil).OrWhere("password", "=", "1234").Compile())
 		  System.DebugLog(ShowSelect(Record))
 		  
 		  // Looks up a record where the username is Paul
-		  Record = DB.Find("Users").Where("username", "=", "Paul").OrderBy("id").Execute(ORMTestDatabase)
+		  Record = DB.Find().From("Users").Where("username", "=", "Paul").OrderBy("id").Execute(ORMTestDatabase)
 		  // Logs the new Entry
-		  System.DebugLog(DB.Find("Users").Where("username", "=", "Paul").OrderBy("id").Compile())
+		  System.DebugLog(DB.Find().From("Users").Where("username", "=", "Paul").OrderBy("id").Compile())
 		  System.DebugLog(ShowSelect(Record))
 		  
 		  // Tests a where using a LIKE comparison
-		  Record = DB.Find("Users").Where("username", "LIKE", "Pau%").Execute(ORMTestDatabase)
-		  System.DebugLog(DB.Find("Users").Where("username", "LIKE", "Pau%").Compile())
+		  Record = DB.Find().From("Users").Where("username", "LIKE", "Pau%").Execute(ORMTestDatabase)
+		  System.DebugLog(DB.Find().From("Users").Where("username", "LIKE", "Pau%").Compile())
 		  System.DebugLog(ShowSelect(Record))
 		  
 		  Assert.IsNotNil(Record)
@@ -213,12 +175,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -247,16 +211,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -269,6 +236,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

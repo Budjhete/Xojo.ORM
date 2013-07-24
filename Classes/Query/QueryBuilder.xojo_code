@@ -110,6 +110,32 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub From(pTableName As String)
+		  From(pTableName, pTableName)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function From(pTableName As String) As QueryBuilder
+		  From(pTableName)
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub From(pTableName As String, pTableAlias As String)
+		  mQuery.Append(new FromQueryExpression(pTableName, pTableAlias))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function From(pTableName As String, pTableAlias As String) As QueryBuilder
+		  From(pTableName, pTableAlias)
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub GroupBy(pColumns() As String)
 		  mQuery.Append(new GroupByQueryExpression(pColumns))
 		End Sub
@@ -151,27 +177,27 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Join(pDirection As String, pTableName As String)
-		  Join(pDirection, pTableName, pTableName)
+		Sub Join(pTableName As String)
+		  Join(pTableName, pTableName)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pDirection As String, pTableName As String) As QueryBuilder
-		  Join(pDirection, pTableName)
+		Function Join(pTableName As String) As QueryBuilder
+		  Join(pTableName)
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Join(pDirection As String, pTableName As String, pAlias As String)
-		  mQuery.Append(new JoinQueryExpression(pDirection, pTableName, pAlias))
+		Sub Join(pTableName As String, pAlias As String)
+		  mQuery.Append(new JoinQueryExpression(pTableName, pAlias))
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pDirection As String, pTableName As String, pAlias As String) As QueryBuilder
-		  Join(pDirection, pTableName, pAlias)
+		Function Join(pTableName As String, pAlias As String) As QueryBuilder
+		  Join(pTableName, pAlias)
 		  return Me
 		End Function
 	#tag EndMethod
@@ -328,13 +354,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Sub Values(ParamArray pValues As Variant)
-		  Dim VariantArray() As Variant
-		  
-		  For Each pValuesElement As Variant in pValues
-		    VariantArray.Append(pValuesElement)
-		  Next
-		  
-		  Values(VariantArray)
+		  Values(pValues)
 		End Sub
 	#tag EndMethod
 

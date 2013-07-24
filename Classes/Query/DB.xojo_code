@@ -17,34 +17,38 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pColumns() As String, pTableNames() As String) As QueryBuilder
-		  Return DB.Find(pColumns, pTableNames, pTableNames)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Find(pColumns() As String, pTableName As String) As QueryBuilder
-		  Return DB.Find(pColumns, Array(pTableName))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Find(pTableName As String) As QueryBuilder
-		  Return Find(Array("*"), pTableName)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Find(pColumn As String, pTableName As String) As QueryBuilder
-		  Return Find(Array(pColumn), Array(pTableName))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Find(pTablesColumns() As Variant, pTableNames() As String, pAlias() As String) As QueryBuilder
+		Function Find(pColumns() As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
-		  Return pQueryBuilder.Append(new SelectQueryExpression(pTablesColumns, pTableNames, pAlias))
+		  Dim pVariantColumns() As Variant
+		  
+		  For Each pColumn As String In pColumns
+		    pVariantColumns.Append(pColumn)
+		  Next
+		  
+		  Return pQueryBuilder.Append(new SelectQueryExpression(pVariantColumns))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Find(pColumns() As Variant) As QueryBuilder
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Return pQueryBuilder.Append(new SelectQueryExpression(pColumns))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Find(ParamArray pColumns As Variant) As QueryBuilder
+		  If pColumns.UBound = -1 Then
+		    // Find * when no columns are specified
+		    Return Find(DB.Expression("*"))
+		  End If
+		  
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Return pQueryBuilder.Append(new SelectQueryExpression(pColumns))
+		  
 		End Function
 	#tag EndMethod
 

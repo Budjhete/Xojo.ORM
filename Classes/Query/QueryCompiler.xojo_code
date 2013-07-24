@@ -1,11 +1,7 @@
 #tag Module
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
-		Function Column(pColumn As Variant) As String
-		  If pColumn IsA QueryExpression Then
-		    Return QueryExpression(pColumn).Compile()
-		  End If
-		  
+		Function Column(pColumn As String) As String
 		  // Compile column
 		  Dim pParts() As String = Split(pColumn, ".")
 		  
@@ -36,11 +32,23 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Columns(pColumns() As Variant) As String
-		  // Compile values
 		  Dim pCompiledColumns() As String
 		  
-		  For i As Integer = 0 To pColumns.Ubound
-		    pCompiledColumns.Append(QueryCompiler.Value(pColumns(i)))
+		  For Each pColumn As Variant In pColumns
+		    
+		    Select Case pColumn
+		      
+		    Case IsA QueryExpression
+		      
+		      pCompiledColumns.Append(QueryExpression(pColumn).Compile)
+		      
+		    Else
+		      
+		      pCompiledColumns.Append(QueryCompiler.Column(pColumn.StringValue))
+		      
+		      
+		    End Select
+		    
 		  Next
 		  
 		  Return Join(pCompiledColumns, ", ")
@@ -78,7 +86,6 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function TableName(pTableName As String) As String
-		  // Table name without alias
 		  Return "`" + pTableName + "`"
 		End Function
 	#tag EndMethod
@@ -86,28 +93,6 @@ Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function TableName(pTableName As String, pAlias As String) As String
 		  Return "`" + pTableName + "` AS `" + pAlias + "`"
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function TableNames(pTableNames() As String) As String
-		  // Table names without alias
-		  
-		  For i As Integer = 0 To pTableNames.Ubound
-		    pTableNames(i) = QueryCompiler.TableName(pTableNames(i))
-		  Next
-		  
-		  Return Join(pTableNames, ", ")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function TableNames(pTableNames() As String, pAlias() As String) As String
-		  For i As Integer = 0 To pTableNames.Ubound
-		    pTableNames(i) = QueryCompiler.TableName(pTableNames(i), pAlias(i))
-		  Next
-		  
-		  Return Join(pTableNames, ", ")
 		End Function
 	#tag EndMethod
 
@@ -120,6 +105,10 @@ Protected Module QueryCompiler
 		    
 		  Case pValue.IsNull, Nil
 		    Return "NULL"
+		    
+		  Case pValue.IsNumeric
+		    // Do not quote numeric value
+		    Return pValue.StringValue
 		    
 		  End Select
 		  

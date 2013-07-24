@@ -55,11 +55,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function CountAll(pDatabase As Database) As Integer
-		  mQuery.Append(new SelectQueryExpression("COUNT(*)", TableName()))
+		  Return DB.Find(DB.Expression("COUNT(*) AS count")).From(TableName).Execute(pDatabase).Field("count").IntegerValue
 		  
-		  Dim pRecordSet As RecordSet = Execute(pDatabase)
-		  
-		  Return pRecordSet.Field("(COUNT(*))").IntegerValue()
 		  
 		End Function
 	#tag EndMethod
@@ -92,7 +89,7 @@ Inherits QueryBuilder
 		  // Clear changes, they are saved in mData
 		  Clear()
 		  
-		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey(), Me.TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
+		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		  
 		  // Update primary key from the last row inserted in this table
 		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
@@ -187,9 +184,15 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
+		  Dim pVariantColumns() As Variant
 		  
-		  mQuery.Append(new SelectQueryExpression(Me.TableName))
-		  mQuery.Append(new LimitQueryExpression(1))
+		  For Each pColumn As String In TableColumns(pDatabase)
+		    pVariantColumns.Append(pColumn)
+		  Next
+		  
+		  mQuery.Append(new SelectQueryExpression(pVariantColumns))
+		  
+		  From(TableName).Limit(1)
 		  
 		  RaiseEvent Finding()
 		  
@@ -214,9 +217,24 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  mQuery.Append(new SelectQueryExpression(TableColumns(pDatabase), TableName()))
+		  Dim pVariantColumns() As Variant
+		  
+		  For Each pColumn As String In TableColumns(pDatabase)
+		    pVariantColumns.Append(pColumn)
+		  Next
+		  
+		  mQuery.Append(new SelectQueryExpression(pVariantColumns))
+		  
+		  From(TableName())
+		  
 		  Return Execute(pDatabase)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub From(pColumn As Variant)
+		  From(pColumn)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -460,7 +478,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Variant) As ORM
+		Function Values(ParamArray pValues() As Variant) As ORM
 		  Values(pValues)
 		  Return Me
 		End Function
@@ -554,12 +572,6 @@ Inherits QueryBuilder
 			Group="ID"
 			Type="String"
 			InheritedFrom="Object"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="TableName"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
