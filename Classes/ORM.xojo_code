@@ -61,8 +61,18 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(mORM As ORM)
-		  mData = mORM.mData
-		  mChanged = mORM.mChanged
+		  mData = New Dictionary()
+		  mChanged = New Dictionary()
+		  
+		  // Copies the data
+		  For Each Key As Variant In mORM.mData.Keys
+		    mData.Value(Key) = mORM.mData.Value(Key)
+		  Next
+		  
+		  // Copies the changed data
+		  For Each Key As Variant In mORM.mChanged.Keys
+		    mChanged.Value(Key) = mORM.mChanged.Value(Key)
+		  Next
 		End Sub
 	#tag EndMethod
 
