@@ -5,8 +5,8 @@ Inherits TestGroup
 		Sub CloneTest()
 		  Dim OriginalORM As New UserTest
 		  
-		  OriginalORM.Data("username", "Paul-Willy Jean")
-		  OriginalORM.Data("password", "Jean")
+		  Call OriginalORM.Data("username", "Paul-Willy Jean")
+		  Call OriginalORM.Data("password", "Jean")
 		  
 		  Dim NewORM As UserTest = UserTest(OriginalORM.Clone())
 		  Assert.AreEqual(NewORM.TableName(), OriginalORM.TableName(), NewORM.TableName() + " " + OriginalORM.TableName())
@@ -14,7 +14,7 @@ Inherits TestGroup
 		  System.DebugLog(NewORM.Data("username"))
 		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NewORM.Data("username").StringValue, "Both ORMs should have the same data.")
 		  
-		  NewORM.Data("username", "Paul")
+		  Call NewORM.Data("username", "Paul")
 		  System.DebugLog(OriginalORM.Data("username"))
 		  System.DebugLog(NewORM.Data("username"))
 		  Assert.IsFalse(NewORM.Data("username") = OriginalORM.Data("username"), "Both ORMs should have different usernames.")
@@ -130,7 +130,7 @@ Inherits TestGroup
 		  
 		  Dim pTableColumns() As Variant = pUser.TableColumns(ORMTestDatabase)
 		  
-		  For i As Integer = 0 To pColumns.UBound 
+		  For i As Integer = 0 To pColumns.UBound
 		    Assert.AreEqual(pColumns(i), pTableColumns(i).StringValue)
 		  Next
 		End Sub
@@ -191,12 +191,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -225,16 +227,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -247,6 +252,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
