@@ -279,7 +279,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Initial(pColumn As String, pDefault As Variant = Nil) As Variant
-		  Return mData.Value(pColumn, pDefault)
+		  Return mData.Lookup(pColumn, pDefault)
 		End Function
 	#tag EndMethod
 
