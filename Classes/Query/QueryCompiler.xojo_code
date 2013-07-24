@@ -102,6 +102,21 @@ Protected Module QueryCompiler
 		    
 		  End Select
 		  
+		  Select Case pValue.Type
+		    
+		  Case Variant.TypeInteger, Variant.TypeLong, Variant.TypeDouble
+		    Return pValue.StringValue
+		    
+		  Case Variant.TypeBoolean
+		    
+		    If pValue.BooleanValue Then
+		      Return "1"
+		    Else
+		      Return "0"
+		    End If
+		    
+		  End Select
+		  
 		  Return "'" + pValue.StringValue + "'"
 		  
 		  

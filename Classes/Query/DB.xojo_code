@@ -49,6 +49,18 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Set(pValues() As Variant) As ExpressionQueryExpression
+		  Return new ExpressionQueryExpression("(" + QueryCompiler.Values(pValues) + ")")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Set(ParamArray pValues As Variant) As ExpressionQueryExpression
+		  Return Set(pValues)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Update(pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
