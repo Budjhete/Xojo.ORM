@@ -50,6 +50,12 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Clone() As ORM
+		  Return New ORM(Me)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000
 		Sub Constructor()
 		  mData = New Dictionary()
