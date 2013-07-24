@@ -2,6 +2,21 @@
 Protected Class ORMUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub CloneTest()
+		  Dim OriginalORM As New UserTest
+		  
+		  OriginalORM.Data("username", "Paul-Willy Jean")
+		  OriginalORM.Data("password", "Jean")
+		  
+		  Dim NouvelORM As UserTest = OriginalORM.Clone()
+		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NouvelORM.Data("username").StringValue, "Les deux ORMs devraient avoir les mêmes données")
+		  
+		  NouvelORM.Data("username", "Paul")
+		  Assert.IsFalse(NouvelORM.Data("username") = OriginalORM.Data("username"), "Les deux ORMs devraient avoir un username différent")
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CreateTest()
 		  Dim pModel As New UserTest()
 		  
