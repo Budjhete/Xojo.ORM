@@ -161,8 +161,22 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As String, pAlias As String) As QueryBuilder
-		  mQuery.Append(new JoinQueryExpression(pTableName, pAlias))
+		Function Join(pTableName As String, pTableAlias As String) As QueryBuilder
+		  mQuery.Append(new JoinQueryExpression(pTableName, pTableAlias))
+		  
+		  return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftOuterJoin(pTableName As String) As QueryBuilder
+		  Return LeftOuterJoin(pTableName, pTableName)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As QueryBuilder
+		  mQuery.Append(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
 		  
 		  return Me
 		End Function

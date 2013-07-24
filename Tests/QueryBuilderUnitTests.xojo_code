@@ -37,6 +37,41 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub LeftOuterJoinTest()
+		  System.DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
+		  Dim pRecordSet As RecordSet
+		  Dim pStatement As String
+		  
+		  DB.Delete("Groups").Execute(ORMTestDatabase)
+		  DB.Delete("Users").Execute(ORMTestDatabase)
+		  
+		  DB.Insert("Users", "username", "password").Values("Hete.ca", "hete").Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "userId").Values("Developpeur", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name").Values("Gestionnaire").Execute(ORMTestDatabase)
+		  
+		  // Tests for a simple left join on the Users table. The syntax is likely to change very soon
+		  pStatement = DB.Find().From("Users").LeftOuterJoin("Groups").On("Users.id", "=", "Groups.userId").Compile()
+		  pRecordSet = DB.Find().From("Users").LeftOuterJoin("Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
+		  Assert.AreEqual ("SELECT * FROM `Users` AS `Users` LEFT OUTER JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`userId`", pStatement)
+		  
+		  // Tests for a simple left join on the Groups table.
+		  pStatement = DB.Find.From("Groups").LeftOuterJoin("Users").On("Groups.userId", "=", "Users.id").Compile()
+		  pRecordSet = DB.Find.From("Groups").LeftOuterJoin("Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
+		  Assert.AreEqual ("SELECT * FROM `Groups` AS `Groups` LEFT OUTER JOIN `Users` AS `Users` ON `Groups`.`userId` = `Users`.`id`", pStatement)
+		  
+		  // Join with different alias
+		  pStatement =  DB.Find.From("Users", "U").LeftOuterJoin("Groups", "G").Where("U.username", "LIKE", "%ete%").Compile()
+		  pRecordSet = DB.Find.From("Users", "U").LeftOuterJoin("Groups", "G").Where("U.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `U` LEFT OUTER JOIN `Groups` AS `G` WHERE `U`.`username` LIKE '%ete%'", pStatement)
+		  
+		  // Multi-join
+		  pStatement =  DB.Find.From("Users").LeftOuterJoin("Groups").LeftOuterJoin("Groups", "G").On("Groups.id", "=", "G.id").Where("Users.username", "LIKE", "%ete%").Compile()
+		  pRecordSet = DB.Find.From("Users").LeftOuterJoin("Groups").LeftOuterJoin("Groups", "G").On("Groups.id", "=", "G.id").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` LEFT OUTER JOIN `Groups` AS `Groups` LEFT OUTER JOIN `Groups` AS `G` ON `Groups`.`id` = `G`.`id` WHERE `Users`.`username` LIKE '%ete%'", pStatement)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub NestedQueryExpressionTest()
 		  Dim pRecordSet As RecordSet
 		  Dim pStatement As String
@@ -170,12 +205,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -204,16 +241,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -226,6 +266,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
