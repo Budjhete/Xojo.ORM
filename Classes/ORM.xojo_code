@@ -431,7 +431,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  Return Introspection.GetType(Me).Name
+		  return Introspection.GetType(Me).Name
 		End Function
 	#tag EndMethod
 
