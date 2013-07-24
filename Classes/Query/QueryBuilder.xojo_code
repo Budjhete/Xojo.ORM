@@ -26,6 +26,18 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Clone() As QueryBuilder
+		  Dim pQueryBuilder As New QueryBuilder()
+		  
+		  For Each pQueryExpression As QueryExpression In mQuery
+		    pQueryBuilder.mQuery.Append(pQueryExpression)
+		  Next
+		  
+		  Return pQueryBuilder
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Compile() As String
 		  Dim pStatements() As String
 		  Dim pNice As Integer
