@@ -46,10 +46,23 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Clone() As ORM
+		  Return New ORM(Me)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000
 		Sub Constructor()
 		  mData = New Dictionary()
 		  mChanged = New Dictionary()
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(mORM As ORM)
+		  mData = mORM.mData
+		  mChanged = mORM.mChanged
 		End Sub
 	#tag EndMethod
 
