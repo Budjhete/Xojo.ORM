@@ -102,8 +102,7 @@ Protected Module QueryCompiler
 		    
 		  End Select
 		  
-		  Return "'" + pValue.StringValue + "'"
-		  
+		  Return "'" + ReplaceAll(pValue.StringValue, "'", "''") + "'"
 		  
 		End Function
 	#tag EndMethod
