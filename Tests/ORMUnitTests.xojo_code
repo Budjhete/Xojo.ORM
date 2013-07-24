@@ -8,10 +8,15 @@ Inherits TestGroup
 		  OriginalORM.Data("username", "Paul-Willy Jean")
 		  OriginalORM.Data("password", "Jean")
 		  
-		  Dim NouvelORM As UserTest = OriginalORM.Clone()
+		  Dim NouvelORM As New ORM
+		  NouvelORM = OriginalORM.Clone()
+		  System.DebugLog(OriginalORM.Data("username"))
+		  System.DebugLog(NouvelORM.Data("username"))
 		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NouvelORM.Data("username").StringValue, "Les deux ORMs devraient avoir les mêmes données")
 		  
 		  NouvelORM.Data("username", "Paul")
+		  System.DebugLog(OriginalORM.Data("username"))
+		  System.DebugLog(NouvelORM.Data("username"))
 		  Assert.IsFalse(NouvelORM.Data("username") = OriginalORM.Data("username"), "Les deux ORMs devraient avoir un username différent")
 		End Sub
 	#tag EndMethod
