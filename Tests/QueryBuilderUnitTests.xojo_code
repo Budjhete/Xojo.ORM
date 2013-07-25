@@ -85,7 +85,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SetExpressionTest()
-		  Dim pStatement As String 
+		  Dim pStatement As String
 		  
 		  pStatement = DB.Set("Tata", "titi", 2).Compile()
 		  

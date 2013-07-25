@@ -65,6 +65,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pORM As ORM)
+		  Constructor()
+		  
 		  // Use a copy of mData to avoid external changes
 		  For Each pKey As Variant In pORM.mData.Keys()
 		    mData.Value(pKey) = pORM.mData.Value(pKey)
