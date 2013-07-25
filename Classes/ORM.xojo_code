@@ -50,12 +50,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Clone() As ORM
-		  Return New ORM(Me)
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1000
 		Sub Constructor()
 		  mData = New Dictionary()
@@ -65,6 +59,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pORM As ORM)
+		  Constructor()
+		  
 		  // Use a copy of mData to avoid external changes
 		  For Each pKey As Variant In pORM.mData.Keys()
 		    mData.Value(pKey) = pORM.mData.Value(pKey)
@@ -463,7 +459,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  Return Introspection.GetType(Me).Name
+		  return Introspection.GetType(Me).Name
 		End Function
 	#tag EndMethod
 
