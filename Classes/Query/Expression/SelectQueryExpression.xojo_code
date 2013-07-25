@@ -2,7 +2,7 @@
 Protected Class SelectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Return "SELECT " + QueryCompiler.Columns(mColumns)
 		End Function
 	#tag EndMethod

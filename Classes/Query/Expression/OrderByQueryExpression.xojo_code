@@ -2,13 +2,18 @@
 Protected Class OrderByQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Dim pCompiledColumns() As String
 		  
 		  // Compile each column and add its direction
 		  For i As Integer = 0 To mColumns.UBound
 		    pCompiledColumns.Append QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
 		  Next
+		  
+		  If pLastQueryExpression IsA OrderByQueryExpression Then
+		    // @TODO fixer l'espace avant la virgule
+		    Return ", " + Join(pCompiledColumns, ", ")
+		  End If
 		  
 		  Return "ORDER BY " + Join(pCompiledColumns, ", ")
 		  

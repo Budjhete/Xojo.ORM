@@ -1,9 +1,10 @@
 #tag Class
-Protected Class LeftOuterJoinQueryExpression
-Inherits JoinQueryExpression
+Protected Class AndHavingQueryExpression
+Inherits HavingQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile() As String
-		  Return "LEFT OUTER " + Super.Compile()
+		  return "AND " + Predicate()
+		  
 		End Function
 	#tag EndMethod
 

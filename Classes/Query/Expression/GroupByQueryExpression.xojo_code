@@ -2,7 +2,7 @@
 Protected Class GroupByQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Return "GROUP BY " + QueryCompiler.Columns(mColumns)
 		  
 		End Function
@@ -16,7 +16,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return 7
+		  Return 5
 		End Function
 	#tag EndMethod
 

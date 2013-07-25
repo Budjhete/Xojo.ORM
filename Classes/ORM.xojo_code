@@ -263,6 +263,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function HavingClose() As ORM
+		  Call Super.HavingClose()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function HavingOpen() As ORM
+		  Call Super.HavingOpen()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Initial() As Dictionary
 		  Dim pData As Dictionary
 		  
@@ -322,7 +338,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn As String, pOperator As String, pValue As Variant) As ORM
+		Function On(pColumn As Variant, pOperator As String, pValue As Variant) As ORM
 		  Call Super.On(pColumn, pOperator, pValue)
 		  
 		  Return Me
@@ -485,6 +501,20 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Using(pColumns() As Variant) As ORM
+		  Call Super.Using(pColumns)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Using(ParamArray pColumns As Variant) As ORM
+		  Return Using(pColumns)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
@@ -503,6 +533,22 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Where(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.Where(pColumn, pOperator, pValue)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function WhereClose() As ORM
+		  Call Super.WhereClose()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function WhereOpen() As ORM
+		  Call Super.WhereOpen()
 		  
 		  Return Me
 		End Function

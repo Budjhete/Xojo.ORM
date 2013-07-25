@@ -1,16 +1,9 @@
 #tag Class
-Protected Class OrHavingQueryExpression
-Inherits HavingQueryExpression
-	#tag Method, Flags = &h0
-		Function Compile() As String
-		  Return "OR " + Predicate()
-		  
-		End Function
-	#tag EndMethod
-
+Protected Class HavingCloseQueryExpression
+Inherits CloseQueryExpression
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return Super.Nice() + 1
+		  Return 6
 		End Function
 	#tag EndMethod
 

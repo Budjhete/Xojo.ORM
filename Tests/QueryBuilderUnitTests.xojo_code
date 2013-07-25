@@ -2,6 +2,18 @@
 Protected Class QueryBuilderUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub HavingTest()
+		  Dim pStatement As String
+		  Dim pRecordSet As RecordSet
+		  
+		  // Tests for HavingOpen and HavingClose
+		  pStatement = DB.Find.From("Users").GroupBy("username").HavingOpen.Having("username", "=", "Paul").HavingClose.Compile()
+		  pRecordSet = DB.Find.From("Users").GroupBy("username").HavingOpen.Having("username", "=", "Paul").HavingClose.Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` GROUP BY `username` HAVING ( `username` = 'Paul' )", pStatement)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub JoinTest()
 		  System.DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
 		  Dim pRecordSet As RecordSet
@@ -30,9 +42,9 @@ Inherits TestGroup
 		  Assert.AreEqual("SELECT * FROM `Users` AS `U` JOIN `Groups` AS `G` WHERE `U`.`username` LIKE '%ete%'", pStatement)
 		  
 		  // Multi-join
-		  pStatement =  DB.Find.From("Users").Join("Groups").Join("Groups", "G").On("Groups.id", "=", "G.id").Where("Users.username", "LIKE", "%ete%").Compile()
-		  pRecordSet = DB.Find.From("Users").Join("Groups").Join("Groups", "G").On("Groups.id", "=", "G.id").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` JOIN `Groups` AS `G` ON `Groups`.`id` = `G`.`id` WHERE `Users`.`username` LIKE '%ete%'", pStatement)
+		  pStatement = DB.Find.From("Users").Join("Groups").On("Groups.id", "=", "G.id").Join("Groups", "G").On("Groups.id", "=", "G.id").Where("Users.username", "LIKE", "%ete%").Compile()
+		  pRecordSet = DB.Find.From("Users").Join("Groups").On("Groups.id", "=", "G.id").Join("Groups", "G").On("Groups.id", "=", "G.id").Where("Users.username", "LIKE", "%ete%").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` ON `Groups`.`id` = `G`.`id` JOIN `Groups` AS `G` ON `Groups`.`id` = `G`.`id` WHERE `Users`.`username` LIKE '%ete%'", pStatement)
 		End Sub
 	#tag EndMethod
 
@@ -84,16 +96,13 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub SetExpressionTest()
-		  Dim pStatement As String 
+		Sub OnTest()
+		  Dim pStatement As String
+		  Dim pRecordSet As RecordSet
 		  
-		  pStatement = DB.Set("Tata", "titi", 2).Compile()
-		  
-		  Assert.AreEqual("('Tata', 'titi', 2)", pStatement)
-		  
-		  pStatement = DB.Set(Array("Tata", "titi", 2)).Compile
-		  
-		  Assert.AreEqual("('Tata', 'titi', 2)", pStatement)
+		  pStatement = DB.Find.From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").On("Users.id", "=", "Groups.userId").Compile()
+		  pRecordSet = DB.Find.From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`userId` AND `Users`.`id` = `Groups`.`userId`", pStatement)
 		End Sub
 	#tag EndMethod
 
@@ -157,6 +166,17 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub UsingTest()
+		  Dim pStatement As String
+		  Dim pRecordSet As RecordSet
+		  
+		  pStatement = DB.Find.From("Users").Join("Groups").Using("id").Compile()
+		  pRecordSet = DB.Find.From("Users").Join("Groups").Using("id").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` USING ( `id` )", pStatement)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub ValuesTest()
 		  Dim pRecordSet As RecordSet
 		  Dim pStatement As String
@@ -164,16 +184,16 @@ Inherits TestGroup
 		  // Inserts a new entry with ParamArrays in Values
 		  pStatement = DB.Insert("Users", "username", "password").Values("Hete", ".ca").Compile()
 		  pRecordSet = DB.Insert("Users", "username", "password").Values("Hete", ".ca").Execute(ORMTestDatabase)
-		  Assert.AreEqual("INSERT INTO `Users` (`username`, `password`) VALUES ('Hete', '.ca')", pStatement)
+		  Assert.AreEqual("INSERT INTO `Users` ( `username`, `password` ) VALUES ( 'Hete', '.ca' )", pStatement)
 		  
 		  // Set a value to Nil
 		  pStatement = DB.Insert("Users", "username", "password").Values(Nil, Nil).Compile()
 		  pRecordSet = DB.Insert("Users", "username", "password").Values(Nil, Nil).Execute(ORMTestDatabase)
-		  Assert.AreEqual("INSERT INTO `Users` (`username`, `password`) VALUES (NULL, NULL)", pStatement)
+		  Assert.AreEqual("INSERT INTO `Users` ( `username`, `password` ) VALUES ( NULL, NULL )", pStatement)
 		  
 		  // Use a QueryExpression
 		  pStatement = DB.Insert("Users", "username").Values(DB.Expression("John")).Compile()
-		  Assert.AreEqual("INSERT INTO `Users` (`username`) VALUES (John)", pStatement)
+		  Assert.AreEqual("INSERT INTO `Users` ( `username` ) VALUES ( John )", pStatement)
 		  
 		End Sub
 	#tag EndMethod
@@ -210,6 +230,11 @@ Inherits TestGroup
 		  System.DebugLog(ShowSelect(pRecordSet))
 		  
 		  Assert.IsNotNil(pRecordSet)
+		  
+		  // Tests for WhereOpen and WhereClose
+		  pStatement = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Compile()
+		  pRecordSet = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` WHERE ( `username` = 'Paul' )", pStatement)
 		End Sub
 	#tag EndMethod
 
@@ -219,12 +244,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -253,16 +280,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -275,6 +305,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

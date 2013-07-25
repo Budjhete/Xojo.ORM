@@ -1,11 +1,26 @@
 #tag Class
-Protected Class CrossJoinQueryExpression
-Inherits JoinQueryExpression
+Protected Class UserTest
+Inherits ORM
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  Return "CROSS " + Super.Compile()
+		Function TableName() As String
+		  Return "Users"
 		End Function
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return Data("username")
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Call Data("username", value)
+			End Set
+		#tag EndSetter
+		username As String
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior
@@ -46,6 +61,12 @@ Inherits JoinQueryExpression
 			InitialValue="0"
 			Type="Integer"
 			InheritedFrom="Object"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="username"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

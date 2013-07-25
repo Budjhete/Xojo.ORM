@@ -2,7 +2,7 @@
 Protected Class FromQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Return "FROM " + QueryCompiler.TableName(mTableName, mTableAlias)
 		End Function
 	#tag EndMethod

@@ -2,7 +2,7 @@
 Protected Class UpdateQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  return "UPDATE " + QueryCompiler.TableName(mTableName)
 		  
 		  

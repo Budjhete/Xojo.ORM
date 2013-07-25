@@ -2,14 +2,8 @@
 Protected Class OrWhereQueryExpression
 Inherits WhereQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  return "OR " + Predicate()
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  Return Super.Nice() + 1
 		End Function
 	#tag EndMethod
 

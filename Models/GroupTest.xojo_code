@@ -1,9 +1,9 @@
 #tag Class
-Protected Class FullJoinQueryExpression
-Inherits JoinQueryExpression
+Protected Class GroupTest
+Inherits ORM
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  Return "FULL " + Super.Compile()
+		Function TableName() As String
+		  Return "Groups"
 		End Function
 	#tag EndMethod
 

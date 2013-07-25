@@ -2,39 +2,27 @@
 Protected Class UsingQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  Return "USING " + QueryCompiler.Column(mColumn) + QueryCompiler.Operator(mOperator) + QueryCompiler.Value(mValue)
-		  
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Return "USING ( " + QueryCompiler.Columns(mColumns) + " )"
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumn As String, pOperator As String, pValue As Variant)
-		  mColumn = pColumn
-		  mOperator = pOperator
-		  mValue = pValue
+		Sub Constructor(pColumns() As Variant)
+		  mColumns = pColumns
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return 4
-		  
+		  Return 3
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mColumn As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mOperator As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
-		Private mValue As Variant
+		Private mColumns As Variant
 	#tag EndProperty
 
 

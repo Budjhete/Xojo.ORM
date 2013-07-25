@@ -1,16 +1,9 @@
 #tag Class
-Protected Class AndHavingQueryExpression
-Inherits HavingQueryExpression
+Protected Class RightJoinQueryExpression
+Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  return "AND " + Predicate()
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  Return Super.Nice() + 1
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Return "RIGHT " + Super.Compile()
 		End Function
 	#tag EndMethod
 

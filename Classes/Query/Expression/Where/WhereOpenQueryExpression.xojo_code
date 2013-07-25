@@ -1,16 +1,19 @@
 #tag Class
-Protected Class AndWhereQueryExpression
-Inherits WhereQueryExpression
+Protected Class WhereOpenQueryExpression
+Inherits OpenQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  return "AND " + Predicate()
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  If pLastQueryExpression IsA WhereQueryExpression Then
+		    Return "AND " + Super.Compile()
+		  End If
 		  
+		  Return "WHERE " + Super.Compile()
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return Super.Nice() + 1
+		  Return 4
 		End Function
 	#tag EndMethod
 

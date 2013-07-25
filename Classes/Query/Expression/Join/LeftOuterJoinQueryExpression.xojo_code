@@ -1,9 +1,9 @@
 #tag Class
-Protected Class RightJoinQueryExpression
+Protected Class LeftOuterJoinQueryExpression
 Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  Return "RIGHT " + Super.Compile()
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Return "LEFT OUTER " + Super.Compile()
 		End Function
 	#tag EndMethod
 

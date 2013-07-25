@@ -1,34 +1,12 @@
 #tag Class
-Protected Class SetQueryExpression
-Implements QueryExpression
+Protected Class OrHavingQueryExpression
+Inherits HavingQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  If pLastQueryExpression IsA SetQueryExpression Then
-		    Return ", " + QueryCompiler.Set(mValues)
-		  End if
-		  
-		  Return "SET " + QueryCompiler.Set(mValues)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Constructor(pValues As Dictionary)
-		  mValues = pValues
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  Return 2
-		  
+		Function Compile() As String
+		  Return "OR " + Predicate()
 		  
 		End Function
 	#tag EndMethod
-
-
-	#tag Property, Flags = &h21
-		Private mValues As Dictionary
-	#tag EndProperty
 
 
 	#tag ViewBehavior

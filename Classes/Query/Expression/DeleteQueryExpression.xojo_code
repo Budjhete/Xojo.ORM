@@ -2,8 +2,8 @@
 Protected Class DeleteQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  return "DELETE FROM " + QueryCompiler.TableName(mTableName)
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Return "DELETE FROM " + QueryCompiler.TableName(mTableName)
 		End Function
 	#tag EndMethod
 

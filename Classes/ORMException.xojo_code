@@ -14,6 +14,7 @@ Inherits RuntimeException
 			Group="Behavior"
 			InitialValue="0"
 			Type="Integer"
+			InheritedFrom="RuntimeException"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -36,6 +37,7 @@ Inherits RuntimeException
 			Group="Behavior"
 			Type="String"
 			EditorType="MultiLineEditor"
+			InheritedFrom="RuntimeException"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"

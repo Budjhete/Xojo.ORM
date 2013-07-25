@@ -3,17 +3,13 @@ Protected Class QueryBuilder
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new AndHavingQueryExpression(pLeft, pOperator, pRight))
-		  
-		  Return Me
+		  Return Append(new AndHavingQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new AndWhereQueryExpression(pLeft, pOperator, pRight))
-		  
-		  Return Me
+		  Return Append(new AndWhereQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
 
@@ -38,7 +34,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Dim pStatements() As String
 		  Dim pNice As Integer
 		  
@@ -50,7 +46,8 @@ Implements QueryExpression
 		      Dim pQueryExpression As QueryExpression = mQuery(i)
 		      
 		      If pQueryExpression.Nice() = pNice Then
-		        pStatements.Append(pQueryExpression.Compile())
+		        pStatements.Append(pQueryExpression.Compile(pLastQueryExpression))
+		        pLastQueryExpression = pQueryExpression
 		      End If
 		      
 		    Next
@@ -114,17 +111,13 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function From(pTableName As String, pTableAlias As String) As QueryBuilder
-		  mQuery.Append(new FromQueryExpression(pTableName, pTableAlias))
-		  
-		  Return Me
+		  Return Append(new FromQueryExpression(pTableName, pTableAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumns() As Variant) As QueryBuilder
-		  mQuery.Append(new GroupByQueryExpression(pColumns))
-		  
-		  Return Me
+		  Return Append(new GroupByQueryExpression(pColumns))
 		End Function
 	#tag EndMethod
 
@@ -148,9 +141,19 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Having(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new HavingQueryExpression(pLeft, pOperator, pRight))
-		  
-		  Return Me
+		  Return Append(new HavingQueryExpression(pLeft, pOperator, pRight))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function HavingClose() As QueryBuilder
+		  Return Append(new HavingCloseQueryExpression())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function HavingOpen() As QueryBuilder
+		  Return Append(new HavingOpenQueryExpression())
 		End Function
 	#tag EndMethod
 
@@ -198,17 +201,13 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As QueryBuilder
-		  mQuery.Append(new OffsetQueryExpression(pOffset))
-		  
-		  Return Me
+		  Return Append(new OffsetQueryExpression(pOffset))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new OnQueryExpression(pLeft, pOperator, pRight))
-		  
-		  Return Me
+		Function On(pColumn As Variant, pOperator As String, pValue As Variant) As QueryBuilder
+		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue))
 		End Function
 	#tag EndMethod
 
@@ -274,10 +273,14 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Using(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new UsingQueryExpression(pLeft, pOperator, pRight))
-		  
-		  Return Me
+		Function Using(pColumns() As Variant) As QueryBuilder
+		  Return Append(new UsingQueryExpression(pColumns))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Using(ParamArray pColumns As Variant) As QueryBuilder
+		  Return Using(pColumns)
 		End Function
 	#tag EndMethod
 
@@ -300,7 +303,7 @@ Implements QueryExpression
 		  // Applies a dictionary of criterias
 		  
 		  For Each pKey As Variant In pCriterias.Keys()
-		    Call Having(pKey, "=", pCriterias.Value(pKey))
+		    Call Where(pKey, "=", pCriterias.Value(pKey))
 		  Next
 		  
 		  Return Me
@@ -309,9 +312,19 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new WhereQueryExpression(pLeft, pOperator, pRight))
-		  
-		  Return Me
+		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function WhereClose() As QueryBuilder
+		  Return Append(new WhereCloseQueryExpression())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function WhereOpen() As QueryBuilder
+		  Return Append(new WhereOpenQueryExpression())
 		End Function
 	#tag EndMethod
 

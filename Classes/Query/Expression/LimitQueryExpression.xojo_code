@@ -2,7 +2,7 @@
 Protected Class LimitQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Return "LIMIT " + Str(mLimit)
 		End Function
 	#tag EndMethod

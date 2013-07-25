@@ -54,24 +54,25 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Set(pValues As Dictionary) As String
-		  Dim pQuery As String
-		  Dim i As Integer = 0
+		  // Compile values
+		  Dim pCompiledValues() As String
 		  
-		  For Each pKey As Variant In pValues.Keys()
+		  For Each pColumn As Variant In pValues.Keys()
 		    
-		    pQuery = pQuery + QueryCompiler.Column(pKey) + "=" + QueryCompiler.Value(pValues.Value(pKey))
-		    
-		    If i <> pValues.Keys().UBound Then
-		      pQuery = pQuery + ","
-		    End If
-		    
-		    i = i + 1
+		    pCompiledValues.Append(QueryCompiler.Set(pColumn, pValues.Value(pColumn)))
 		    
 		  Next
 		  
-		  Return pQuery
+		  Return Join(pCompiledValues, ", ")
 		  
 		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Set(pColumn As Variant, pValue As Variant) As String
+		  Return QueryCompiler.Column(pColumn) + " = " + QueryCompiler.Value(pValue)
 		End Function
 	#tag EndMethod
 

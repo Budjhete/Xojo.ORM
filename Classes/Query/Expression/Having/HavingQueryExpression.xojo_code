@@ -1,32 +1,51 @@
 #tag Class
-Protected Class JoinQueryExpression
+Protected Class HavingQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  Return "JOIN " + QueryCompiler.TableName(mTableName, mTableAlias)
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  If pLastQueryExpression IsA HavingQueryExpression Then
+		    Return "AND " + Predicate()
+		  End If
+		  
+		  If pLastQueryExpression IsA HavingOpenQueryExpression Then
+		    Return Predicate()
+		  End If
+		  
+		  Return "HAVING " + Predicate()
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pTableAlias As String)
-		  mTableName = pTableName
-		  mTableAlias = pTableAlias
+		Sub Constructor(pLeft As Variant, pOperator As String, pRight As Variant)
+		  mLeft = pLeft
+		  mOperator = pOperator
+		  mRight = pRight
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return 3
+		  Return 6
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function Predicate() As String
+		  Return QueryCompiler.Column(mLeft) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Value(mRight)
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mTableAlias As String
+		Private mLeft As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableName As String
+		Private mOperator As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mRight As Variant
 	#tag EndProperty
 
 
