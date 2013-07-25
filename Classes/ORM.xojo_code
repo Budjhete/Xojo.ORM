@@ -31,7 +31,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Changed() As Boolean
-		  return mChanged.Keys().Ubound >= 0
+		  return mChanged.Keys().Ubound > -1
 		End Function
 	#tag EndMethod
 
@@ -150,11 +150,16 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String, pValue As Variant) As ORM
 		  // If it is different than the original data, it has changed
+		  
+		  RaiseEvent Changing()
+		  
 		  If Initial(pColumn) <> pValue Then
-		    RaiseEvent Changing()
 		    mChanged.Value(pColumn) = pValue
-		    RaiseEvent Changed()
+		  ElseIf mChanged.HasKey(pColumn) Then
+		    mChanged.Remove(pColumn)
 		  End If
+		  
+		  RaiseEvent Changed()
 		  
 		  Return Me
 		  
@@ -190,10 +195,14 @@ Inherits QueryBuilder
 		  // Add SELECT and LIMIT 1 to the query
 		  Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Limit(1).Execute(pDatabase)
 		  
-		  // Fetch record set
-		  For Each pColumn As Variant In TableColumns(pDatabase)
-		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		  Next
+		  If pRecordSet <> Nil Then
+		    
+		    // Fetch record set
+		    For Each pColumn As Variant In TableColumns(pDatabase)
+		      mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		    Next
+		    
+		  End If
 		  
 		  RaiseEvent Found()
 		  
@@ -320,7 +329,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Loaded() As Boolean
 		  // Model must have a primary key and that primary key must not be Nil
-		  Return Data(PrimaryKey()) <> Nil
+		  Return Initial(PrimaryKey()) <> Nil
 		  
 		End Function
 	#tag EndMethod

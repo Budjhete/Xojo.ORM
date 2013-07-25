@@ -46,18 +46,18 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DeleteTest()
-		  Dim DeleteModel As New UserTest()
+		  Dim pUserTest As New UserTest()
 		  
-		  Call DeleteModel.Data("username", "Paul-Willy Jean").Data("password", "Jean").Create(ORMTestDatabase)
+		  Call pUserTest.Data("username", "Paul-Willy Jean").Data("password", "Jean").Create(ORMTestDatabase)
 		  
-		  Assert.IsTrue(DeleteModel.Loaded())
-		  Assert.IsFalse(DeleteModel.Changed()), "Le modele est enregistre, mais il a quand-meme change"
+		  Assert.IsTrue pUserTest.Loaded()
+		  Assert.IsFalse pUserTest.Changed(), "Le modele est enregistre, mais il a quand-meme change"
 		  
 		  // Supprime le modele et verifie l'etat de l'ORM
-		  DeleteModel.Delete(ORMTestDatabase)
+		  Call pUserTest.Delete(ORMTestDatabase)
 		  
-		  Assert.IsFalse  DeleteModel.Loaded(), "Le modele reste tout de meme charge"
-		  Assert.IsFalse  DeleteModel.Changed(), "L'ORM a change, mais il n'existe plus."
+		  Assert.IsFalse pUserTest.Loaded(), "Le modele reste tout de meme charge"
+		  Assert.IsFalse pUserTest.Changed(), "L'ORM a change, mais il n'existe plus."
 		End Sub
 	#tag EndMethod
 
