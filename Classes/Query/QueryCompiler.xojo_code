@@ -4,11 +4,11 @@ Protected Module QueryCompiler
 		Function Column(pColumn As Variant) As String
 		  Select Case pColumn
 		    
-		  Case IsA ExpressionQueryExpression
-		    Return ExpressionQueryExpression(pColumn).Compile
+		  Case IsA QueryBuilder
+		    Return "(" + QueryBuilder(pColumn).Compile + ")"
 		    
 		  Case IsA QueryExpression
-		    Return "(" + QueryExpression(pColumn).Compile + ")"
+		    Return QueryExpression(pColumn).Compile
 		    
 		  Case Nil
 		    Return "NULL"
@@ -92,11 +92,11 @@ Protected Module QueryCompiler
 		Function Value(pValue As Variant) As String
 		  Select Case pValue
 		    
-		  Case IsA ExpressionQueryExpression
-		    Return ExpressionQueryExpression(pValue).Compile
+		  Case IsA QueryBuilder
+		    Return "(" + QueryExpression(pValue).Compile + ")"
 		    
 		  Case IsA QueryExpression
-		    Return "(" + QueryExpression(pValue).Compile + ")"
+		    Return QueryExpression(pValue).Compile
 		    
 		  Case Nil
 		    Return "NULL"
