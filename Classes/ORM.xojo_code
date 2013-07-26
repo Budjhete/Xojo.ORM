@@ -52,24 +52,16 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor()
-		  mData = New Dictionary()
-		  mChanged = New Dictionary()
+		  mData = New Dictionary
+		  mChanged = New Dictionary
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pORM As ORM)
+		Sub Constructor(pPrimaryKey As Variant)
 		  Constructor()
 		  
-		  // Use a copy of mData to avoid external changes
-		  For Each pKey As Variant In pORM.mData.Keys()
-		    mData.Value(pKey) = pORM.mData.Value(pKey)
-		  Next
-		  
-		  // Use a copy of mChanged to avoid external changes
-		  For Each pKey As Variant In pORM.mChanged.Keys()
-		    mChanged.Value(pKey) = pORM.mChanged.Value(pKey)
-		  Next
+		  Call Where(PrimaryKey(), "=", pPrimaryKey)
 		End Sub
 	#tag EndMethod
 
@@ -278,6 +270,24 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function HavingOpen() As ORM
 		  Call Super.HavingOpen()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Inflate(pORM As ORM) As ORM
+		  Call Super.Inflate(pORM)
+		  
+		  // Use a copy of mData to avoid external changes
+		  For Each pKey As Variant In pORM.mData.Keys()
+		    mData.Value(pKey) = pORM.mData.Value(pKey)
+		  Next
+		  
+		  // Use a copy of mChanged to avoid external changes
+		  For Each pKey As Variant In pORM.mChanged.Keys()
+		    mChanged.Value(pKey) = pORM.mChanged.Value(pKey)
+		  Next
 		  
 		  Return Me
 		End Function

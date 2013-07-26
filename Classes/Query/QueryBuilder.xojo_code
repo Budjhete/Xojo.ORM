@@ -14,22 +14,20 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Append(pQueryExpression As QueryExpression) As QueryBuilder
-		  mQuery.Append(pQueryExpression)
+		Function Append(pQueryExpressions() As QueryExpression) As QueryBuilder
+		  For Each pQueryExpression As QueryExpression In pQueryExpressions
+		    Call Append(pQueryExpression)
+		  Next
 		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Clone() As QueryBuilder
-		  Dim pQueryBuilder As New QueryBuilder()
+		Function Append(pQueryExpression As QueryExpression) As QueryBuilder
+		  mQuery.Append(pQueryExpression)
 		  
-		  For Each pQueryExpression As QueryExpression In mQuery
-		    pQueryBuilder.mQuery.Append(pQueryExpression)
-		  Next
-		  
-		  Return pQueryBuilder
+		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -154,6 +152,12 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function HavingOpen() As QueryBuilder
 		  Return Append(new HavingOpenQueryExpression())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Inflate(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  Return Append(pQueryBuilder.mQuery)
 		End Function
 	#tag EndMethod
 
