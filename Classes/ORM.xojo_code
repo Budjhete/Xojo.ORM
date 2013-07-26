@@ -79,27 +79,29 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
 		  end
 		  
-		  RaiseEvent Creating()
-		  
-		  DB.Insert(TableName(), mChanged.Keys()).Values(mChanged.Values()).Execute(pDatabase)
-		  
-		  // Update data
-		  For Each pKey As Variant In mChanged.Keys()
-		    mData.Value(pKey) = mChanged.Value(pKey)
-		  Next
-		  
-		  // Reset QueryBuilder
-		  Call Reset()
-		  
-		  // Clear changes, they are saved in mData
-		  Call Clear()
-		  
-		  Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
-		  
-		  // Update primary key from the last row inserted in this table
-		  mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
-		  
-		  RaiseEvent Created()
+		  If Not RaiseEvent Creating() Then
+		    
+		    DB.Insert(TableName(), mChanged.Keys()).Values(mChanged.Values()).Execute(pDatabase)
+		    
+		    // Update data
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Reset QueryBuilder
+		    Call Reset()
+		    
+		    // Clear changes, they are saved in mData
+		    Call Clear()
+		    
+		    Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
+		    
+		    // Update primary key from the last row inserted in this table
+		    mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
+		    
+		    RaiseEvent Created()
+		    
+		  End If
 		  
 		  Return Me
 		End Function
@@ -143,15 +145,17 @@ Inherits QueryBuilder
 		Function Data(pColumn As String, pValue As Variant) As ORM
 		  // If it is different than the original data, it has changed
 		  
-		  RaiseEvent Changing()
-		  
-		  If Initial(pColumn) <> pValue Then
-		    mChanged.Value(pColumn) = pValue
-		  ElseIf mChanged.HasKey(pColumn) Then
-		    mChanged.Remove(pColumn)
+		  If Not RaiseEvent Changing() Then
+		    
+		    If Initial(pColumn) <> pValue Then
+		      mChanged.Value(pColumn) = pValue
+		    ElseIf mChanged.HasKey(pColumn) Then
+		      mChanged.Remove(pColumn)
+		    End If
+		    
+		    RaiseEvent Changed()
+		    
 		  End If
-		  
-		  RaiseEvent Changed()
 		  
 		  Return Me
 		  
@@ -159,21 +163,25 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Delete(pDatabase As Database)
+		Function Delete(pDatabase As Database) As ORM
 		  if Not Loaded() then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
 		  
-		  RaiseEvent Deleting()
+		  If Not RaiseEvent Deleting() Then
+		    
+		    Append(new DeleteQueryExpression(TableName())).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		    
+		    Call Unload()
+		    
+		    Call Clear()
+		    
+		    RaiseEvent Deleted()
+		    
+		  End If
 		  
-		  Append(new DeleteQueryExpression(TableName())).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
-		  
-		  Call Unload()
-		  
-		  Call Clear()
-		  
-		  RaiseEvent Deleted()
-		End Sub
+		  Return Me
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -182,21 +190,23 @@ Inherits QueryBuilder
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  RaiseEvent Finding()
-		  
-		  // Add SELECT and LIMIT 1 to the query
-		  Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Limit(1).Execute(pDatabase)
-		  
-		  If pRecordSet <> Nil Then
+		  If Not RaiseEvent Finding() Then
 		    
-		    // Fetch record set
-		    For Each pColumn As Variant In TableColumns(pDatabase)
-		      mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		    Next
+		    // Add SELECT and LIMIT 1 to the query
+		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Limit(1).Execute(pDatabase)
+		    
+		    If pRecordSet <> Nil Then
+		      
+		      // Fetch record set
+		      For Each pColumn As Variant In TableColumns(pDatabase)
+		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		      Next
+		      
+		    End If
+		    
+		    RaiseEvent Found()
 		    
 		  End If
-		  
-		  RaiseEvent Found()
 		  
 		  Return Me
 		  
@@ -503,18 +513,20 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
 		  End If
 		  
-		  RaiseEvent Updating()
-		  
-		  Append(new UpdateQueryExpression(TableName)).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
-		  
-		  For Each pKey As Variant In mChanged.Keys()
-		    mData.Value(pKey) = mChanged.Value(pKey)
-		  Next
-		  
-		  // Clear mChanged, they are merged in mData
-		  Call Clear()
-		  
-		  RaiseEvent Updated()
+		  If Not RaiseEvent Updating() Then
+		    
+		    Append(new UpdateQueryExpression(TableName)).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		    
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear mChanged, they are merged in mData
+		    Call Clear()
+		    
+		    RaiseEvent Updated()
+		    
+		  End If
 		  
 		  Return Me
 		  
@@ -581,7 +593,7 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Changing()
+		Event Changing() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -589,7 +601,7 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Creating()
+		Event Creating() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -597,11 +609,11 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Deleting()
+		Event Deleting() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Finding()
+		Event Finding() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -613,7 +625,7 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Updating()
+		Event Updating() As Boolean
 	#tag EndHook
 
 

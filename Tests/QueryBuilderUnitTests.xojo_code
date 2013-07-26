@@ -2,6 +2,21 @@
 Protected Class QueryBuilderUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub FindTest()
+		  Dim pStatement As String
+		  Dim pRecordSet As RecordSet
+		  
+		  Dim pColumns() As Variant
+		  pColumns.Append("nom")
+		  
+		  pStatement = DB.Find("id").Append(new SelectQueryExpression(pColumns)).From("Clients").Compile()
+		  pRecordSet = DB.Find("id").Append(new SelectQueryExpression(pColumns)).From("Clients").Execute(ORMTestDatabase)
+		  
+		  Assert.AreEqual("SELECT `id` , `nom` FROM `Clients`", pStatement)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub HavingTest()
 		  Dim pStatement As String
 		  Dim pRecordSet As RecordSet
