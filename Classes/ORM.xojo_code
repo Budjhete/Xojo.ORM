@@ -279,10 +279,16 @@ Inherits QueryBuilder
 		Function Inflate(pORM As ORM) As ORM
 		  Call Super.Inflate(pORM)
 		  
+		  // Clear mData
+		  mData.Clear()
+		  
 		  // Use a copy of mData to avoid external changes
 		  For Each pKey As Variant In pORM.mData.Keys()
 		    mData.Value(pKey) = pORM.mData.Value(pKey)
 		  Next
+		  
+		  // Clear mChanged
+		  mChanged.Clear()
 		  
 		  // Use a copy of mChanged to avoid external changes
 		  For Each pKey As Variant In pORM.mChanged.Keys()

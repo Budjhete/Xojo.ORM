@@ -157,7 +157,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Inflate(pQueryBuilder As QueryBuilder) As QueryBuilder
-		  Return Append(pQueryBuilder.mQuery)
+		  Return Reset.Append(pQueryBuilder.mQuery)
 		End Function
 	#tag EndMethod
 

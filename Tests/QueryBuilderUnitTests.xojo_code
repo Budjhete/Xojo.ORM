@@ -14,6 +14,20 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub InflateTest()
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Call pQueryBuilder.Where("A", "=", "A")
+		  
+		  Dim pNewQueryBuilder As New QueryBuilder
+		  
+		  Call pNewQueryBuilder.Inflate(pQueryBuilder)
+		  
+		  Assert.AreEqual(pQueryBuilder.Compile, pNewQueryBuilder.Compile)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub JoinTest()
 		  System.DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
 		  Dim pRecordSet As RecordSet
@@ -244,14 +258,12 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -280,19 +292,16 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -305,7 +314,6 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
