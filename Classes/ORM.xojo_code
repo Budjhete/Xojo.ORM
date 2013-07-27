@@ -445,11 +445,17 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Save(pDatabase As Database) As ORM
-		  If Loaded() Then
-		    Return Update(pDatabase)
-		  Else
-		    Return Create(pDatabase)
-		  End
+		  If Not RaiseEvent Saving Then
+		    
+		    If Loaded() Then
+		      Return Update(pDatabase)
+		    Else
+		      Return Create(pDatabase)
+		    End
+		    
+		    RaiseEvent Saved
+		    
+		  End If
 		End Function
 	#tag EndMethod
 
@@ -619,6 +625,14 @@ Inherits QueryBuilder
 
 	#tag Hook, Flags = &h0
 		Event Found()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Saved()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Saving() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
