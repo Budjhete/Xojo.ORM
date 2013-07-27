@@ -1,6 +1,12 @@
 #tag Module
 Protected Module DB
 	#tag Method, Flags = &h0
+		Function Count(pColumn As Variant) As QueryExpression
+		  Return Expression("COUNT( " + QueryCompiler.Column(pColumn) + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Delete(pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
@@ -49,13 +55,13 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Set(pValues() As Variant) As ExpressionQueryExpression
+		Function Set(pValues() As Variant) As QueryExpression
 		  Return new ExpressionQueryExpression("(" + QueryCompiler.Values(pValues) + ")")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Set(ParamArray pValues As Variant) As ExpressionQueryExpression
+		Function Set(ParamArray pValues As Variant) As QueryExpression
 		  Return Set(pValues)
 		End Function
 	#tag EndMethod

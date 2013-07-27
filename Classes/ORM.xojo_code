@@ -88,9 +88,6 @@ Inherits QueryBuilder
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
-		    // Reset QueryBuilder
-		    Call Reset()
-		    
 		    // Clear changes, they are saved in mData
 		    Call Clear()
 		    
@@ -143,10 +140,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String, pValue As Variant) As ORM
-		  // If it is different than the original data, it has changed
-		  
 		  If Not RaiseEvent Changing() Then
 		    
+		    // If it is different than the original data, it has changed
 		    If Initial(pColumn) <> pValue Then
 		      mChanged.Value(pColumn) = pValue
 		    ElseIf mChanged.HasKey(pColumn) Then
@@ -170,10 +166,12 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Deleting() Then
 		    
-		    Append(new DeleteQueryExpression(TableName())).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		    DB.Delete(TableName()).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
 		    
+		    // Empty mData
 		    Call Unload()
 		    
+		    // Empty mChanges
 		    Call Clear()
 		    
 		    RaiseEvent Deleted()
@@ -287,22 +285,24 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Inflate(pORM As ORM) As ORM
+		  // Inflate this ORM on another ORM
+		  
 		  Call Super.Inflate(pORM)
 		  
 		  // Clear mData
-		  mData.Clear()
+		  pORM.mData.Clear()
 		  
 		  // Use a copy of mData to avoid external changes
-		  For Each pKey As Variant In pORM.mData.Keys()
-		    mData.Value(pKey) = pORM.mData.Value(pKey)
+		  For Each pKey As Variant In mData.Keys()
+		    pORM.mData.Value(pKey) = mData.Value(pKey)
 		  Next
 		  
 		  // Clear mChanged
-		  mChanged.Clear()
+		  pORM.mChanged.Clear()
 		  
 		  // Use a copy of mChanged to avoid external changes
-		  For Each pKey As Variant In pORM.mChanged.Keys()
-		    mChanged.Value(pKey) = pORM.mChanged.Value(pKey)
+		  For Each pKey As Variant In mChanged.Keys()
+		    pORM.mChanged.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
 		  Return Me
@@ -410,8 +410,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Pk() As Variant
-		  // Primary key value
-		  Return Data(PrimaryKey())
+		  // Initial primary key value
+		  Return Initial(PrimaryKey())
 		End Function
 	#tag EndMethod
 
@@ -515,8 +515,9 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Updating() Then
 		    
-		    Append(new UpdateQueryExpression(TableName)).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		    DB.Update(TableName()).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
 		    
+		    // Merge mData with mChanged
 		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
