@@ -176,9 +176,19 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Join(pTableName As String, pTableAlias As String) As QueryBuilder
-		  mQuery.Append(new JoinQueryExpression(pTableName, pTableAlias))
-		  
-		  return Me
+		  Return Append(new JoinQueryExpression(pTableName, pTableAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftJoin(pTableName As String) As QueryBuilder
+		  Return LeftJoin(pTableName, pTableName)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftJoin(pTableName As String, pTableAlias As String) As QueryBuilder
+		  Return Append(new LeftJoinQueryExpression(pTableName, pTableAlias))
 		End Function
 	#tag EndMethod
 
