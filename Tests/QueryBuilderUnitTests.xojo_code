@@ -8,22 +8,22 @@ Inherits TestGroup
 		  
 		  // SELECT * statement
 		  pStatement = DB.Find.From("Users").Compile()
-		  pRecordSet = DB.Find.Execute(ORMTestDatabase)
+		  pRecordSet = DB.Find.From("Users").Execute(ORMTestDatabase)
 		  Assert.AreEqual("SELECT * FROM `Users`", pStatement)
 		  
 		  // Simple SELECT statement
 		  pStatement = DB.Find("id").From("Users").Compile()
-		  pRecordSet = DB.Find("id").Execute(ORMTestDatabase)
+		  pRecordSet = DB.Find("id").From("Users").Execute(ORMTestDatabase)
 		  Assert.AreEqual("SELECT `id` FROM `Users`", pStatement)
 		  
 		  // Multiple SELECT statement
 		  pStatement = DB.Find("id", "username").From("Users").Compile()
-		  pRecordSet = DB.Find("id", "username").Execute(ORMTestDatabase)
+		  pRecordSet = DB.Find("id", "username").From("Users").Execute(ORMTestDatabase)
 		  Assert.AreEqual("SELECT `id`, `username` FROM `Users`", pStatement)
 		  
 		  // Count Expression in SELECT
 		  pStatement = DB.Find(DB.Count("id"), "username").From("Users").Compile()
-		  pRecordSet = DB.Find(DB.Count("id"), "username").Execute(ORMTestDatabase)
+		  pRecordSet = DB.Find(DB.Count("id"), "username").From("Users").Execute(ORMTestDatabase)
 		  Assert.AreEqual("SELECT COUNT(`id`), `username` FROM `Users`", pStatement)
 		  
 		  // @todo SELECT DINSTINCT
@@ -296,14 +296,12 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -332,19 +330,16 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -357,7 +352,6 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
