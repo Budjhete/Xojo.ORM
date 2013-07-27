@@ -9,33 +9,35 @@ Inherits TestGroup
 		  // SELECT * statement
 		  pStatement = DB.Find.From("Users").Compile()
 		  pRecordSet = DB.Find.From("Users").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT * FROM `Users`", pStatement)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users`", pStatement)
 		  
 		  // Simple SELECT statement
 		  pStatement = DB.Find("id").From("Users").Compile()
 		  pRecordSet = DB.Find("id").From("Users").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT `id` FROM `Users`", pStatement)
+		  Assert.AreEqual("SELECT `id` FROM `Users` AS `Users`", pStatement)
 		  
 		  // Multiple SELECT statement
 		  pStatement = DB.Find("id", "username").From("Users").Compile()
 		  pRecordSet = DB.Find("id", "username").From("Users").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT `id`, `username` FROM `Users`", pStatement)
+		  Assert.AreEqual("SELECT `id`, `username` FROM `Users` AS `Users`", pStatement)
 		  
 		  // Count Expression in SELECT
 		  pStatement = DB.Find(DB.Count("id"), "username").From("Users").Compile()
 		  pRecordSet = DB.Find(DB.Count("id"), "username").From("Users").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT COUNT(`id`), `username` FROM `Users`", pStatement)
+		  Assert.AreEqual("SELECT COUNT ( `id` ), `username` FROM `Users` AS `Users`", pStatement)
 		  
-		  // @todo SELECT DINSTINCT
+		  // Distinct Expression in SELECT
+		  pStatement = DB.Find(DB.Distinct("id"), "username").From("Users").Compile()
+		  pRecordSet = DB.Find(DB.Distinct("id"), "username").From("Users").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT DISTINCT ( `id` ), `username` FROM `Users` AS `Users`", pStatement)
 		  
 		  // Add more SELECT expression on existing SELECT expression
-		  
 		  Dim pColumns() As Variant
 		  pColumns.Append("username")
 		  
 		  pStatement = DB.Find("id").Append(new SelectQueryExpression(pColumns)).From("Users").Compile()
 		  pRecordSet = DB.Find("id").Append(new SelectQueryExpression(pColumns)).From("Users").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT `id` , `username` FROM `Users`", pStatement)
+		  Assert.AreEqual("SELECT `id` , `username` FROM `Users` AS `Users`", pStatement)
 		End Sub
 	#tag EndMethod
 
@@ -296,12 +298,14 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -330,16 +334,19 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -352,6 +359,7 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
+			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

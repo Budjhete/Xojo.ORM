@@ -2,7 +2,7 @@
 Protected Module DB
 	#tag Method, Flags = &h0
 		Function Count(pColumn As Variant) As QueryExpression
-		  Return Expression("COUNT( " + QueryCompiler.Column(pColumn) + " )")
+		  Return Expression("COUNT ( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
@@ -15,7 +15,13 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Expression(pExpression As String) As ExpressionQueryExpression
+		Function Distinct(pColumn As Variant) As QueryExpression
+		  Return Expression("DISTINCT ( " + QueryCompiler.Column(pColumn) + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Expression(pExpression As String) As QueryExpression
 		  Return new ExpressionQueryExpression(pExpression)
 		End Function
 	#tag EndMethod
