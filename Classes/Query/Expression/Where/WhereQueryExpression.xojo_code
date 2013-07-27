@@ -7,6 +7,10 @@ Implements QueryExpression
 		    Return "AND " + Predicate()
 		  End If
 		  
+		  If pLastQueryExpression IsA WhereCloseQueryExpression Then
+		    Return "AND " + Predicate()
+		  End If
+		  
 		  If pLastQueryExpression IsA WhereOpenQueryExpression Then
 		    Return Predicate()
 		  End If

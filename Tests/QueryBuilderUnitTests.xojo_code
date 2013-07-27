@@ -289,6 +289,11 @@ Inherits TestGroup
 		  pStatement = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Compile()
 		  pRecordSet = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Execute(ORMTestDatabase)
 		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` WHERE ( `username` = 'Paul' )", pStatement)
+		  
+		  // WHERE after a WhereClose
+		  pStatement = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Where("username", "=", "Paul").Compile()
+		  pRecordSet = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Where("username", "=", "Paul").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` WHERE ( `username` = 'Paul' ) AND `username` = 'Paul'", pStatement)
 		End Sub
 	#tag EndMethod
 
