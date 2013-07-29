@@ -65,6 +65,8 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile()
 		    
+		    pStatement = pStatement.Replace(Chr(0), "")
+		    
 		    pDatabase.SQLExecute(pStatement)
 		    
 		    If pDatabase.Error Then
@@ -86,6 +88,8 @@ Implements QueryExpression
 		  If Not RaiseEvent Executing() Then
 		    
 		    Dim pStatement As String = Compile()
+		    
+		    pStatement = pStatement.Replace(Chr(0), "")
 		    
 		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
 		    
