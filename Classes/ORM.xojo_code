@@ -130,6 +130,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String) As Variant
 		  // Getter for data
+		  
 		  If mChanged.HasKey(pColumn) Then
 		    Return mChanged.Value(pColumn)
 		  End If
@@ -207,7 +208,6 @@ Inherits QueryBuilder
 		  End If
 		  
 		  Return Me
-		  
 		End Function
 	#tag EndMethod
 
@@ -447,13 +447,17 @@ Inherits QueryBuilder
 		Function Save(pDatabase As Database) As ORM
 		  If Not RaiseEvent Saving Then
 		    
+		    Dim returnValue As ORM
+		    
 		    If Loaded() Then
-		      Return Update(pDatabase)
+		      returnValue = Update(pDatabase)
 		    Else
-		      Return Create(pDatabase)
+		      returnValue = Create(pDatabase)
 		    End
 		    
 		    RaiseEvent Saved
+		    
+		    Return returnValue
 		    
 		  End If
 		End Function
