@@ -130,6 +130,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String) As Variant
 		  // Getter for data
+		  
 		  If mChanged.HasKey(pColumn) Then
 		    Return mChanged.Value(pColumn)
 		  End If
@@ -207,7 +208,6 @@ Inherits QueryBuilder
 		  End If
 		  
 		  Return Me
-		  
 		End Function
 	#tag EndMethod
 
