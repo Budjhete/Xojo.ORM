@@ -447,13 +447,17 @@ Inherits QueryBuilder
 		Function Save(pDatabase As Database) As ORM
 		  If Not RaiseEvent Saving Then
 		    
+		    Dim returnValue As ORM
+		    
 		    If Loaded() Then
-		      Return Update(pDatabase)
+		      returnValue = Update(pDatabase)
 		    Else
-		      Return Create(pDatabase)
+		      returnValue = Create(pDatabase)
 		    End
 		    
 		    RaiseEvent Saved
+		    
+		    Return returnValue
 		    
 		  End If
 		End Function
