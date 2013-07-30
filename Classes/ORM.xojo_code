@@ -183,6 +183,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub dumpChanges()
+		  // For debug purposes
+		  
+		  For Each element As Variant In mChanged.Keys
+		    System.DebugLog element.StringValue
+		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Find(pDatabase As Database) As ORM
 		  If Loaded() Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
