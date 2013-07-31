@@ -173,6 +173,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Database() As Database
+		  return Nil
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Delete(pDatabase As Database) As ORM
 		  if Not Loaded() then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
