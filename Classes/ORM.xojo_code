@@ -18,13 +18,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function BelongsTo(pTableName As String, pForeignKey As Integer) As ORM
+		Function BelongsTo(pTableName As String, pForeignKey As String) As ORM
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub BelongsTo(pTableName As String, pForeignKey As Integer, pORM As ORM)
+		Sub BelongsTo(pAlias As String, pForeignKey As String, pORM As ORM)
+		  // pAlias will be the "property" through which we will acces the models that Me belongsTo
+		  mBelongsTo.Append(New Dictionary(pAlias : New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)))
 		  
 		End Sub
 	#tag EndMethod
@@ -276,6 +278,12 @@ Inherits QueryBuilder
 		Function Has(pTableName As String, pForeignKey As Variant, pFarTable As String, pFarKey As Variant) As Boolean
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasMany(pAlias As String, pForeignKey As String, pORM As ORM)
+		  mHasMany.Append(New Dictionary(pAlias : New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)))
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -687,12 +695,20 @@ Inherits QueryBuilder
 	#tag EndHook
 
 
+	#tag Property, Flags = &h1
+		Protected mBelongsTo() As Dictionary
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private mChanged As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mData As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mHasMany() As Dictionary
 	#tag EndProperty
 
 
