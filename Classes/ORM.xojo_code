@@ -187,7 +187,7 @@ Inherits QueryBuilder
 		  // For debug purposes
 		  
 		  For Each element As Variant In mChanged.Keys
-		    System.DebugLog element.StringValue
+		    System.DebugLog element.StringValue + " is : " + mChanged.Value(element).StringValue + "; was : " + mData.Value(element).StringValue
 		  Next
 		End Sub
 	#tag EndMethod
@@ -514,7 +514,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  return Introspection.GetType(Me).Name
+		  Return Introspection.GetType(Me).Name
 		End Function
 	#tag EndMethod
 
