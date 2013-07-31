@@ -116,6 +116,9 @@ Protected Module QueryCompiler
 		      Return "0"
 		    End If
 		    
+		  Case Variant.TypeArray
+		    return Join(pValue, ", ")
+		    
 		  End Select
 		  
 		  // Quote quotes ;)
