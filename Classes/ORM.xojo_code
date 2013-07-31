@@ -82,6 +82,26 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, Optional pFarKeys As Variant) As Integer
+		  If pFarKeys = Nil Then
+		    Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
+		    .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		    .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		    .Execute(Me.Database)
+		    return Records.Field("RecordsFound").IntegerValue
+		  End If
+		  
+		  If pFarKeys IsA ORM Then
+		    pFarKeys = ORM(pFarKeys).Pk()
+		  End If
+		  
+		  pFarKeys = Array(pFarKeys)
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Create(pDatabase As Database) As ORM
 		  if Loaded() then
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
