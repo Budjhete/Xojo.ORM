@@ -192,16 +192,20 @@ Inherits QueryBuilder
 		Sub dumpChanges()
 		  // For debug purposes
 		  
-		  For Each element As Variant In mChanged.Keys
-		    Dim msg As String = element.StringValue + " is : " _
-		    + mChanged.Value(element).StringValue
-		    If mData.HasKey(element) Then
-		      msg = msg + "; was : " + mData.Value(element).StringValue
-		    Else
-		      msg = msg + " (never was)"
-		    End If
-		    System.DebugLog msg
-		  Next
+		  If Not Loaded Then
+		    System.DebugLog "Model is not loaded !"
+		  Else
+		    For Each element As Variant In mChanged.Keys
+		      Dim msg As String = element.StringValue + " is : " _
+		      + mChanged.Value(element).StringValue
+		      If mData.HasKey(element) Then
+		        msg = msg + "; was : " + mData.Value(element).StringValue
+		      Else
+		        msg = msg + " (never was)"
+		      End If
+		      System.DebugLog msg
+		    Next
+		  End If
 		End Sub
 	#tag EndMethod
 
