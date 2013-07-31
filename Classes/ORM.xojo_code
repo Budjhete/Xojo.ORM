@@ -187,7 +187,14 @@ Inherits QueryBuilder
 		  // For debug purposes
 		  
 		  For Each element As Variant In mChanged.Keys
-		    System.DebugLog element.StringValue + " is : " + mChanged.Value(element).StringValue + "; was : " + mData.Value(element).StringValue
+		    Dim msg As String = element.StringValue + " is : " _
+		    + mChanged.Value(element).StringValue
+		    If mData.HasKey(element) Then
+		      msg = msg + "; was : " + mData.Value(element).StringValue
+		    Else
+		      msg = msg + " (never was)"
+		    End If
+		    System.DebugLog msg
 		  Next
 		End Sub
 	#tag EndMethod
