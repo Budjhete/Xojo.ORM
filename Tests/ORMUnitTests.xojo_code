@@ -2,6 +2,14 @@
 Protected Class ORMUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub CountRelationsTest()
+		  Dim mORM As New UserTest(1)
+		  Dim Relations As Integer = mORM.CountRelations("Project")
+		  Assert.AreEqual(Relations, 1)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CreateTest()
 		  Dim pModel As New UserTest()
 		  
