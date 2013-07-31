@@ -18,15 +18,21 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function BelongsTo(pTableName As String, pForeignKey As String) As ORM
-		  
+		Function BelongsTo() As Dictionary
+		  return mBelongsTo
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub BelongsTo(pTableName As String, pForeignKey As String)
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub BelongsTo(pAlias As String, pForeignKey As String, pORM As ORM)
 		  // pAlias will be the "property" through which we will acces the models that Me belongsTo
-		  mBelongsTo.Append(New Dictionary(pAlias : New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)))
+		  mBelongsTo.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)
 		  
 		End Sub
 	#tag EndMethod
@@ -272,8 +278,32 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function HasMany() As Dictionary
+		  return mHasMany
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasMany(pORM As ORM, pAlias As String, pForeignKey As String, Optional pThrough As String, Optional pFarKey As Variant)
+		  If pThrough = "" Then
+		    
+		    // Sets a new HasMany relationship in between this model and any other
+		    mHasMany.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey, "Through" : pThrough)
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub HasMany(pAlias As String, pForeignKey As String, pORM As ORM)
-		  mHasMany.Append(New Dictionary(pAlias : New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)))
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasMany(pAlias As String, pForeignKey As String, pThrough As String, pORM As ORM)
+		  // Initializes the far key of a HasMany through relationship
+		  Dim pFarKey As String = pORM.TableName() + "Id"
+		  HasMany(pORM, pAlias, pForeignKey, pThrough, pFarKey)
 		End Sub
 	#tag EndMethod
 
@@ -687,7 +717,7 @@ Inherits QueryBuilder
 
 
 	#tag Property, Flags = &h1
-		Protected mBelongsTo() As Dictionary
+		Protected mBelongsTo As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -699,7 +729,7 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mHasMany() As Dictionary
+		Protected mHasMany As Dictionary
 	#tag EndProperty
 
 
