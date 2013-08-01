@@ -317,6 +317,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Find() As ORM
+		  Return Me.Find(Me.Database)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Find(pDatabase As Database) As ORM
 		  If Loaded() Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
