@@ -2,6 +2,12 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
+		Function Add() As ORM
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndHaving(pLeft, pOperator, pRight)
 		  
