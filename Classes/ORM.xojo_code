@@ -84,32 +84,81 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, Optional pFarKeys As Variant) As Integer
-		  If pFarKeys = Nil Then
-		    // The request that looks in the pivot table to see if this model is present
-		    Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
-		    .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
-		    .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
-		    .Execute(Me.Database)
-		    
-		    // A string representation of the request
-		    Dim RecordsCompile As String = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
-		    .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
-		    .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
-		    .Compile()
-		    System.DebugLog(RecordsCompile)
-		    
-		    // Returns the number of relations found
-		    return Records.Field("RecordsFound").IntegerValue
+		Function CountRelations(pAlias As String) As Integer
+		  // The request that looks in the pivot table to see if this model is present
+		  Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Execute(Me.Database)
+		  
+		  // A string representation of the request
+		  Dim RecordsCompile As String = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Compile()
+		  System.DebugLog(RecordsCompile)
+		  
+		  // Returns the number of relations found
+		  return Records.Field("RecordsFound").IntegerValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys() As Integer) As Integer
+		  Dim pFarKeysString() As String
+		  
+		  // Converts the array of Integers into a array of
+		  // Strings before it is passedto another signature of the method
+		  For Each pFarKey As Integer In pFarKeys
+		    pFarKeysString.Append(Str(pFarKey))
+		  Next
+		  
+		  Return CountRelations(pAlias, pFarKeysString)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys As Integer) As Integer
+		  Return CountRelations(pAlias, Str(pFarKeys))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pORM As ORM) As Integer
+		  Dim pFarKey As Variant = pORM.Pk()
+		  Return CountRelations(pAlias, pFarKey.StringValue)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys() As String) As Integer
+		  If pFarKeys.Ubound < 0 OR Not Me.Loaded Then
+		    return 0
 		  End If
 		  
-		  If pFarKeys IsA ORM Then
-		    pFarKeys = ORM(pFarKeys).Pk()
-		  End If
+		  // The request to see if this model is related to the specified FarKeys
+		  Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) As RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)_
+		  .Execute(Me.Database)
 		  
-		  pFarKeys = Array(pFarKeys)
+		  // A string representation of the request
+		  Dim RecordsCompile As String = DB.Find(DB.Expression("COUNT(*) As RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)_
+		  .Compile()
+		  System.DebugLog(RecordsCompile)
 		  
-		  
+		  // Returns the number of relations found
+		  return Records.Field("RecordsFound").IntegerValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys As String) As Integer
+		  Return CountRelations(pAlias, Array(pFarKeys))
 		End Function
 	#tag EndMethod
 
