@@ -62,6 +62,8 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = New Dictionary
 		  mChanged = New Dictionary
+		  mHasMany = New Dictionary
+		  mBelongsTo = New Dictionary
 		End Sub
 	#tag EndMethod
 
