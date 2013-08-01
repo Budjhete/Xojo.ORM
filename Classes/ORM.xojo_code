@@ -368,8 +368,33 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pTableName As String, pForeignKey As Variant, pFarTable As String, pFarKey As Variant) As Boolean
+		Function Has(pAlias As String) As Boolean
+		  Return (Me.CountRelations(pAlias) <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarKeys() As Integer) As Boolean
+		  Return (Me.CountRelations(pAlias, pFarKeys) <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarkeys() As String) As Boolean
+		  Return (Me.CountRelations(pAlias, pFarkeys) <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarKey As Variant) As Boolean
+		  // Checks if pFarKey is explicitly Nil
+		  If pFarKey.IsNull Then
+		    Return (Me.CountRelations(pAlias) <> 0)
+		  ElseIf pFarKey IsA ORM Then
+		    Return (Me.CountRelations(pAlias, ORM(pFarKey)) <> 0)
+		  End If
 		  
+		  Return (Me.CountRelations(pAlias, pFarKey.StringValue) <> 0)
 		End Function
 	#tag EndMethod
 
@@ -810,6 +835,12 @@ Inherits QueryBuilder
 	#tag Hook, Flags = &h0
 		Event Updating() As Boolean
 	#tag EndHook
+
+
+	#tag Note, Name = Has
+		
+		Ne sert qu'à vérifier les relations Has Many Through
+	#tag EndNote
 
 
 	#tag Property, Flags = &h1
