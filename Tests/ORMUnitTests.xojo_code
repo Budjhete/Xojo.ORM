@@ -87,6 +87,17 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub HasTest()
+		  Dim mUserTest As New UserTest(1)
+		  call mUserTest.Find()
+		  
+		  Assert.IsTrue(mUserTest.Has("Project"))
+		  Assert.IsTrue(mUserTest.Has("Project", 1), mUserTest.Data("username") + " should have one role.")
+		  Assert.IsFalse(mUserTest.Has("Project", 0))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub InflateTest()
 		  Dim OriginalORM As New UserTest
 		  
