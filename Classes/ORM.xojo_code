@@ -297,6 +297,14 @@ Inherits QueryBuilder
 		  Else
 		    System.DebugLog "Dumping " + Str(mChanged.Count) + " changed values : "
 		    
+		    Dim i As Integer = 0
+		    Dim mesg As String
+		    For i = 0 To mChanged.Count-1
+		      mesg = mesg + " " + Str(mChanged.Key(i))
+		    Next
+		    System.DebugLog mesg
+		    
+		    
 		    For Each element As Variant In mChanged.Keys
 		      Dim msg As String = element.StringValue + " is : " _
 		      + mChanged.Value(element).StringValue
@@ -310,6 +318,7 @@ Inherits QueryBuilder
 		      System.DebugLog msg
 		    Next
 		  End If
+		  
 		End Sub
 	#tag EndMethod
 
