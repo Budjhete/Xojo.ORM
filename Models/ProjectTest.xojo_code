@@ -9,7 +9,7 @@ Inherits ORM
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  
+		  return "Project"
 		End Function
 	#tag EndMethod
 

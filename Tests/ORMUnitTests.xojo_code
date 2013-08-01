@@ -12,7 +12,21 @@ Inherits TestGroup
 		  Dim Relations As Integer = mORM.CountRelations("Project")
 		  Assert.AreEqual(Relations, 1)
 		  
+		  // Test to see if a provided farkey gives enough constraint
 		  Relations = mORM.CountRelations("Project", 1)
+		  Assert.AreEqual(Relations, 1)
+		  
+		  // Makes sure that it never returns a match for an empty
+		  // primary key
+		  Relations = mORM.CountRelations("Project", 0)
+		  Assert.AreEqual(Relations, 0)
+		  
+		  // Does it work with a string?
+		  Relations = mORM.CountRelations("Project", "myProject")
+		  Assert.AreEqual(Relations, 0)
+		  
+		  // Does it work with many strings
+		  Relations = mORM.CountRelations("Project", Array(1,2,3,4))
 		  Assert.AreEqual(Relations, 1)
 		End Sub
 	#tag EndMethod
