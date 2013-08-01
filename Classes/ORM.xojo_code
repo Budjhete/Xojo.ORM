@@ -406,11 +406,11 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub HasMany(pORM As ORM, pAlias As String, pForeignKey As String, Optional pThrough As String, Optional pFarKey As Variant)
-		  If pThrough = "" Then
-		    
-		    // Sets a new HasMany relationship in between this model and any other
-		    mHasMany.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey, "Through" : pThrough)
+		  If pFarKey.IsNull Then
+		    pFarKey = Me.TableName + "Id"
 		  End If
+		  // Sets a new HasMany relationship in between this model and any other
+		  mHasMany.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey, "Through" : pThrough, "FarKey" : pFarKey)
 		End Sub
 	#tag EndMethod
 
