@@ -86,10 +86,20 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function CountRelations(pAlias As String, Optional pFarKeys As Variant) As Integer
 		  If pFarKeys = Nil Then
+		    // The request that looks in the pivot table to see if this model is present
 		    Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
 		    .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
 		    .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
 		    .Execute(Me.Database)
+		    
+		    // A string representation of the request
+		    Dim RecordsCompile As String = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
+		    .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		    .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		    .Compile()
+		    System.DebugLog(RecordsCompile)
+		    
+		    // Returns the number of relations found
 		    return Records.Field("RecordsFound").IntegerValue
 		  End If
 		  
