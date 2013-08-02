@@ -367,12 +367,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pAlias As String) As Boolean
-		  Return (Me.CountRelations(pAlias) <> 0)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Has(pAlias As String, pFarKeys() As Variant) As Boolean
 		  If pFarKeys.Ubound < 0 Then
 		    Return (Me.CountRelations(pAlias) <> 0)
@@ -380,7 +374,7 @@ Inherits QueryBuilder
 		  
 		  For i As Integer = 0 To pFarKeys.Ubound
 		    If pFarKeys(i) IsA ORM Then
-		      pFarKeys(i) = ORM(pFarKeys(i).Pk())
+		      pFarKeys(i) = ORM(pFarKeys(i)).Pk()
 		    End If
 		  Next
 		  
