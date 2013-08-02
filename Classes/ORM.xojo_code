@@ -655,6 +655,36 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Remove(pAlias As String, pFarKeys() As Variant) As ORM
+		  // Starts the QueryBuilder by removing everything that has this model's primary key as a foreign key
+		  Dim pQueryBuilder As QueryBuilder = DB.Delete(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
+		  
+		  // Converts any ORM into a variant
+		  For pFarKey As Integer = 0 To pFarKeys.Ubound
+		    If pFarKeys(pFarKey) IsA ORM Then
+		      pFarKeys(pFarKey) = ORM(pFarKeys(pFarKey))
+		    End If
+		  Next
+		  
+		  // Adds a where clause if this Far Key's array is not empty
+		  If pFarKeys.Ubound >= 0 Then
+		    Call pQueryBuilder.Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
+		  End If
+		  
+		  pQueryBuilder.Execute(ORMTestDatabase)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Remove(pAlias As String, ParamArray pFarKeys As Variant) As ORM
+		  Return Me.Remove(pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset() As ORM
 		  Call Super.Reset()
 		  
