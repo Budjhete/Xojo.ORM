@@ -2,6 +2,28 @@
 Protected Class ORMUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub AddTest()
+		  CreateUsers()
+		  CreateProjects()
+		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
+		  
+		  // Loads the UsertTest model from the database
+		  Dim pUserTest As New UserTest(1)
+		  Call pUserTest.Find()
+		  
+		  // Loads the ProjectTest model from the database
+		  Dim pProjectTest As New ProjectTest(1)
+		  Call pProjectTest.Find()
+		  
+		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
+		  
+		  Call pUserTest.Add("Project", pProjectTest)
+		  
+		  Assert.IsTrue(pUserTest.Has("Project", pProjectTest))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CountRelationsTest()
 		  // Initializes the model for the test
 		  Dim mORM As New UserTest(1)
