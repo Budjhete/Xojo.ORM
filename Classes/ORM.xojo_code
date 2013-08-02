@@ -124,12 +124,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, pFarKeys As Integer) As Integer
-		  Return CountRelations(pAlias, Str(pFarKeys))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function CountRelations(pAlias As String, pORM As ORM) As Integer
 		  Dim pFarKey As Variant = pORM.Pk()
 		  Return CountRelations(pAlias, pFarKey.StringValue)
@@ -163,8 +157,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, pFarKeys As String) As Integer
-		  Return CountRelations(pAlias, Array(pFarKeys))
+		Function CountRelations(pAlias As String, pFarKeys As Variant) As Integer
+		  Return CountRelations(pAlias, Array(pFarKeys.StringValue))
 		End Function
 	#tag EndMethod
 
