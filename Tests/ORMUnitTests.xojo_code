@@ -189,6 +189,36 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub RemoveTest()
+		  CreateUsers()
+		  CreateProjects()
+		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
+		  
+		  // Loads the UsertTest model from the database
+		  Dim pUserTest As New UserTest(1)
+		  Call pUserTest.Find()
+		  
+		  // Loads the ProjectTest model from the database
+		  Dim pProjectTest As New ProjectTest(1)
+		  Call pProjectTest.Find()
+		  
+		  // Makes sure that pUserTest is not related to pProjectTest
+		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
+		  
+		  // Adds a relation between pUserTest and pProjectTest
+		  Call pUserTest.Add("Project", pProjectTest)
+		  Assert.IsTrue(pUserTest.Has("Project", pProjectTest))
+		  
+		  // Removes any relation between pUserTest and any ProjectTest
+		  Call pUserTest.Remove("Project")
+		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
+		  
+		  pUserTest.Add("Project", 1, 2, 3, 4)
+		  Assert.IsTrue(pUserTest.Has("Project", 1, 2, 3, 4))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub SaveTest()
 		  Dim pUserTest As New UserTest()
 		  
