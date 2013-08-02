@@ -118,24 +118,6 @@ Protected Module QueryCompiler
 		    
 		  End Select
 		  
-		  // @FIXME
-		  // Puts the values in parentheses if it is an array
-		  If pValue.IsArray Then
-		    // Puts a first quote around each element of the array
-		    Dim re As New RegEx
-		    Dim ro As New RegExOptions
-		    
-		    // This is what happens when you can't parse a variant array
-		    // to do something more elegant
-		    ro.ReplaceAllMatches = True
-		    re.Options = ro
-		    re.SearchPattern = "[\w]+"
-		    re.ReplacementPattern = "'\0'"
-		    
-		    // Returns the quoted and parenthized elements
-		    Return "(" + re.Replace(Join(pValue, ", ")) + ")"
-		  End If
-		  
 		  // Quote quotes ;)
 		  Return "'" + ReplaceAll(pValue.StringValue, "'", "''") + "'"
 		  
