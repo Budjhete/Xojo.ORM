@@ -2,8 +2,37 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
-		Function Add() As ORM
+		Function Add(pAlias As String, pFarkeys() As Variant) As ORM
+		  // Sets the columns to insert into
+		  Dim pColumns() As Variant = Array(_
+		  Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"),_
+		  Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"))
+		  // Defines the foreign key to use for this model
+		  Dim pForeignKey As Variant = Me.Pk()
 		  
+		  // Links this model with each Far Key provided for
+		  For Each pFarKey As Variant in pFarkeys
+		    DB.Insert(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through").StringValue,_
+		    pColumns).Values(pForeignKey, pFarKey).Execute(Me.Database)
+		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Add(pAlias As String, pFarKey As Variant) As ORM
+		  If pFarKey IsA ORM Then
+		    Return Me.Add(pAlias, Array(ORM(pFarKey).Pk()))
+		  End If
+		  
+		  Return Me.Add(pAlias, Array(pFarKey))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Add(pAlias As String, ParamArray pFarKeys As Variant) As ORM
+		  Return Me.Add(pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
