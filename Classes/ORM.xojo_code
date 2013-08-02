@@ -3,6 +3,14 @@ Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Add(pAlias As String, pFarkeys() As Variant) As ORM
+		  // Converts any ORM that might be in the pFarkeys array
+		  // into a variant
+		  For pFarKey As Integer = 0 To pFarkeys.Ubound
+		    If pFarkeys(pFarKey) IsA ORM Then
+		      pFarKeys(pFarKey) = ORM(pFarKeys(pFarKey)).Pk()
+		    End If
+		  Next
+		  
 		  // Sets the columns to insert into
 		  Dim pColumns() As Variant = Array(_
 		  Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"),_
@@ -17,16 +25,6 @@ Inherits QueryBuilder
 		  Next
 		  
 		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Add(pAlias As String, pFarKey As Variant) As ORM
-		  If pFarKey IsA ORM Then
-		    Return Me.Add(pAlias, Array(ORM(pFarKey).Pk()))
-		  End If
-		  
-		  Return Me.Add(pAlias, Array(pFarKey))
 		End Function
 	#tag EndMethod
 
