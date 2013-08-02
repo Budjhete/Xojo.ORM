@@ -409,27 +409,24 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pAlias As String, pFarKeys() As Integer) As Boolean
-		  Return (Me.CountRelations(pAlias, pFarKeys) <> 0)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Has(pAlias As String, pFarkeys() As String) As Boolean
-		  Return (Me.CountRelations(pAlias, pFarkeys) <> 0)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Has(pAlias As String, pFarKey As Variant) As Boolean
-		  // Checks if pFarKey is explicitly Nil
-		  If pFarKey.IsNull Then
+		Function Has(pAlias As String, pFarKeys() As Variant) As Boolean
+		  If pFarKeys.Ubound < 0 Then
 		    Return (Me.CountRelations(pAlias) <> 0)
-		  ElseIf pFarKey IsA ORM Then
-		    Return (Me.CountRelations(pAlias, ORM(pFarKey)) <> 0)
 		  End If
 		  
-		  Return (Me.CountRelations(pAlias, pFarKey.StringValue) <> 0)
+		  For i As Integer = 0 To pFarKeys.Ubound
+		    If pFarKeys(i) IsA ORM Then
+		      pFarKeys(i) = ORM(pFarKeys(i).Pk())
+		    End If
+		  Next
+		  
+		  Return (Me.CountRelations(pAlias, pFarKeys) = pFarKeys.Ubound + 1)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, ParamArray pFarKeys As Variant) As Boolean
+		  Return Me.Has(pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
