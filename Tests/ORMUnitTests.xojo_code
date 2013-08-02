@@ -32,6 +32,16 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub CreateProjects()
+		  DB.Delete("Projets").Execute(ORMTestDatabase)
+		  DB.Insert("Projets", "name").Values("Budjhete").Execute(ORMTestDatabase)
+		  DB.Insert("Projets", "name").Values("Kanjo").Execute(ORMTestDatabase)
+		  DB.Insert("Projets", "name").Values("Hete").Execute(ORMTestDatabase)
+		  DB.Insert("Projets", "name").Values("Vee").Execute(ORMTestDatabase)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CreateTest()
 		  Dim pModel As New UserTest()
 		  
@@ -46,6 +56,14 @@ Inherits TestGroup
 		  
 		  Assert.IsTrue pModel.Loaded()
 		  Assert.IsFalse pModel.Changed(), "L'ORM a change"
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub CreateUsers()
+		  DB.Delete("Users").Execute(ORMTestDatabase)
+		  DB.Insert("Users", "username", "password").Values("Budjhete", ".com").Execute(ORMTestDatabase)
+		  DB.Insert("Users", "username", "password").Values("Kanjo", ".com").Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
 
