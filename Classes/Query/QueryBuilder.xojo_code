@@ -336,7 +336,13 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		Function Where(pLeft As Variant, pOperator As String, pRight() As Variant) As QueryBuilder
+		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pLeft As Variant, pOperator As String, ParamArray pRight As Variant) As QueryBuilder
 		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
