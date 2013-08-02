@@ -213,7 +213,7 @@ Inherits TestGroup
 		  Call pUserTest.Remove("Project")
 		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
 		  
-		  pUserTest.Add("Project", 1, 2, 3, 4)
+		  Call pUserTest.Add("Project", 1, 2, 3, 4)
 		  Assert.IsTrue(pUserTest.Has("Project", 1, 2, 3, 4))
 		End Sub
 	#tag EndMethod
