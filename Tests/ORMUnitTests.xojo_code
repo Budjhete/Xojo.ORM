@@ -54,6 +54,16 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub CreateGroups()
+		  DB.Delete("Groups").Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "userId").Values("Developpeurs", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "userId").Values("Designers", 2).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name").Values("Junior").Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name").Values("Senior").Execute(ORMTestDatabase)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CreateProjects()
 		  DB.Delete("Projets").Execute(ORMTestDatabase)
 		  DB.Insert("Projets", "name").Values("Budjhete").Execute(ORMTestDatabase)
