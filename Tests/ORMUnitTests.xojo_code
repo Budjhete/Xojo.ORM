@@ -166,6 +166,30 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub LookupTest()
+		  CreateUsers()
+		  CreateGroups()
+		  CreateProjects()
+		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
+		  
+		  Dim pGroupTest As New GroupTest(1)
+		  Call pGroupTest.Find()
+		  
+		  Dim pUserTest As UserTest = UserTest(pGroupTest.user)
+		  
+		  Assert.AreEqual(pUserTest.Data("id").StringValue, pGroupTest.user.Data("id"))
+		  
+		  Call pUserTest.Add("Projects", 1)
+		  Dim pProjectTest As ProjectTest = ProjectTest(pUserTest.Projects)
+		  Dim Records As RecordSet = pProjectTest.FindAll(pProjectTest.Database)
+		  
+		  Call pGroupTest.Unload.Clear
+		  pGroupTest = GroupTest(pUserTest.Groups)
+		  Records = pGroupTest.FindAll(pGroupTest.Database)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub ReloadTest()
 		  Dim pUserTest As New UserTest()
 		  

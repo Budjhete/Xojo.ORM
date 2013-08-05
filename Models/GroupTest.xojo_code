@@ -1,6 +1,25 @@
 #tag Class
 Protected Class GroupTest
 Inherits ORM
+	#tag Method, Flags = &h1000
+		Sub Constructor()
+		  // Calling the overridden superclass constructor.
+		  // Note that this may need modifications if there are multiple constructor choices.
+		  // Possible constructor calls:
+		  // Constructor() -- From ORM
+		  // Constructor(pPrimaryKey As Variant) -- From ORM
+		  Super.Constructor
+		  
+		  BelongsTo(New UserTest, "user", "userId")
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Database() As Database
+		  Return ORMTestDatabase
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function TableName() As String
 		  Return "Groups"
