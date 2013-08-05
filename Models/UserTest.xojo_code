@@ -10,7 +10,8 @@ Inherits ORM
 		  // Constructor(pPrimaryKey As Variant) -- From ORM
 		  Super.Constructor
 		  
-		  HasMany(New ProjectTest, "Project", "userId", "Projects_Users", "projectId")
+		  HasMany(New ProjectTest, "Projects", "userId", "Projects_Users", "projectId")
+		  HasMany(New GroupTest, "Groups", "userId")
 		End Sub
 	#tag EndMethod
 

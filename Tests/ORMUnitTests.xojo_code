@@ -15,11 +15,11 @@ Inherits TestGroup
 		  Dim pProjectTest As New ProjectTest(1)
 		  Call pProjectTest.Find()
 		  
-		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
+		  Assert.IsFalse(pUserTest.Has("Projects", pProjectTest))
 		  
-		  Call pUserTest.Add("Project", pProjectTest)
+		  Call pUserTest.Add("Projects", pProjectTest)
 		  
-		  Assert.IsTrue(pUserTest.Has("Project", pProjectTest))
+		  Assert.IsTrue(pUserTest.Has("Projects", pProjectTest))
 		End Sub
 	#tag EndMethod
 
@@ -31,24 +31,24 @@ Inherits TestGroup
 		  
 		  // Tests for any relation with another model in an
 		  // Has Many Through relationship
-		  Dim Relations As Integer = mORM.CountRelations("Project")
+		  Dim Relations As Integer = mORM.CountRelations("Projects")
 		  Assert.AreEqual(Relations, 1)
 		  
 		  // Test to see if a provided farkey gives enough constraint
-		  Relations = mORM.CountRelations("Project", 1)
+		  Relations = mORM.CountRelations("Projects", 1)
 		  Assert.AreEqual(Relations, 1)
 		  
 		  // Makes sure that it never returns a match for an empty
 		  // primary key
-		  Relations = mORM.CountRelations("Project", 0)
+		  Relations = mORM.CountRelations("Projects", 0)
 		  Assert.AreEqual(Relations, 0)
 		  
 		  // Does it work with a string?
-		  Relations = mORM.CountRelations("Project", "myProject")
+		  Relations = mORM.CountRelations("Projects", "myProject")
 		  Assert.AreEqual(Relations, 0)
 		  
 		  // Does it work with many strings
-		  Relations = mORM.CountRelations("Project", 1,2,3,4)
+		  Relations = mORM.CountRelations("Projects", 1,2,3,4)
 		  Assert.AreEqual(Relations, 1)
 		End Sub
 	#tag EndMethod
@@ -131,9 +131,9 @@ Inherits TestGroup
 		  Dim mUserTest As New UserTest(1)
 		  call mUserTest.Find()
 		  
-		  Assert.IsTrue(mUserTest.Has("Project"))
-		  Assert.IsTrue(mUserTest.Has("Project", 1), mUserTest.Data("username") + " should have one role.")
-		  Assert.IsFalse(mUserTest.Has("Project", 0))
+		  Assert.IsTrue(mUserTest.Has("Projects"))
+		  Assert.IsTrue(mUserTest.Has("Projects", 1), mUserTest.Data("username") + " should have one role.")
+		  Assert.IsFalse(mUserTest.Has("Projects", 0))
 		End Sub
 	#tag EndMethod
 
@@ -227,18 +227,18 @@ Inherits TestGroup
 		  Call pProjectTest.Find()
 		  
 		  // Makes sure that pUserTest is not related to pProjectTest
-		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
+		  Assert.IsFalse(pUserTest.Has("Projects", pProjectTest))
 		  
 		  // Adds a relation between pUserTest and pProjectTest
-		  Call pUserTest.Add("Project", pProjectTest)
-		  Assert.IsTrue(pUserTest.Has("Project", pProjectTest))
+		  Call pUserTest.Add("Projects", pProjectTest)
+		  Assert.IsTrue(pUserTest.Has("Projects", pProjectTest))
 		  
 		  // Removes any relation between pUserTest and any ProjectTest
-		  Call pUserTest.Remove("Project")
-		  Assert.IsFalse(pUserTest.Has("Project", pProjectTest))
+		  Call pUserTest.Remove("Projects")
+		  Assert.IsFalse(pUserTest.Has("Projects", pProjectTest))
 		  
-		  Call pUserTest.Add("Project", 1, 2, 3, 4)
-		  Assert.IsTrue(pUserTest.Has("Project", 1, 2, 3, 4))
+		  Call pUserTest.Add("Projects", 1, 2, 3, 4)
+		  Assert.IsTrue(pUserTest.Has("Projects", 1, 2, 3, 4))
 		End Sub
 	#tag EndMethod
 
