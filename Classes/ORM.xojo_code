@@ -57,16 +57,17 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub BelongsTo(pTableName As String, pForeignKey As String)
+		Sub BelongsTo(pORM As ORM, Optional pAlias As String, Optional pForeignKey As String)
+		  If pForeignKey = "" Then
+		    pForeignKey = Me.TableName + "Id"
+		  End If
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub BelongsTo(pAlias As String, pForeignKey As String, pORM As ORM)
+		  If pAlias = "" Then
+		    pAlias = pORM.TableName
+		  End If
+		  
 		  // pAlias will be the "property" through which we will acces the models that Me belongsTo
 		  mBelongsTo.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)
-		  
 		End Sub
 	#tag EndMethod
 
