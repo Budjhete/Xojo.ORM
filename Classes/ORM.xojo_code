@@ -557,7 +557,8 @@ Inherits QueryBuilder
 		    If Not pORM.Loaded Then
 		      pColumn = pORM.TableName + "." + pORM.PrimaryKey
 		      pValue = Me.Data(Dictionary(Me.mBelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
-		      Return pORM.Where(pColumn, "=", pValue).Find
+		      Call pORM.Where(pColumn, "=", pValue)
+		      Call pORM.Find
 		    Else
 		      Return pORM
 		    End If
@@ -575,8 +576,8 @@ Inherits QueryBuilder
 		      pColumn = pORM.TableName + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey")
 		      pValue = Me.Pk()
 		    End If
-		    
-		    return pORM.Where(pColumn, "=", pValue)
+		    Call pORM.Where(pColumn, "=", pValue)
+		    Return pORM
 		  End If
 		End Function
 	#tag EndMethod
