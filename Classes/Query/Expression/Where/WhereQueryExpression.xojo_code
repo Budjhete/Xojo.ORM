@@ -20,37 +20,11 @@ Implements QueryExpression
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub Constructor(pLeft As Variant, pOperator As String, pRight() As Variant)
+	#tag Method, Flags = &h1000
+		Sub Constructor(pLeft As Variant, pOperator As String, pRight As Variant)
 		  mLeft = pLeft
 		  mOperator = pOperator
-		  
-		  If pRight.Ubound = 0 Then
-		    mRight = pRight(0)
-		    Exit Sub
-		  End If
-		  
-		  // Opens the parentheses for any value enumeration in
-		  // the right element of the WHERE clause
-		  mRight = "("
-		  
-		  For i As Integer = 0 To pRight.Ubound
-		    mRight = mRight + "'" + pRight(i) + "'"
-		    
-		    // Adds a comma if it is not the last element
-		    If i <> pRight.Ubound Then
-		      mRight = mRight + ", "
-		    End If
-		  Next
-		  
-		  // Closes the parentheses for the enumeration
-		  mRight = mRight + ")"
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1000
-		Sub Constructor(pLeft As Variant, pOperator As String, ParamArray pRight As Variant)
-		  Constructor(pLeft, pOperator, pRight)
+		  mRight = pRight
 		End Sub
 	#tag EndMethod
 

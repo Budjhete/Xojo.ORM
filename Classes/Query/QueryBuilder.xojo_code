@@ -336,13 +336,24 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pLeft As Variant, pOperator As String, pRight() As Variant) As QueryBuilder
-		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Where(pLeft As Variant, pOperator As String, ParamArray pRight As Variant) As QueryBuilder
+		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  If pRight.IsArray Then
+		    Dim pRights() As Variant = pRight
+		    pRight = "("
+		    
+		    // Parses the variant array for the query
+		    For i As Integer = 0 To pRights.Ubound
+		      pRight = pRight + "'" + pRights(i) + "'"
+		      // Adds a comma between each value
+		      If i < pRights.Ubound Then
+		        pRight = pRight + ","
+		      End If
+		    Next
+		    
+		    pRight = pRight + ")"
+		    Return Append(New WhereQueryExpression(pLeft, pOperator, New ExpressionQueryExpression(pRight)))
+		  End If
+		  
 		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
