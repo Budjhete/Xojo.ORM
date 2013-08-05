@@ -65,7 +65,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile()
 		    
-		    pStatement = pStatement.Replace(Chr(0), "")
+		    pStatement = pStatement.ReplaceAll(Chr(0), "")
 		    
 		    pDatabase.SQLExecute(pStatement)
 		    
@@ -89,7 +89,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile()
 		    
-		    pStatement = pStatement.Replace(Chr(0), "")
+		    pStatement = pStatement.ReplaceAll(Chr(0), "")
 		    
 		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
 		    
