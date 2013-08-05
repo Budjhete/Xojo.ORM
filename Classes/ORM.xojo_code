@@ -407,20 +407,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub HasMany(pAlias As String, pForeignKey As String, pORM As ORM)
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub HasMany(pAlias As String, pForeignKey As String, pThrough As String, pORM As ORM)
-		  // Initializes the far key of a HasMany through relationship
-		  Dim pFarKey As String = pORM.TableName() + "Id"
-		  HasMany(pORM, pAlias, pForeignKey, pThrough, pFarKey)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function HasOne(pTableName As String, pFarKey As String) As RecordSet
 		  
 		End Function
