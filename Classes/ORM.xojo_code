@@ -559,6 +559,7 @@ Inherits QueryBuilder
 		      pValue = Me.Data(Dictionary(Me.mBelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
 		      Call pORM.Where(pColumn, "=", pValue)
 		      Call pORM.Find
+		      Return pORM
 		    Else
 		      Return pORM
 		    End If
