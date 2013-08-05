@@ -1,20 +1,20 @@
 #tag Class
-Protected Class ORMException
-Inherits RuntimeException
-	#tag Method, Flags = &h1000
-		Sub Constructor(pMessage As String)
-		  Message = pMessage
-		End Sub
+Protected Class ProjectTest
+Inherits ORM
+	#tag Method, Flags = &h0
+		Function Database() As Database
+		  return ORMTestDatabase
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableName() As String
+		  return "Project"
+		End Function
 	#tag EndMethod
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="ErrorNumber"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
 			Visible=true
@@ -30,12 +30,6 @@ Inherits RuntimeException
 			InitialValue="0"
 			Type="Integer"
 			InheritedFrom="Object"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Message"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"

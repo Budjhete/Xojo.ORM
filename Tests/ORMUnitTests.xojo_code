@@ -2,6 +2,36 @@
 Protected Class ORMUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub CountRelationsTest()
+		  // Initializes the model for the test
+		  Dim mORM As New UserTest(1)
+		  call mORM.Find(mORM.Database)
+		  
+		  // Tests for any relation with another model in an
+		  // Has Many Through relationship
+		  Dim Relations As Integer = mORM.CountRelations("Project")
+		  Assert.AreEqual(Relations, 1)
+		  
+		  // Test to see if a provided farkey gives enough constraint
+		  Relations = mORM.CountRelations("Project", 1)
+		  Assert.AreEqual(Relations, 1)
+		  
+		  // Makes sure that it never returns a match for an empty
+		  // primary key
+		  Relations = mORM.CountRelations("Project", 0)
+		  Assert.AreEqual(Relations, 0)
+		  
+		  // Does it work with a string?
+		  Relations = mORM.CountRelations("Project", "myProject")
+		  Assert.AreEqual(Relations, 0)
+		  
+		  // Does it work with many strings
+		  Relations = mORM.CountRelations("Project", Array(1,2,3,4))
+		  Assert.AreEqual(Relations, 1)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CreateTest()
 		  Dim pModel As New UserTest()
 		  
@@ -53,6 +83,17 @@ Inherits TestGroup
 		  Assert.AreEqual("james", pUserTest.username)
 		  
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasTest()
+		  Dim mUserTest As New UserTest(1)
+		  call mUserTest.Find()
+		  
+		  Assert.IsTrue(mUserTest.Has("Project"))
+		  Assert.IsTrue(mUserTest.Has("Project", 1), mUserTest.Data("username") + " should have one role.")
+		  Assert.IsFalse(mUserTest.Has("Project", 0))
 		End Sub
 	#tag EndMethod
 

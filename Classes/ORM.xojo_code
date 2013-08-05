@@ -2,6 +2,12 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
+		Function Add() As ORM
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndHaving(pLeft, pOperator, pRight)
 		  
@@ -18,13 +24,21 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function BelongsTo(pTableName As String, pForeignKey As Integer) As ORM
-		  
+		Function BelongsTo() As Dictionary
+		  return mBelongsTo
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub BelongsTo(pTableName As String, pForeignKey As Integer, pORM As ORM)
+		Sub BelongsTo(pTableName As String, pForeignKey As String)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub BelongsTo(pAlias As String, pForeignKey As String, pORM As ORM)
+		  // pAlias will be the "property" through which we will acces the models that Me belongsTo
+		  mBelongsTo.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)
 		  
 		End Sub
 	#tag EndMethod
@@ -54,6 +68,8 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = New Dictionary
 		  mChanged = New Dictionary
+		  mHasMany = New Dictionary
+		  mBelongsTo = New Dictionary
 		End Sub
 	#tag EndMethod
 
@@ -70,6 +86,79 @@ Inherits QueryBuilder
 		  Return DB.Find(DB.Expression("COUNT(*) AS count")).From(TableName).Execute(pDatabase).Field("count").IntegerValue
 		  
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String) As Integer
+		  // The request that looks in the pivot table to see if this model is present
+		  Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Execute(Me.Database)
+		  
+		  // A string representation of the request
+		  Dim RecordsCompile As String = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Compile()
+		  System.DebugLog(RecordsCompile)
+		  
+		  // Returns the number of relations found
+		  return Records.Field("RecordsFound").IntegerValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys() As Integer) As Integer
+		  Dim pFarKeysString() As String
+		  
+		  // Converts the array of Integers into a array of
+		  // Strings before it is passedto another signature of the method
+		  For Each pFarKey As Integer In pFarKeys
+		    pFarKeysString.Append(Str(pFarKey))
+		  Next
+		  
+		  Return CountRelations(pAlias, pFarKeysString)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pORM As ORM) As Integer
+		  Dim pFarKey As Variant = pORM.Pk()
+		  Return CountRelations(pAlias, pFarKey.StringValue)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys() As String) As Integer
+		  If pFarKeys.Ubound < 0 OR Not Me.Loaded Then
+		    return 0
+		  End If
+		  
+		  // The request to see if this model is related to the specified FarKeys
+		  Dim Records As RecordSet = DB.Find(DB.Expression("COUNT(*) As RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)_
+		  .Execute(Me.Database)
+		  
+		  // A string representation of the request
+		  Dim RecordsCompile As String = DB.Find(DB.Expression("COUNT(*) As RecordsFound"))_
+		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())_
+		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)_
+		  .Compile()
+		  System.DebugLog(RecordsCompile)
+		  
+		  // Returns the number of relations found
+		  return Records.Field("RecordsFound").IntegerValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys As Variant) As Integer
+		  Return CountRelations(pAlias, Array(pFarKeys.StringValue))
 		End Function
 	#tag EndMethod
 
@@ -165,6 +254,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Database() As Database
+		  return Nil
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Delete(pDatabase As Database) As ORM
 		  if Not Loaded() then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
@@ -222,6 +317,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Find() As ORM
+		  Return Me.Find(Me.Database)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Find(pDatabase As Database) As ORM
 		  If Loaded() Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
@@ -273,9 +374,64 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pTableName As String, pForeignKey As Variant, pFarTable As String, pFarKey As Variant) As Boolean
-		  
+		Function Has(pAlias As String) As Boolean
+		  Return (Me.CountRelations(pAlias) <> 0)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarKeys() As Integer) As Boolean
+		  Return (Me.CountRelations(pAlias, pFarKeys) <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarkeys() As String) As Boolean
+		  Return (Me.CountRelations(pAlias, pFarkeys) <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarKey As Variant) As Boolean
+		  // Checks if pFarKey is explicitly Nil
+		  If pFarKey.IsNull Then
+		    Return (Me.CountRelations(pAlias) <> 0)
+		  ElseIf pFarKey IsA ORM Then
+		    Return (Me.CountRelations(pAlias, ORM(pFarKey)) <> 0)
+		  End If
+		  
+		  Return (Me.CountRelations(pAlias, pFarKey.StringValue) <> 0)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function HasMany() As Dictionary
+		  return mHasMany
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasMany(pORM As ORM, pAlias As String, pForeignKey As String, Optional pThrough As String, Optional pFarKey As Variant)
+		  If pFarKey.IsNull Then
+		    pFarKey = Me.TableName + "Id"
+		  End If
+		  // Sets a new HasMany relationship in between this model and any other
+		  mHasMany.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey, "Through" : pThrough, "FarKey" : pFarKey)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasMany(pAlias As String, pForeignKey As String, pORM As ORM)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub HasMany(pAlias As String, pForeignKey As String, pThrough As String, pORM As ORM)
+		  // Initializes the far key of a HasMany through relationship
+		  Dim pFarKey As String = pORM.TableName() + "Id"
+		  HasMany(pORM, pAlias, pForeignKey, pThrough, pFarKey)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -687,12 +843,26 @@ Inherits QueryBuilder
 	#tag EndHook
 
 
+	#tag Note, Name = Has
+		
+		Ne sert qu'à vérifier les relations Has Many Through
+	#tag EndNote
+
+
+	#tag Property, Flags = &h1
+		Protected mBelongsTo As Dictionary
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private mChanged As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mData As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mHasMany As Dictionary
 	#tag EndProperty
 
 
