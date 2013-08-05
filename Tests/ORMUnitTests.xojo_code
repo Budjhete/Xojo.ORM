@@ -48,7 +48,7 @@ Inherits TestGroup
 		  Assert.AreEqual(Relations, 0)
 		  
 		  // Does it work with many strings
-		  Relations = mORM.CountRelations("Project", Array(1,2,3,4))
+		  Relations = mORM.CountRelations("Project", 1,2,3,4)
 		  Assert.AreEqual(Relations, 1)
 		End Sub
 	#tag EndMethod

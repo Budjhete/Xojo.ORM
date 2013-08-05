@@ -151,7 +151,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function CountRelations(pAlias As String, ParamArray pFarKeys As Variant) As Integer
-		  Return CountRelations(pAlias, pFarKeys)
+		  // @FIXME Does not manage parameters that might be an array of any datatype
+		  // Do not call it this way <code>MyORM.CountRelations("MyAlias", Array("FarKey1", "FarKey2"))</code>
+		  Return Me.CountRelations(palias, pFarKeys)
 		End Function
 	#tag EndMethod
 
