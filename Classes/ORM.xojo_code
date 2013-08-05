@@ -545,6 +545,43 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Operator_Lookup(pAlias As String) As ORM
+		  Dim pORM As ORM
+		  Dim pColumn As Variant
+		  Dim pValue As Variant
+		  
+		  If Me.mBelongsTo.HasKey(pAlias) Then
+		    pORM = Dictionary(Me.mBelongsTo.Value(pAlias)).Value("Model")
+		    
+		    // Fetches the ORM in the database if it's not loaded yet.
+		    If Not pORM.Loaded Then
+		      pColumn = pORM.TableName + "." + pORM.PrimaryKey
+		      pValue = Me.Data(Dictionary(Me.mBelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
+		      Return pORM.Where(pColumn, "=", pValue).Find
+		    Else
+		      Return pORM
+		    End If
+		  ElseIf Me.mHasMany.HasKey(pAlias) Then
+		    pORM = Dictionary(Me.mHasMany.Value(pAlias)).Value("Model")
+		    // Grabs a Has Many "Through" relationship if it exists
+		    If Dictionary(Me.mHasMany.Value(pAlias)).Value("Through") <> Nil Then
+		      Dim Through As Variant = Dictionary(Me.mHasMany.Value(pAlias)).Value("Through")
+		      Dim JoinCol1 As Variant = Through + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey")
+		      Dim JoinCol2 As Variant = pORM.TableName + "." + pORM.PrimaryKey
+		      Call pORM.Join(Through).On(JoinCol1, "=", JoinCol2)
+		      pColumn = Through + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey")
+		      pValue = Me.Pk()
+		    Else
+		      pColumn = pORM.TableName + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey")
+		      pValue = Me.Pk()
+		    End If
+		    
+		    return pORM.Where(pColumn, "=", pValue)
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() As Variant, pDirections() As String) As ORM
 		  Call Super.OrderBy(pColumns, pDirections)
 		  
