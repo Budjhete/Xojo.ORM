@@ -52,6 +52,11 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function BelongsTo() As Dictionary
+		  // Checks if the dictionary is empty
+		  If Me.mBelongsTo.Count = 0 Then
+		    Initialize()
+		  End If
+		  
 		  return mBelongsTo
 		End Function
 	#tag EndMethod
@@ -393,6 +398,11 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function HasMany() As Dictionary
+		  // Checks if the dictionary is empty
+		  If mHasMany.Count = 0 Then
+		    Initialize()
+		  End If
+		  
 		  return mHasMany
 		End Function
 	#tag EndMethod
@@ -494,6 +504,12 @@ Inherits QueryBuilder
 		Function Initial(pColumn As String) As Variant
 		  Return mData.Lookup(pColumn, Nil)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Initialize()
+		  
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0

@@ -1,24 +1,17 @@
 #tag Class
 Protected Class UserTest
 Inherits ORM
-	#tag Method, Flags = &h1000
-		Sub Constructor()
-		  // Calling the overridden superclass constructor.
-		  // Note that this may need modifications if there are multiple constructor choices.
-		  // Possible constructor calls:
-		  // Constructor() -- From ORM
-		  // Constructor(pPrimaryKey As Variant) -- From ORM
-		  Super.Constructor
-		  
-		  HasMany(New ProjectTest, "Projects", "userId", "Projects_Users", "projectId")
-		  HasMany(New GroupTest, "Groups", "userId")
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function Database() As Database
 		  Return ORMTestDatabase
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Initialize()
+		  HasMany(New ProjectTest, "Projects", "userId", "Projects_Users", "projectId")
+		  HasMany(New GroupTest, "Groups", "userId")
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
