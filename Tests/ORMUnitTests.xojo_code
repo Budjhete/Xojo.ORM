@@ -58,7 +58,7 @@ Inherits TestGroup
 		  DB.Delete("Groups").Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name", "userId").Values("Developpeurs", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name", "userId").Values("Designers", 2).Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name").Values("Junior").Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "userId").Values("Junior", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name").Values("Senior").Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
