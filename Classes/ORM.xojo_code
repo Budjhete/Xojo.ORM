@@ -13,14 +13,14 @@ Inherits QueryBuilder
 		  
 		  // Sets the columns to insert into
 		  Dim pColumns() As Variant = Array(_
-		  Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"),_
-		  Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"))
+		  Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"),_
+		  Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"))
 		  // Defines the foreign key to use for this model
 		  Dim pForeignKey As Variant = Me.Pk()
 		  
 		  // Links this model with each Far Key provided for
 		  For Each pFarKey As Variant in pFarkeys
-		    DB.Insert(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through").StringValue,_
+		    DB.Insert(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue,_
 		    pColumns).Values(pForeignKey, pFarKey).Execute(Me.Database)
 		  Next
 		  
@@ -131,8 +131,8 @@ Inherits QueryBuilder
 		  
 		  // The request that looks in the pivot table to see if this model is present
 		  Dim pQueryBuilder As QueryBuilder = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
-		  .From(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
-		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
+		  .From(Dictionary(Me.HasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
 		  
 		  // Converts any ORM in the array into a variant containing its primary key
 		  For i As integer = 0 To pFarKeys.Ubound
@@ -143,7 +143,7 @@ Inherits QueryBuilder
 		  
 		  If pFarKeys.Ubound >= 0 Then
 		    // The request to see if this model is related to the specified FarKeys
-		    Call pQueryBuilder.Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
+		    Call pQueryBuilder.Where(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
 		  End If
 		  
 		  Dim Records As RecordSet = pQueryBuilder.Execute(Me.Database)
@@ -566,31 +566,31 @@ Inherits QueryBuilder
 		  Dim pColumn As Variant
 		  Dim pValue As Variant
 		  
-		  If Me.mBelongsTo.HasKey(pAlias) Then
-		    pORM = Dictionary(Me.mBelongsTo.Value(pAlias)).Value("Model")
+		  If Me.BelongsTo.HasKey(pAlias) Then
+		    pORM = Dictionary(Me.BelongsTo.Value(pAlias)).Value("Model")
 		    
 		    // Fetches the ORM in the database if it's not loaded yet.
 		    If Not pORM.Loaded Then
 		      pColumn = pORM.TableName + "." + pORM.PrimaryKey
-		      pValue = Me.Data(Dictionary(Me.mBelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
+		      pValue = Me.Data(Dictionary(Me.BelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
 		      Call pORM.Where(pColumn, "=", pValue)
 		      Call pORM.Find
 		      Return pORM
 		    Else
 		      Return pORM
 		    End If
-		  ElseIf Me.mHasMany.HasKey(pAlias) Then
-		    pORM = Dictionary(Me.mHasMany.Value(pAlias)).Value("Model")
+		  ElseIf Me.HasMany.HasKey(pAlias) Then
+		    pORM = Dictionary(Me.HasMany.Value(pAlias)).Value("Model")
 		    // Grabs a Has Many "Through" relationship if it exists
-		    If Dictionary(Me.mHasMany.Value(pAlias)).Value("Through") <> Nil Then
-		      Dim Through As Variant = Dictionary(Me.mHasMany.Value(pAlias)).Value("Through")
-		      Dim JoinCol1 As Variant = Through + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey")
+		    If Dictionary(Me.HasMany.Value(pAlias)).Value("Through") <> Nil Then
+		      Dim Through As Variant = Dictionary(Me.HasMany.Value(pAlias)).Value("Through")
+		      Dim JoinCol1 As Variant = Through + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey")
 		      Dim JoinCol2 As Variant = pORM.TableName + "." + pORM.PrimaryKey
 		      Call pORM.Join(Through).On(JoinCol1, "=", JoinCol2)
-		      pColumn = Through + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey")
+		      pColumn = Through + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey")
 		      pValue = Me.Pk()
 		    Else
-		      pColumn = pORM.TableName + "." + Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey")
+		      pColumn = pORM.TableName + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey")
 		      pValue = Me.Pk()
 		    End If
 		    Call pORM.Where(pColumn, "=", pValue)
@@ -661,8 +661,8 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Remove(pAlias As String, pFarKeys() As Variant) As ORM
 		  // Starts the QueryBuilder by removing everything that has this model's primary key as a foreign key
-		  Dim pQueryBuilder As QueryBuilder = DB.Delete(Dictionary(Me.mHasMany.Value(pAlias)).Value("Through"))_
-		  .Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
+		  Dim pQueryBuilder As QueryBuilder = DB.Delete(Dictionary(Me.HasMany.Value(pAlias)).Value("Through"))_
+		  .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
 		  
 		  // Converts any ORM into a variant
 		  For pFarKey As Integer = 0 To pFarKeys.Ubound
@@ -673,7 +673,7 @@ Inherits QueryBuilder
 		  
 		  // Adds a where clause if this Far Key's array is not empty
 		  If pFarKeys.Ubound >= 0 Then
-		    Call pQueryBuilder.Where(Dictionary(Me.mHasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
+		    Call pQueryBuilder.Where(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
 		  End If
 		  
 		  pQueryBuilder.Execute(ORMTestDatabase)
