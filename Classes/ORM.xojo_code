@@ -103,6 +103,7 @@ Inherits QueryBuilder
 		  mChanged = New Dictionary
 		  mHasMany = New Dictionary
 		  mBelongsTo = New Dictionary
+		  mRelated = New Dictionary
 		End Sub
 	#tag EndMethod
 
@@ -573,19 +574,15 @@ Inherits QueryBuilder
 		  Dim pColumn As Variant
 		  Dim pValue As Variant
 		  
-		  If Me.BelongsTo.HasKey(pAlias) Then
+		  If Me.Related.HasKey(pAlias) Then
+		    Return Me.Related.Value(pAlias)
+		  ElseIf Me.BelongsTo.HasKey(pAlias) Then
 		    pORM = Dictionary(Me.BelongsTo.Value(pAlias)).Value("Model")
 		    
-		    // Fetches the ORM in the database if it's not loaded yet.
-		    If Not pORM.Loaded Then
-		      pColumn = pORM.TableName + "." + pORM.PrimaryKey
-		      pValue = Me.Data(Dictionary(Me.BelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
-		      Call pORM.Where(pColumn, "=", pValue)
-		      Call pORM.Find
-		      Return pORM
-		    Else
-		      Return pORM
-		    End If
+		    pColumn = pORM.TableName + "." + pORM.PrimaryKey
+		    pValue = Me.Data(Dictionary(Me.BelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
+		    Call pORM.Where(pColumn, "=", pValue)
+		    Call pORM.Find
 		  ElseIf Me.HasMany.HasKey(pAlias) Then
 		    pORM = Dictionary(Me.HasMany.Value(pAlias)).Value("Model")
 		    // Grabs a Has Many "Through" relationship if it exists
@@ -601,8 +598,11 @@ Inherits QueryBuilder
 		      pValue = Me.Pk()
 		    End If
 		    Call pORM.Where(pColumn, "=", pValue)
-		    Return pORM
 		  End If
+		  
+		  Me.Related(pAlias, pORM)
+		  
+		  Return Me.mRelated.Value(pAlias)
 		End Function
 	#tag EndMethod
 
@@ -650,6 +650,21 @@ Inherits QueryBuilder
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Related() As Dictionary
+		  Return mRelated
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Related(pAlias As String, pORM As ORM)
+		  // Does not override
+		  If Not Me.mRelated.HasKey(pAlias) Then
+		    Me.mRelated.Value(pAlias) = pORM
+		  End If
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -928,6 +943,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h1
 		Protected mHasMany As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mRelated As Dictionary
 	#tag EndProperty
 
 
