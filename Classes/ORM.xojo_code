@@ -582,7 +582,7 @@ Inherits QueryBuilder
 		  ElseIf Me.HasMany.HasKey(pAlias) Then
 		    pORM = Dictionary(Me.HasMany.Value(pAlias)).Value("Model")
 		    // Grabs a Has Many "Through" relationship if it exists
-		    If Dictionary(Me.HasMany.Value(pAlias)).Value("Through") <> Nil Then
+		    If Dictionary(Me.HasMany.Value(pAlias)).Value("Through") <> "" Then
 		      Dim Through As Variant = Dictionary(Me.HasMany.Value(pAlias)).Value("Through")
 		      Dim JoinCol1 As Variant = Through + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey")
 		      Dim JoinCol2 As Variant = pORM.TableName + "." + pORM.PrimaryKey
