@@ -158,10 +158,10 @@ Inherits TestGroup
 		  Call OriginalORM.Data("password", password)
 		  
 		  Dim NewORM As New UserTest()
-		  Call NewORM.Inflate(OriginalORM)
+		  Call OriginalORM.Inflate(NewORM)
 		  
 		  Assert.AreEqual(NewORM.TableName(), OriginalORM.TableName(), NewORM.TableName() + " " + OriginalORM.TableName())
-		  Assert.AreEqual(OriginalORM.Data("username"), username, "The original ORM's username should be " + username)
+		  Assert.AreEqual(username, OriginalORM.Data("username"), "The original ORM's username should be " + username)
 		  System.DebugLog(NewORM.Data("username"))
 		  Assert.AreEqual(NewORM.Data("username"), username, "The new ORM's username should be " + username)
 		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NewORM.Data("username").StringValue, "Both ORMs should have the same data.")
