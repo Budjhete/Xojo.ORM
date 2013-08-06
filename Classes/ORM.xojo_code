@@ -2,7 +2,7 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
-		Function Add(pAlias As String, pFarkeys() As Variant) As ORM
+		Function Add(pDatabase As Database, pAlias As String, pFarkeys() As Variant) As ORM
 		  // Converts any ORM that might be in the pFarkeys array
 		  // into a variant
 		  For pFarKey As Integer = 0 To pFarkeys.Ubound
@@ -21,7 +21,7 @@ Inherits QueryBuilder
 		  // Links this model with each Far Key provided for
 		  For Each pFarKey As Variant in pFarkeys
 		    DB.Insert(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue,_
-		    pColumns).Values(pForeignKey, pFarKey).Execute(Me.Database)
+		    pColumns).Values(pForeignKey, pFarKey).Execute(pDatabase)
 		  Next
 		  
 		  Return Me
@@ -29,8 +29,20 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Add(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As ORM
+		  Return Add(pDatabase, pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Add(pAlias As String, pFarKeys() As Variant) As ORM
+		  Return Add(Database, pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Add(pAlias As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Me.Add(pAlias, pFarKeys)
+		  Return Add(Me.Database, pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
@@ -124,7 +136,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, pFarKeys() As Variant) As Integer
+		Function CountRelations(pDatabase As Database, pAlias As String, pFarKeys() As Variant) As Integer
 		  If Not Me.Loaded Then
 		    return 0
 		  End If
@@ -147,7 +159,7 @@ Inherits QueryBuilder
 		    Call pQueryBuilder.Where(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
 		  End If
 		  
-		  Dim Records As RecordSet = pQueryBuilder.Execute(Me.Database)
+		  Dim Records As RecordSet = pQueryBuilder.Execute(pDatabase)
 		  
 		  System.DebugLog(pQueryBuilder.Compile())
 		  
@@ -157,10 +169,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, ParamArray pFarKeys As Variant) As Integer
+		Function CountRelations(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As Integer
 		  // @FIXME Does not manage parameters that might be an array of any datatype
 		  // Do not call it this way <code>MyORM.CountRelations("MyAlias", Array("FarKey1", "FarKey2"))</code>
-		  Return Me.CountRelations(palias, pFarKeys)
+		  Return Me.CountRelations(pDatabase, palias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, pFarKeys() As Variant) As Integer
+		  Return CountRelations(Database, pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function CountRelations(pAlias As String, ParamArray pFarKeys As Variant) As Integer
+		  Return CountRelations(Me.Database, pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
@@ -383,9 +407,9 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pAlias As String, pFarKeys() As Variant) As Boolean
+		Function Has(pDatabase As Database, pAlias As String, pFarKeys() As Variant) As Boolean
 		  If pFarKeys.Ubound < 0 Then
-		    Return (Me.CountRelations(pAlias) <> 0)
+		    Return (Me.CountRelations(pDatabase, pAlias) <> 0)
 		  End If
 		  
 		  For i As Integer = 0 To pFarKeys.Ubound
@@ -394,13 +418,25 @@ Inherits QueryBuilder
 		    End If
 		  Next
 		  
-		  Return (Me.CountRelations(pAlias, pFarKeys) = pFarKeys.Ubound + 1)
+		  Return (Me.CountRelations(pDatabase, pAlias, pFarKeys) = pFarKeys.Ubound + 1)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As Boolean
+		  Return Me.Has(pDatabase, pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pAlias As String, pFarKeys() As Variant) As Boolean
+		  Return Has(Database, pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Has(pAlias As String, ParamArray pFarKeys As Variant) As Boolean
-		  Return Me.Has(pAlias, pFarKeys)
+		  Return Has(Database, pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
@@ -681,7 +717,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pAlias As String, pFarKeys() As Variant) As ORM
+		Function Remove(pDatabase As Database, pAlias As String, pFarKeys() As Variant) As ORM
 		  // Starts the QueryBuilder by removing everything that has this model's primary key as a foreign key
 		  Dim pQueryBuilder As QueryBuilder = DB.Delete(Dictionary(Me.HasMany.Value(pAlias)).Value("Through"))_
 		  .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
@@ -698,15 +734,27 @@ Inherits QueryBuilder
 		    Call pQueryBuilder.Where(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
 		  End If
 		  
-		  pQueryBuilder.Execute(ORMTestDatabase)
+		  pQueryBuilder.Execute(pDatabase)
 		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Remove(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As ORM
+		  Return Me.Remove(pDatabase, pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Remove(pAlias As String, pFarKeys() As Variant) As ORM
+		  Return Remove(Database, pAlias, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Remove(pAlias As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Me.Remove(pAlias, pFarKeys)
+		  Return Remove(Database, pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
@@ -834,7 +882,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(ParamArray pValues() As Variant) As ORM
+		Function Values(pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
 		  Return Me
@@ -842,7 +890,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Variant) As ORM
+		Function Values(ParamArray pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
 		  Return Me
