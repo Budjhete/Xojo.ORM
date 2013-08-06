@@ -177,25 +177,30 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub LookupTest()
+		  // Sets the database environment for the tests
 		  CreateUsers()
 		  CreateGroups()
 		  CreateProjects()
 		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
 		  
+		  // Loads a first GroupTest model
 		  Dim pGroupTest As New GroupTest(1)
 		  Call pGroupTest.Find()
 		  
+		  // Tests a belongs to relationship
 		  Dim pUserTest As UserTest = UserTest(pGroupTest.user)
 		  
+		  // Compares the UserTest's id with that of the GroupsTest's related user
 		  Assert.AreEqual(pUserTest.Data("id").StringValue, pGroupTest.user.Data("id"))
 		  
+		  // Adds a has many through relationship to the UserTest model
 		  Call pUserTest.Add("Projects", 1)
+		  // Tests the has many through relationship
 		  Dim pProjectTest As ProjectTest = ProjectTest(pUserTest.Projects)
 		  Dim Records As RecordSet = pProjectTest.FindAll(pProjectTest.Database)
 		  
-		  Call pGroupTest.Unload.Clear
-		  pGroupTest = GroupTest(pUserTest.Groups)
-		  Records = pGroupTest.FindAll(pGroupTest.Database)
+		  // Tests a has many relationship with the UserTest's related groups
+		  Assert.AreEqual(pUserTest.Groups.FindAll(pGroupTest.Database).RecordCount, 2)
 		End Sub
 	#tag EndMethod
 
