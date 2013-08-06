@@ -353,8 +353,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function FindAll() As RecordSet
+		  Return Me.FindAll(Me.Database)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  Return DB.Find(TableColumns(pDatabase)).From(TableName()).Execute(pDatabase)
+		  ' Return DB.Find(TableColumns(pDatabase)).From(TableName()).Execute(pDatabase)
+		  Return Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Execute(pDatabase)
 		End Function
 	#tag EndMethod
 
