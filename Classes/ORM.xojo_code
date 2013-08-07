@@ -527,6 +527,14 @@ Inherits QueryBuilder
 		    pORM.mChanged.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
+		  // Clear the relations
+		  pORM.mRelated.Clear
+		  
+		  // Copies this ORM's relations
+		  For Each pKey As Variant In mRelated.Keys()
+		    pORM.mRelated.Value(pKey) = mRelated.Value(pKey)
+		  Next
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
