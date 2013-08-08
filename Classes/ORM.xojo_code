@@ -254,6 +254,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Data(pcolumn As String, Assigns pValue As Variant)
+		  Call Data(pColumn, pValue)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Data(pColumn As String, pValue As Variant) As ORM
 		  If Not RaiseEvent Changing() Then
 		    
