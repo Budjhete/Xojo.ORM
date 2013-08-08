@@ -850,6 +850,11 @@ Inherits QueryBuilder
 		  // Vide les données, pas les changements
 		  mData.Clear()
 		  
+		  mRelated.Clear()
+		  
+		  mHasMany.Clear()
+		  
+		  mBelongsTo.Clear()
 		  Return Me
 		End Function
 	#tag EndMethod
