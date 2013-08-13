@@ -649,7 +649,8 @@ Inherits QueryBuilder
 		    End If
 		    Call pORM.Where(pColumn, "=", pValue)
 		  Else
-		    Return Nil
+		    // Needs to fail if Lookup brings up nothing
+		    Raise New NilObjectException
 		  End If
 		  
 		  Me.Related(pAlias, pORM)
