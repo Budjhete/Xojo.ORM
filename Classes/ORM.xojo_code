@@ -919,6 +919,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Where(pCriterias As Dictionary) As ORM
+		  For Each pKey As Variant in pCriterias.Keys
+		    Call Where(pKey, "=", pCriterias.Value(pKey))
+		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Where(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.Where(pColumn, pOperator, pValue)
 		  
