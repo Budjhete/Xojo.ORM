@@ -648,6 +648,8 @@ Inherits QueryBuilder
 		      pValue = Me.Pk()
 		    End If
 		    Call pORM.Where(pColumn, "=", pValue)
+		  Else
+		    Return Nil
 		  End If
 		  
 		  Me.Related(pAlias, pORM)
