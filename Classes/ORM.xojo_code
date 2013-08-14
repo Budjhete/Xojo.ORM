@@ -619,6 +619,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Operator_Convert(pRecord As RecordSet)
+		  // @FIXME Add any restriction that might be relevent to the use of this operator
+		  // We will not modify the ORM's data if it is already loaded
+		  If Not Loaded Then
+		    For i As Integer = 1 To pRecord.FieldCount
+		      mData.Value(pRecord.IdxField(i).Name) = pRecord.IdxField(i).Value
+		    Next
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Operator_Lookup(pAlias As String) As ORM
 		  Dim pORM As ORM
 		  Dim pColumn As Variant
