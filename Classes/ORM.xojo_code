@@ -620,6 +620,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub Operator_Convert(pRecord As RecordSet)
+		  Constructor
 		  // @FIXME Add any restriction that might be relevent to the use of this operator
 		  // We will not modify the ORM's data if it is already loaded
 		  If Not Loaded Then
