@@ -298,6 +298,13 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Union(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  // @FIXME This is a patch that need to be standarized
+		  Return Append(New UnionQueryExpression(pQueryBuilder.Compile))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Using(pColumns() As Variant) As QueryBuilder
 		  Return Append(new UsingQueryExpression(pColumns))
 		End Function
