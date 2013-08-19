@@ -637,15 +637,17 @@ Inherits QueryBuilder
 		  Dim pColumn As Variant
 		  Dim pValue As Variant
 		  
+		  // If the relation is already resolved
 		  If Me.Related.HasKey(pAlias) Then
 		    Return Me.Related.Value(pAlias)
+		    // If it is a belongs to relationship
 		  ElseIf Me.BelongsTo.HasKey(pAlias) Then
 		    pORM = Dictionary(Me.BelongsTo.Value(pAlias)).Value("Model")
 		    
 		    pColumn = pORM.TableName + "." + pORM.PrimaryKey
 		    pValue = Me.Data(Dictionary(Me.BelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
 		    Call pORM.Where(pColumn, "=", pValue)
-		    Call pORM.Find
+		    // If it is a has many relationship
 		  ElseIf Me.HasMany.HasKey(pAlias) Then
 		    pORM = Dictionary(Me.HasMany.Value(pAlias)).Value("Model")
 		    // Grabs a Has Many "Through" relationship if it exists
