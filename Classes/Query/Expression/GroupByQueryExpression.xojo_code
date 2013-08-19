@@ -3,8 +3,19 @@ Protected Class GroupByQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  Return "GROUP BY " + QueryCompiler.Columns(mColumns)
+		  Dim pCompiledColumns() As String
 		  
+		  // Compile each column
+		  For i As Integer = 0 To mColumns.UBound
+		    pCompiledColumns.Append QueryCompiler.Column(mColumns(i))
+		  Next
+		  
+		  If pLastQueryExpression IsA GroupByQueryExpression Then
+		    // @TODO fixer l'espace avant la virgule
+		    Return ", " + Join(pCompiledColumns, ", ")
+		  End If
+		  
+		  Return "GROUP BY " + Join(pCompiledColumns, ", ")
 		End Function
 	#tag EndMethod
 
