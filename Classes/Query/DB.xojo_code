@@ -30,7 +30,7 @@ Protected Module DB
 		Function Find(pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
-		  Return pQueryBuilder.Append(new SelectQueryExpression(pColumns))
+		  Return pQueryBuilder.Append(New SelectQueryExpression(pColumns))
 		End Function
 	#tag EndMethod
 

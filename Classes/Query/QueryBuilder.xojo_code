@@ -110,6 +110,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function From(pQueryBuilder As QueryBuilder, pTableAlias As String = "") As QueryBuilder
+		  Return Append(new FromQueryExpression(pQueryBuilder, pTableAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function From(pTableName As String) As QueryBuilder
 		  Return From(pTableName, pTableName)
 		End Function

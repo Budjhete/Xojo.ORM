@@ -144,7 +144,7 @@ Inherits QueryBuilder
 		  
 		  // The request that looks in the pivot table to see if this model is present
 		  Dim pQueryBuilder As QueryBuilder = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
-		  .From(Dictionary(Me.HasMany.Value(pAlias)).Value("Through"))_
+		  .From(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue)_
 		  .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
 		  
 		  // Converts any ORM in the array into a variant containing its primary key
