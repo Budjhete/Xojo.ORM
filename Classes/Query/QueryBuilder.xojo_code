@@ -305,7 +305,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Union(pQueryBuilder As QueryBuilder) As QueryBuilder
-		  // @FIXME This is a patch that need to be standarized
+		  // @FIXME This is a patch that needs to be standarized
 		  Return Append(New UnionQueryExpression(pQueryBuilder.Compile))
 		End Function
 	#tag EndMethod
