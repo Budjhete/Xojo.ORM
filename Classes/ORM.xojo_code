@@ -16,10 +16,10 @@ Inherits QueryBuilder
 		  Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"),_
 		  Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"))
 		  // Defines the foreign key to use for this model
-		  Dim pForeignKey As Variant = Me.Pk()
+		  Dim pForeignKey As Variant = Me.Pk
 		  
 		  // Links this model with each Far Key provided for
-		  For Each pFarKey As Variant in pFarkeys
+		  For Each pFarKey As Variant In pFarkeys
 		    DB.Insert(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue,_
 		    pColumns).Values(pForeignKey, pFarKey).Execute(pDatabase)
 		  Next
@@ -35,15 +35,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pAlias As String, pFarKeys() As Variant) As ORM
-		  Return Add(Database, pAlias, pFarKeys)
-		End Function
+		Sub Add(pAlias As String, pFarKeys() As Variant)
+		  Raise New RuntimeException
+		  // Return Add(Database, pAlias, pFarKeys)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pAlias As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Add(Me.Database, pAlias, pFarKeys)
-		End Function
+		Sub Add(pAlias As String, ParamArray pFarKeys As Variant)
+		  // Return Add(Me.Database, pAlias, pFarKeys)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -90,7 +91,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Changed() As Boolean
-		  return mChanged.Keys().Ubound > -1
+		  Return (mChanged.Keys().Ubound > -1) And mChangedRelations.Equals(mInitalRelations)
 		End Function
 	#tag EndMethod
 
@@ -104,7 +105,7 @@ Inherits QueryBuilder
 		Function Clear() As ORM
 		  // Clear changes, not data
 		  mChanged.Clear()
-		  
+		  mChangedRelations.Clear()
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -116,6 +117,8 @@ Inherits QueryBuilder
 		  mHasMany = New Dictionary
 		  mBelongsTo = New Dictionary
 		  mRelated = New Dictionary
+		  mInitalRelations = New Dictionary
+		  mChangedRelations = New Dictionary
 		End Sub
 	#tag EndMethod
 
@@ -190,6 +193,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Create(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
 		  if Loaded() then
 		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
 		  end
@@ -348,6 +353,50 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub FetchRelations(pDatabase As Database)
+		  // Fetches the primary keys of the initially related models
+		  
+		  // BelongsTo
+		  For Each pAlias As String In Me.BelongsTo.Keys
+		    Dim pPks() As Integer
+		    pPks.Append(Me.mData.Value(Dictionary(Me.mBelongsTo.Value(pAlias)).Value("ForeignKey").StringValue).IntegerValue)
+		    Me.mInitalRelations.Value(pAlias) = pPks
+		  Next
+		  
+		  // HasMany
+		  For Each pAlias As String In Me.HasMany.Keys
+		    Dim pPks() As Integer
+		    Dim pRecordSet As RecordSet
+		    
+		    // Has Many "Through" ?
+		    If Dictionary(Me.HasMany.Value(pAlias)).Value("Through") <> "" Then
+		      pRecordSet = DB.Find(DB.Expression(QueryCompiler.Column(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey").StringValue) + " AS key")) _
+		      .From(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue) _
+		      .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey").StringValue, "=", Me.Pk()) _
+		      .Execute(pDatabase)
+		    Else
+		      pRecordSet = DB.Find(DB.Expression(QueryCompiler.Column(ORM(Dictionary(Me.HasMany.Value(pAlias)).Value("Model")).PrimaryKey) + " AS key")) _
+		      .From(ORM(Dictionary(Me.HasMany.Value(pAlias)).Value("Model")).TableName) _
+		      .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey").StringValue, "=", Me.Pk()) _
+		      .Execute(pDatabase)
+		    End If
+		    
+		    While Not pRecordSet.EOF
+		      pPks.Append(pRecordSet.Field("key").IntegerValue)
+		      System.DebugLog pAlias + " : " + Str(pRecordSet.Field("key").IntegerValue)
+		      pRecordSet.MoveNext
+		    Wend
+		    
+		    Me.mInitalRelations.Value(pAlias) = pPks
+		  Next
+		  
+		  mChangedRelations = mInitalRelations.Clone()
+		  
+		  System.DebugLog "Relations fetched for " + Me.TableName + " !"
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Find() As ORM
 		  Return Me.Find(Me.Database)
@@ -371,6 +420,9 @@ Inherits QueryBuilder
 		      For Each pColumn As Variant In TableColumns(pDatabase)
 		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		      Next
+		      
+		      // Fetch inital relations
+		      FetchRelations(pDatabase)
 		      
 		    End If
 		    
@@ -539,6 +591,22 @@ Inherits QueryBuilder
 		  // Copies this ORM's relations
 		  For Each pKey As Variant In mRelated.Keys()
 		    pORM.mRelated.Value(pKey) = mRelated.Value(pKey)
+		  Next
+		  
+		  // Clear mInitalRelations
+		  pORM.mInitalRelations.Clear()
+		  
+		  // Use a copy of mInitalRelations to avoid external changes
+		  For Each pKey As Variant In mInitalRelations.Keys()
+		    pORM.mInitalRelations.Value(pKey) = mInitalRelations.Value(pKey)
+		  Next
+		  
+		  // Clear mChanged
+		  pORM.mChangedRelations.Clear()
+		  
+		  // Use a copy of mChanged to avoid external changes
+		  For Each pKey As Variant In mChangedRelations.Keys()
+		    pORM.mChangedRelations.Value(pKey) = mChangedRelations.Value(pKey)
 		  Next
 		  
 		  Return Me
@@ -810,12 +878,60 @@ Inherits QueryBuilder
 		      returnValue = Create(pDatabase)
 		    End
 		    
+		    // SaveRelations(pDatabase)
+		    
 		    RaiseEvent Saved
 		    
 		    Return returnValue
 		    
 		  End If
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub SaveBelongsTos(pDatabase As Database)
+		  // // BelongsTo
+		  // For Each pAlias As String In Me.BelongsTo.Keys
+		  // Dim pInitalPks() As Integer = mInitalRelations.Value(pAlias)
+		  // Dim pChangedPks() As Integer = mChangedRelations.Value(pAlias)
+		  // 
+		  // For Each pInitialPk As Integer In pInitalPks
+		  // // If the initial primary key exists in mChangedRelations, tests if the value has changed
+		  // If pInitalPks.IndexOf(pInitialPk) <> -1 Then
+		  // 
+		  // Else
+		  // // If the initial primary key does not exist in mChangedRelations, remove the associate model
+		  // mData
+		  // End If
+		  // Next
+		  // 
+		  // // Relations are the ones defined in mChangedRelations
+		  // mInitalRelations.Value(pAlias) = mChangedRelations.Value(pAlias)
+		  // Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub SaveHasManys(pDatabase As Database)
+		  // // BelongsTo
+		  // For Each pAlias As String In Me.BelongsTo.Keys
+		  // Dim pInitalPks() As Integer = mInitalRelations.Value(pAlias)
+		  // Dim pChangedPks() As Integer = mChangedRelations.Value(pAlias)
+		  // 
+		  // For Each pInitialPk As Integer In pInitalPks
+		  // // If the initial primary key exists in mChangedRelations, tests if the value has changed
+		  // If pInitalPks.IndexOf(pInitialPk) <> -1 Then
+		  // 
+		  // Else
+		  // // If the initial primary key does not exist in mChangedRelations, remove the associate model
+		  // mData
+		  // End If
+		  // Next
+		  // 
+		  // // Relations are the ones defined in mChangedRelations
+		  // mInitalRelations.Value(pAlias) = mChangedRelations.Value(pAlias)
+		  // Next
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -873,12 +989,17 @@ Inherits QueryBuilder
 		  mHasMany.Clear()
 		  
 		  mBelongsTo.Clear()
+		  
+		  mInitalRelations.Clear()
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Update(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
 		  If Not Loaded() then
 		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
 		  End If
@@ -1032,12 +1153,20 @@ Inherits QueryBuilder
 		Private mChanged As Dictionary
 	#tag EndProperty
 
+	#tag Property, Flags = &h1
+		Protected mChangedRelations As Dictionary
+	#tag EndProperty
+
 	#tag Property, Flags = &h21
 		Private mData As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mHasMany As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h1
+		Protected mInitalRelations As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
