@@ -3,10 +3,18 @@ Protected Class FromQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Dim pStatement As String
+		  
+		  If pLastQueryExpression IsA FromQueryExpression Then
+		    pStatement = ", "
+		  Else
+		    pStatement = "FROM "
+		  End If
+		  
 		  If mTable.Type = 8 Then // String
-		    Return "FROM " + QueryCompiler.TableName(mTable, mTableAlias)
+		    Return pStatement + QueryCompiler.TableName(mTable, mTableAlias)
 		  ElseIf mTable IsA QueryBuilder Then
-		    Return "FROM " + QueryCompiler.Column(mTable) + " " + mTableAlias
+		    Return pStatement + QueryCompiler.Column(mTable) + " " + mTableAlias
 		  End If
 		End Function
 	#tag EndMethod
