@@ -2,16 +2,33 @@
 Protected Class UserTest
 Inherits ORM
 	#tag Method, Flags = &h0
+		Function Add(pProjectTest As ProjectTest) As ORM
+		  Return Add("UsersProjects", "user", "project", pProjectTest.Pk)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Database() As Database
 		  Return ORMTestDatabase
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Initialize()
-		  HasMany(New ProjectTest, "Projects", "userId", "Projects_Users", "projectId")
-		  HasMany(New GroupTest, "Groups", "userId")
-		End Sub
+		Function Groups() As QueryBuilder
+		  Return HasMany("Groups", "user")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pProject As ProjectTest, pDatabase As Database) As Boolean
+		  Return Has("UsersProjects", "user", "project", pProject.Pk, pDatabase)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Projects() As QueryBuilder
+		  Return HasManyThrough("Projects_Users", "user", "project", "Projects")
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0

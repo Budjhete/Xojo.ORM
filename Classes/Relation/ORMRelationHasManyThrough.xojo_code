@@ -1,39 +1,56 @@
 #tag Class
-Protected Class UnionQueryExpression
-Implements QueryExpression
+Protected Class ORMRelationHasManyThrough
+Implements ORMRelation
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  // Part of the QueryExpression interface.
-		  If mAll Then
-		    Return "UNION ALL " + mQueryBuilder.Compile()
-		  Else
-		    Return "UNION " + mQueryBuilder.Compile()
-		  End If
+		Function Add(pDatabase As Database) As ORMRelation
+		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
+		  Values(mForeignKey, mFarKey)._
+		  Execute(pDatabase)
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pQueryBuilder As QueryBuilder, pAll As Boolean = True)
-		  mQueryBuilder = pQueryBuilder
-		  mAll = pAll
+		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pForeignKey As Variant, pFarColumn As String, pFarKey As Variant)
+		  mPivotTableName = pPivotTableName
+		  
+		  mForeignColumn = pForeignColumn
+		  mForeignKey = pForeignKey
+		  
+		  mFarColumn = pFarColumn
+		  mFarKey = pFarKey
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  // Part of the QueryExpression interface.
-		  // @FIXME The nice value might not be good
-		  Return 4
-		End Function
+		Sub Remove(pDatabase As Database)
+		  DB.Delete(mPivotTableName)._
+		  Where(mForeignColumn, "=", mForeignKey)._
+		  AndWhere(mFarColumn, "=", mFarKey)._
+		  Execute(pDatabase)
+		End Sub
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mAll As Boolean = True
+		Private mFarColumn As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mQueryBuilder As QueryBuilder
+		Private mFarKey As Variant
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mForeignColumn As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mForeignKey As Variant
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mPivotTableName As String
 	#tag EndProperty
 
 
@@ -53,18 +70,6 @@ Implements QueryExpression
 			InitialValue="0"
 			Type="Integer"
 			InheritedFrom="Object"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mAll"
-			Group="Behavior"
-			InitialValue="True"
-			Type="Boolean"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mExpression"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"

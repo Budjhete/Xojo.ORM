@@ -5,7 +5,7 @@ Inherits TestGroup
 		Sub AddTest()
 		  CreateUsers()
 		  CreateProjects()
-		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
+		  DB.Delete("UsersProjects").Execute(ORMTestDatabase)
 		  
 		  // Loads the UsertTest model from the database
 		  Dim pUserTest As New UserTest(1)
@@ -15,11 +15,17 @@ Inherits TestGroup
 		  Dim pProjectTest As New ProjectTest(1)
 		  Call pProjectTest.Find()
 		  
-		  Assert.IsFalse(pUserTest.Has("Projects", pProjectTest))
+		  Assert.IsFalse pUserTest.Has(pProjectTest, ORMTestDatabase)
 		  
-		  Call pUserTest.Add("Projects", pProjectTest)
+		  Call pUserTest.Add(pProjectTest)
 		  
-		  Assert.IsTrue(pUserTest.Has("Projects", pProjectTest))
+		  Assert.IsFalse pUserTest.Has(pProjectTest, ORMTestDatabase)
+		  
+		  Call pUserTest.Update(ORMTestDatabase)
+		  
+		  Assert.IsTrue pUserTest.Has(pProjectTest, ORMTestDatabase)
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -35,36 +41,6 @@ Inherits TestGroup
 		    Assert.AreEqual(pRecords.Field("username").StringValue, pUser.Data("username").StringValue)
 		    pRecords.MoveNext
 		  Wend
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub CountRelationsTest()
-		  // Initializes the model for the test
-		  Dim mORM As New UserTest(1)
-		  call mORM.Find(mORM.Database)
-		  
-		  // Tests for any relation with another model in an
-		  // Has Many Through relationship
-		  Dim Relations As Integer = mORM.CountRelations("Projects")
-		  Assert.AreEqual(Relations, 1)
-		  
-		  // Test to see if a provided farkey gives enough constraint
-		  Relations = mORM.CountRelations("Projects", 1)
-		  Assert.AreEqual(Relations, 1)
-		  
-		  // Makes sure that it never returns a match for an empty
-		  // primary key
-		  Relations = mORM.CountRelations("Projects", 0)
-		  Assert.AreEqual(Relations, 0)
-		  
-		  // Does it work with a string?
-		  Relations = mORM.CountRelations("Projects", "myProject")
-		  Assert.AreEqual(Relations, 0)
-		  
-		  // Does it work with many strings
-		  Relations = mORM.CountRelations("Projects", 1,2,3,4)
-		  Assert.AreEqual(Relations, 1)
 		End Sub
 	#tag EndMethod
 
@@ -156,9 +132,11 @@ Inherits TestGroup
 		  Dim mUserTest As New UserTest(1)
 		  call mUserTest.Find()
 		  
-		  Assert.IsTrue(mUserTest.Has("Projects"))
-		  Assert.IsTrue(mUserTest.Has("Projects", 1), mUserTest.Data("username") + " should have one role.")
-		  Assert.IsFalse(mUserTest.Has("Projects", 0))
+		  // Has for HasManyThrough
+		  Assert.IsTrue mUserTest.Has("UsersProjects", "user", "project", ORMTestDatabase)
+		  
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -209,13 +187,13 @@ Inherits TestGroup
 		  Assert.AreEqual(pUserTest.Data("id").StringValue, pGroupTest.user.Data("id"))
 		  
 		  // Adds a has many through relationship to the UserTest model
-		  Call pUserTest.Add("Projects", 1)
+		  Call pUserTest.Add("UsersProjects", "user", "project", 1)
 		  // Tests the has many through relationship
 		  Dim pProjectTest As ProjectTest = ProjectTest(pUserTest.Projects)
 		  Dim Records As RecordSet = pProjectTest.FindAll(pProjectTest.Database)
 		  
 		  // Tests a has many relationship with the UserTest's related groups
-		  Assert.AreEqual(pUserTest.Groups.FindAll(pGroupTest.Database).RecordCount, 2)
+		  Assert.AreEqual(pUserTest.Groups.Execute(pGroupTest.Database).RecordCount, 2)
 		End Sub
 	#tag EndMethod
 
@@ -257,18 +235,19 @@ Inherits TestGroup
 		  Call pProjectTest.Find()
 		  
 		  // Makes sure that pUserTest is not related to pProjectTest
-		  Assert.IsFalse(pUserTest.Has("Projects", pProjectTest))
+		  Assert.IsFalse(pUserTest.Has(pProjectTest, ORMTestDatabase))
 		  
 		  // Adds a relation between pUserTest and pProjectTest
-		  Call pUserTest.Add("Projects", pProjectTest)
-		  Assert.IsTrue(pUserTest.Has("Projects", pProjectTest))
+		  Call pUserTest.Add(pProjectTest)
+		  Assert.IsTrue pUserTest.Has(pProjectTest, ORMTestDatabase)
 		  
 		  // Removes any relation between pUserTest and any ProjectTest
-		  Call pUserTest.Remove("Projects")
-		  Assert.IsFalse(pUserTest.Has("Projects", pProjectTest))
+		  Call pUserTest.Remove("UsersProjects", "user", "project")
+		  Assert.IsFalse(pUserTest.Has(pProjectTest, ORMTestDatabase))
 		  
-		  Call pUserTest.Add("Projects", 1, 2, 3, 4)
-		  Assert.IsTrue(pUserTest.Has("Projects", 1, 2, 3, 4))
+		  Call pUserTest.Add("UsersProjects", "user", "project", 1).Update(ORMTestDatabase)
+		  
+		  Assert.IsTrue(pUserTest.Has("UsersProjects", "user", "project", 1, ORMTestDatabase))
 		End Sub
 	#tag EndMethod
 
@@ -364,14 +343,12 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -400,19 +377,16 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -425,7 +399,6 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"

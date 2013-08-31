@@ -2,26 +2,13 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
-		Function Add(pDatabase As Database, pAlias As String, pFarkeys() As Variant) As ORM
-		  // Converts any ORM that might be in the pFarkeys array
-		  // into a variant
-		  For pFarKey As Integer = 0 To pFarkeys.Ubound
-		    If pFarkeys(pFarKey) IsA ORM Then
-		      pFarKeys(pFarKey) = ORM(pFarKeys(pFarKey)).Pk()
-		    End If
-		  Next
-		  
-		  // Sets the columns to insert into
-		  Dim pColumns() As Variant = Array(_
-		  Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"),_
-		  Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"))
-		  // Defines the foreign key to use for this model
-		  Dim pForeignKey As Variant = Me.Pk
-		  
-		  // Links this model with each Far Key provided for
-		  For Each pFarKey As Variant In pFarkeys
-		    DB.Insert(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue,_
-		    pColumns).Values(pForeignKey, pFarKey).Execute(pDatabase)
+		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
+		  For Each pFarKey As Variant In pFarKeys
+		    
+		    Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
+		    
+		    mAdd.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		    
 		  Next
 		  
 		  Return Me
@@ -29,22 +16,9 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Add(pDatabase, pAlias, pFarKeys)
+		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pFarKeys As Variant) As ORM
+		  Return Add(pPivotTableName, pForeignColumn, pFarColumn, pFarKeys)
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Add(pAlias As String, pFarKeys() As Variant)
-		  Raise New RuntimeException
-		  // Return Add(Database, pAlias, pFarKeys)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Add(pAlias As String, ParamArray pFarKeys As Variant)
-		  // Return Add(Me.Database, pAlias, pFarKeys)
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -64,34 +38,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function BelongsTo() As Dictionary
-		  // Checks if the dictionary is empty
-		  If Me.mBelongsTo.Count = 0 Then
-		    Initialize()
-		  End If
-		  
-		  return mBelongsTo
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub BelongsTo(pORM As ORM, Optional pAlias As String, Optional pForeignKey As String)
-		  If pForeignKey = "" Then
-		    pForeignKey = Me.TableName + "Id"
-		  End If
-		  
-		  If pAlias = "" Then
-		    pAlias = pORM.TableName
-		  End If
-		  
-		  // pAlias will be the "property" through which we will acces the models that Me belongsTo
-		  mBelongsTo.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Changed() As Boolean
-		  Return (mChanged.Keys().Ubound > -1) And mChangedRelations.Equals(mInitalRelations)
+		  Return mChanged.Keys().Ubound > -1 Or mAdd.Keys().Ubound > -1 Or mRemove.Keys.Ubound > -1
 		End Function
 	#tag EndMethod
 
@@ -105,7 +53,8 @@ Inherits QueryBuilder
 		Function Clear() As ORM
 		  // Clear changes, not data
 		  mChanged.Clear()
-		  mChangedRelations.Clear()
+		  mAdd.Clear()
+		  mRemove.Clear()
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -114,11 +63,8 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = New Dictionary
 		  mChanged = New Dictionary
-		  mHasMany = New Dictionary
-		  mBelongsTo = New Dictionary
-		  mRelated = New Dictionary
-		  mInitalRelations = New Dictionary
-		  mChangedRelations = New Dictionary
+		  mAdd = New Dictionary
+		  mRemove = New Dictionary
 		End Sub
 	#tag EndMethod
 
@@ -135,59 +81,6 @@ Inherits QueryBuilder
 		  Return DB.Find(DB.Expression("COUNT(*) AS count")).From(TableName).Execute(pDatabase).Field("count").IntegerValue
 		  
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CountRelations(pDatabase As Database, pAlias As String, pFarKeys() As Variant) As Integer
-		  If Not Me.Loaded Then
-		    return 0
-		  End If
-		  
-		  
-		  // The request that looks in the pivot table to see if this model is present
-		  Dim pQueryBuilder As QueryBuilder = DB.Find(DB.Expression("COUNT(*) AS RecordsFound"))_
-		  .From(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue)_
-		  .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
-		  
-		  // Converts any ORM in the array into a variant containing its primary key
-		  For i As integer = 0 To pFarKeys.Ubound
-		    If pFarKeys(i) IsA ORM Then
-		      pFarKeys(i) = ORM(pFarKeys(i)).Pk()
-		    End If
-		  Next
-		  
-		  If pFarKeys.Ubound >= 0 Then
-		    // The request to see if this model is related to the specified FarKeys
-		    Call pQueryBuilder.Where(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
-		  End If
-		  
-		  Dim Records As RecordSet = pQueryBuilder.Execute(pDatabase)
-		  
-		  System.DebugLog(pQueryBuilder.Compile())
-		  
-		  // Returns the number of relations found
-		  return Records.Field("RecordsFound").IntegerValue
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CountRelations(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As Integer
-		  // @FIXME Does not manage parameters that might be an array of any datatype
-		  // Do not call it this way <code>MyORM.CountRelations("MyAlias", Array("FarKey1", "FarKey2"))</code>
-		  Return Me.CountRelations(pDatabase, palias, pFarKeys)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, pFarKeys() As Variant) As Integer
-		  Return CountRelations(Database, pAlias, pFarKeys)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function CountRelations(pAlias As String, ParamArray pFarKeys As Variant) As Integer
-		  Return CountRelations(Me.Database, pAlias, pFarKeys)
 		End Function
 	#tag EndMethod
 
@@ -215,6 +108,15 @@ Inherits QueryBuilder
 		    
 		    // Update primary key from the last row inserted in this table
 		    mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mAdd.Values()
+		      Call pRelation.Add(pDatabase)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mRemove.Values()
+		      Call pRelation.Remove(pDatabase)
+		    Next
 		    
 		    RaiseEvent Created()
 		    
@@ -353,50 +255,6 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Sub FetchRelations(pDatabase As Database)
-		  // Fetches the primary keys of the initially related models
-		  
-		  // BelongsTo
-		  For Each pAlias As String In Me.BelongsTo.Keys
-		    Dim pPks() As Integer
-		    pPks.Append(Me.mData.Value(Dictionary(Me.mBelongsTo.Value(pAlias)).Value("ForeignKey").StringValue).IntegerValue)
-		    Me.mInitalRelations.Value(pAlias) = pPks
-		  Next
-		  
-		  // HasMany
-		  For Each pAlias As String In Me.HasMany.Keys
-		    Dim pPks() As Integer
-		    Dim pRecordSet As RecordSet
-		    
-		    // Has Many "Through" ?
-		    If Dictionary(Me.HasMany.Value(pAlias)).Value("Through") <> "" Then
-		      pRecordSet = DB.Find(DB.Expression(QueryCompiler.Column(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey").StringValue) + " AS key")) _
-		      .From(Dictionary(Me.HasMany.Value(pAlias)).Value("Through").StringValue) _
-		      .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey").StringValue, "=", Me.Pk()) _
-		      .Execute(pDatabase)
-		    Else
-		      pRecordSet = DB.Find(DB.Expression(QueryCompiler.Column(ORM(Dictionary(Me.HasMany.Value(pAlias)).Value("Model")).PrimaryKey) + " AS key")) _
-		      .From(ORM(Dictionary(Me.HasMany.Value(pAlias)).Value("Model")).TableName) _
-		      .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey").StringValue, "=", Me.Pk()) _
-		      .Execute(pDatabase)
-		    End If
-		    
-		    While Not pRecordSet.EOF
-		      pPks.Append(pRecordSet.Field("key").IntegerValue)
-		      System.DebugLog pAlias + " : " + Str(pRecordSet.Field("key").IntegerValue)
-		      pRecordSet.MoveNext
-		    Wend
-		    
-		    Me.mInitalRelations.Value(pAlias) = pPks
-		  Next
-		  
-		  mChangedRelations = mInitalRelations.Clone()
-		  
-		  System.DebugLog "Relations fetched for " + Me.TableName + " !"
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function Find() As ORM
 		  Return Me.Find(Me.Database)
@@ -420,9 +278,6 @@ Inherits QueryBuilder
 		      For Each pColumn As Variant In TableColumns(pDatabase)
 		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		      Next
-		      
-		      // Fetch inital relations
-		      FetchRelations(pDatabase)
 		      
 		    End If
 		    
@@ -465,63 +320,40 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pDatabase As Database, pAlias As String, pFarKeys() As Variant) As Boolean
-		  If pFarKeys.Ubound < 0 Then
-		    Return (Me.CountRelations(pDatabase, pAlias) <> 0)
-		  End If
-		  
-		  For i As Integer = 0 To pFarKeys.Ubound
-		    If pFarKeys(i) IsA ORM Then
-		      pFarKeys(i) = ORM(pFarKeys(i)).Pk()
-		    End If
-		  Next
-		  
-		  Return (Me.CountRelations(pDatabase, pAlias, pFarKeys) = pFarKeys.Ubound + 1)
+		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pDatabase As Database) As Boolean
+		  // Tells if this model is in HasManyThrough relationship
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pPivotTableName)._
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  Execute(pDatabase)._
+		  Field("count").BooleanValue
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As Boolean
-		  Return Me.Has(pDatabase, pAlias, pFarKeys)
+		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As Variant, pFarKey As Variant, pDatabase As Database) As Boolean
+		  // Tells if this model is in HasManyThrough relationship
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pPivotTableName)._
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  AndWhere(pFarColumn, "=", pFarKey)._
+		  Execute(pDatabase)._
+		  Field("count").BooleanValue
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pAlias As String, pFarKeys() As Variant) As Boolean
-		  Return Has(Database, pAlias, pFarKeys)
+		Function HasMany(pForeignTableName As String, pForeignColumn As String) As QueryBuilder
+		  Return DB.Find.From(pForeignTableName)._
+		  Where(pForeignColumn, "=", Me.Pk)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pAlias As String, ParamArray pFarKeys As Variant) As Boolean
-		  Return Has(Database, pAlias, pFarKeys)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function HasMany() As Dictionary
-		  // Checks if the dictionary is empty
-		  If mHasMany.Count = 0 Then
-		    Initialize()
-		  End If
-		  
-		  return mHasMany
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub HasMany(pORM As ORM, pAlias As String, pForeignKey As String, Optional pThrough As String, Optional pFarKey As Variant)
-		  If pFarKey.IsNull Then
-		    pFarKey = pORM.TableName + "Id"
-		  End If
-		  // Sets a new HasMany relationship in between this model and any other
-		  mHasMany.Value(pAlias) = New Dictionary("Model" : pORM, "ForeignKey" : pForeignKey, "Through" : pThrough, "FarKey" : pFarKey)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function HasOne(pTableName As String, pFarKey As String) As RecordSet
-		  
+		Function HasManyThrough(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarTableName As String) As QueryBuilder
+		  Return DB.Find.From(pFarTableName)._
+		  Join(pPivotTableName)._
+		  On(pForeignColumn, "=", Me.Pk)
 		End Function
 	#tag EndMethod
 
@@ -567,6 +399,7 @@ Inherits QueryBuilder
 		Function Inflate(pORM As ORM) As ORM
 		  // Inflate this ORM on another ORM
 		  
+		  // Call QueryBuilder Inflate
 		  Call Super.Inflate(pORM)
 		  
 		  // Clear mData
@@ -585,28 +418,18 @@ Inherits QueryBuilder
 		    pORM.mChanged.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
-		  // Clear the relations
-		  pORM.mRelated.Clear
+		  pORM.mAdd.Clear
 		  
-		  // Copies this ORM's relations
-		  For Each pKey As Variant In mRelated.Keys()
-		    pORM.mRelated.Value(pKey) = mRelated.Value(pKey)
+		  // Use a copy of mAdd to avoid external changes
+		  For Each pKey As Variant In mAdd.Keys()
+		    pORM.mAdd.Value(pKey) = mAdd.Value(pKey)
 		  Next
 		  
-		  // Clear mInitalRelations
-		  pORM.mInitalRelations.Clear()
+		  pORM.mRemove.Clear
 		  
-		  // Use a copy of mInitalRelations to avoid external changes
-		  For Each pKey As Variant In mInitalRelations.Keys()
-		    pORM.mInitalRelations.Value(pKey) = mInitalRelations.Value(pKey)
-		  Next
-		  
-		  // Clear mChanged
-		  pORM.mChangedRelations.Clear()
-		  
-		  // Use a copy of mChanged to avoid external changes
-		  For Each pKey As Variant In mChangedRelations.Keys()
-		    pORM.mChangedRelations.Value(pKey) = mChangedRelations.Value(pKey)
+		  // Use a copy of mRemove to avoid external changes
+		  For Each pKey As Variant In mRemove.Keys()
+		    pORM.mRemove.Value(pKey) = mRemove.Value(pKey)
 		  Next
 		  
 		  Return Me
@@ -630,12 +453,6 @@ Inherits QueryBuilder
 		Function Initial(pColumn As String) As Variant
 		  Return mData.Lookup(pColumn, Nil)
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Initialize()
-		  
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -688,58 +505,10 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub Operator_Convert(pRecord As RecordSet)
-		  Constructor
-		  // @FIXME Add any restriction that might be relevent to the use of this operator
-		  // We will not modify the ORM's data if it is already loaded
-		  If Not Loaded Then
-		    For i As Integer = 1 To pRecord.FieldCount
-		      mData.Value(pRecord.IdxField(i).Name) = pRecord.IdxField(i).Value
-		    Next
-		  End If
+		  For i As Integer = 1 To pRecord.FieldCount
+		    mData.Value(pRecord.IdxField(i).Name) = pRecord.IdxField(i).Value
+		  Next
 		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Operator_Lookup(pAlias As String) As ORM
-		  Dim pORM As ORM
-		  Dim pColumn As Variant
-		  Dim pValue As Variant
-		  
-		  // If the relation is already resolved
-		  If Me.Related.HasKey(pAlias) Then
-		    Return Me.Related.Value(pAlias)
-		    // If it is a belongs to relationship
-		  ElseIf Me.BelongsTo.HasKey(pAlias) Then
-		    pORM = Dictionary(Me.BelongsTo.Value(pAlias)).Value("Model")
-		    
-		    pColumn = pORM.TableName + "." + pORM.PrimaryKey
-		    pValue = Me.Data(Dictionary(Me.BelongsTo.Value(pAlias)).Value("ForeignKey").StringValue)
-		    Call pORM.Where(pColumn, "=", pValue)
-		    // If it is a has many relationship
-		  ElseIf Me.HasMany.HasKey(pAlias) Then
-		    pORM = Dictionary(Me.HasMany.Value(pAlias)).Value("Model")
-		    // Grabs a Has Many "Through" relationship if it exists
-		    If Dictionary(Me.HasMany.Value(pAlias)).Value("Through") <> "" Then
-		      Dim Through As Variant = Dictionary(Me.HasMany.Value(pAlias)).Value("Through")
-		      Dim JoinCol1 As Variant = Through + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey")
-		      Dim JoinCol2 As Variant = pORM.TableName + "." + pORM.PrimaryKey
-		      Call pORM.Join(Through).On(JoinCol1, "=", JoinCol2)
-		      pColumn = Through + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey")
-		      pValue = Me.Pk()
-		    Else
-		      pColumn = pORM.TableName + "." + Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey")
-		      pValue = Me.Pk()
-		    End If
-		    Call pORM.Where(pColumn, "=", pValue)
-		  Else
-		    // Needs to fail if Lookup brings up nothing
-		    Raise New NilObjectException
-		  End If
-		  
-		  Me.Related(pAlias, pORM)
-		  
-		  Return Me.mRelated.Value(pAlias)
-		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -789,21 +558,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Related() As Dictionary
-		  Return mRelated
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub Related(pAlias As String, pORM As ORM)
-		  // Does not override
-		  If Not Me.mRelated.HasKey(pAlias) Then
-		    Me.mRelated.Value(pAlias) = pORM
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Reload(pDatabase As Database) As ORM
 		  // Save primary key, the model will be unloaded
 		  
@@ -817,44 +571,26 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pDatabase As Database, pAlias As String, pFarKeys() As Variant) As ORM
-		  // Starts the QueryBuilder by removing everything that has this model's primary key as a foreign key
-		  Dim pQueryBuilder As QueryBuilder = DB.Delete(Dictionary(Me.HasMany.Value(pAlias)).Value("Through"))_
-		  .Where(Dictionary(Me.HasMany.Value(pAlias)).Value("ForeignKey"), "=", Me.Pk())
+		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
+		  // Remove a HasManyThrough relationship
 		  
-		  // Converts any ORM into a variant
-		  For pFarKey As Integer = 0 To pFarKeys.Ubound
-		    If pFarKeys(pFarKey) IsA ORM Then
-		      pFarKeys(pFarKey) = ORM(pFarKeys(pFarKey))
-		    End If
-		  Next
-		  
-		  // Adds a where clause if this Far Key's array is not empty
-		  If pFarKeys.Ubound >= 0 Then
-		    Call pQueryBuilder.Where(Dictionary(Me.HasMany.Value(pAlias)).Value("FarKey"), "IN", pFarKeys)
+		  If pFarKeys.Ubound = -1 Then
+		    pFarKeys.Append(DB.Expression("*"))
 		  End If
 		  
-		  pQueryBuilder.Execute(pDatabase)
-		  
-		  Return Me
+		  For Each pFarKey As Variant In pFarKeys
+		    
+		    Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
+		    
+		    mRemove.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		    
+		  Next
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pDatabase As Database, pAlias As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Me.Remove(pDatabase, pAlias, pFarKeys)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Remove(pAlias As String, pFarKeys() As Variant) As ORM
-		  Return Remove(Database, pAlias, pFarKeys)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Remove(pAlias As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Remove(Database, pAlias, pFarKeys)
+		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pFarKeys As Variant) As ORM
+		  Return Remove(pPivotTableName, pForeignColumn, pFarColumn, pFarKeys)
 		End Function
 	#tag EndMethod
 
@@ -870,68 +606,18 @@ Inherits QueryBuilder
 		Function Save(pDatabase As Database) As ORM
 		  If Not RaiseEvent Saving Then
 		    
-		    Dim returnValue As ORM
-		    
 		    If Loaded() Then
-		      returnValue = Update(pDatabase)
+		      Call Update(pDatabase)
 		    Else
-		      returnValue = Create(pDatabase)
+		      Call Create(pDatabase)
 		    End
-		    
-		    // SaveRelations(pDatabase)
 		    
 		    RaiseEvent Saved
 		    
-		    Return returnValue
+		    Return Me
 		    
 		  End If
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Sub SaveBelongsTos(pDatabase As Database)
-		  // // BelongsTo
-		  // For Each pAlias As String In Me.BelongsTo.Keys
-		  // Dim pInitalPks() As Integer = mInitalRelations.Value(pAlias)
-		  // Dim pChangedPks() As Integer = mChangedRelations.Value(pAlias)
-		  // 
-		  // For Each pInitialPk As Integer In pInitalPks
-		  // // If the initial primary key exists in mChangedRelations, tests if the value has changed
-		  // If pInitalPks.IndexOf(pInitialPk) <> -1 Then
-		  // 
-		  // Else
-		  // // If the initial primary key does not exist in mChangedRelations, remove the associate model
-		  // mData
-		  // End If
-		  // Next
-		  // 
-		  // // Relations are the ones defined in mChangedRelations
-		  // mInitalRelations.Value(pAlias) = mChangedRelations.Value(pAlias)
-		  // Next
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Sub SaveHasManys(pDatabase As Database)
-		  // // BelongsTo
-		  // For Each pAlias As String In Me.BelongsTo.Keys
-		  // Dim pInitalPks() As Integer = mInitalRelations.Value(pAlias)
-		  // Dim pChangedPks() As Integer = mChangedRelations.Value(pAlias)
-		  // 
-		  // For Each pInitialPk As Integer In pInitalPks
-		  // // If the initial primary key exists in mChangedRelations, tests if the value has changed
-		  // If pInitalPks.IndexOf(pInitialPk) <> -1 Then
-		  // 
-		  // Else
-		  // // If the initial primary key does not exist in mChangedRelations, remove the associate model
-		  // mData
-		  // End If
-		  // Next
-		  // 
-		  // // Relations are the ones defined in mChangedRelations
-		  // mInitalRelations.Value(pAlias) = mChangedRelations.Value(pAlias)
-		  // Next
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -984,14 +670,6 @@ Inherits QueryBuilder
 		  // Vide les données, pas les changements
 		  mData.Clear()
 		  
-		  mRelated.Clear()
-		  
-		  mHasMany.Clear()
-		  
-		  mBelongsTo.Clear()
-		  
-		  mInitalRelations.Clear()
-		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -1011,6 +689,15 @@ Inherits QueryBuilder
 		    // Merge mData with mChanged
 		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mAdd.Values()
+		      Call pRelation.Add(pDatabase)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mRemove.Values()
+		      Call pRelation.Remove(pDatabase)
 		    Next
 		    
 		    // Clear mChanged, they are merged in mData
@@ -1040,7 +727,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Variant) As ORM
+		Function Values(ParamArray pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
 		  Return Me
@@ -1048,7 +735,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(ParamArray pValues() As Variant) As ORM
+		Function Values(pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
 		  Return Me
@@ -1145,32 +832,20 @@ Inherits QueryBuilder
 	#tag EndNote
 
 
-	#tag Property, Flags = &h1
-		Protected mBelongsTo As Dictionary
+	#tag Property, Flags = &h21
+		Private mAdd As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mChanged As Dictionary
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
-		Protected mChangedRelations As Dictionary
-	#tag EndProperty
-
 	#tag Property, Flags = &h21
 		Private mData As Dictionary
 	#tag EndProperty
 
-	#tag Property, Flags = &h1
-		Protected mHasMany As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mInitalRelations As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mRelated As Dictionary
+	#tag Property, Flags = &h21
+		Private mRemove As Dictionary
 	#tag EndProperty
 
 

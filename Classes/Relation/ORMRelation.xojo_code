@@ -1,32 +1,16 @@
-#tag Class
-Protected Class GroupTest
-Inherits ORM
+#tag Interface
+Protected Interface ORMRelation
 	#tag Method, Flags = &h0
-		Function Database() As Database
-		  Return ORMTestDatabase
+		Function Add(pDatabase As Database) As ORMRelation
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableName() As String
-		  Return "Groups"
-		End Function
+		Sub Remove(pDatabase As Database)
+		  
+		End Sub
 	#tag EndMethod
-
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return New UserTest(Data("user"))
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  Data("user") = value.Pk
-			End Set
-		#tag EndSetter
-		user As UserTest
-	#tag EndComputedProperty
 
 
 	#tag ViewBehavior
@@ -69,5 +53,5 @@ Inherits ORM
 			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
-End Class
-#tag EndClass
+End Interface
+#tag EndInterface
