@@ -272,7 +272,9 @@ Inherits QueryBuilder
 		    If pRecordSet <> Nil Then
 		      
 		      // Fetch record set
-		      For Each pColumn As Variant In TableColumns(pDatabase)
+		      
+		      For i As Integer = 1 To pRecordSet.FieldCount
+		        Dim pColumn As String = pRecordSet.IdxField(i).Name
 		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		      Next
 		      
@@ -295,7 +297,6 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  ' Return DB.Find(TableColumns(pDatabase)).From(TableName()).Execute(pDatabase)
 		  Return Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Execute(pDatabase)
 		End Function
 	#tag EndMethod
@@ -502,6 +503,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub Operator_Convert(pRecord As RecordSet)
+		  Constructor
 		  For i As Integer = 1 To pRecord.FieldCount
 		    mData.Value(pRecord.IdxField(i).Name) = pRecord.IdxField(i).Value
 		  Next
@@ -675,7 +677,7 @@ Inherits QueryBuilder
 		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
 		  
 		  While Not pRecordSet.EOF
-		    pColumns.Append(pRecordSet.Field("ColumnName").Value)
+		    pColumns.Append(TableName() + "." + pRecordSet.Field("ColumnName").Value)
 		    pRecordSet.MoveNext()
 		  WEnd
 		  
