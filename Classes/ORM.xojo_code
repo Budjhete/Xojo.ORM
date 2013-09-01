@@ -5,9 +5,15 @@ Inherits QueryBuilder
 		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
 		  For Each pFarKey As Variant In pFarKeys
 		    
-		    Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
-		    
-		    mAdd.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		    If Not RaiseEvent Changing Then
+		      
+		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
+		      
+		      mAdd.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		      
+		      RaiseEvent Changed
+		      
+		    End If
 		    
 		  Next
 		  
@@ -349,16 +355,16 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function HasMany(pForeignTableName As String, pForeignColumn As String) As QueryBuilder
-		  Return DB.Find.From(pForeignTableName)._
+	#tag Method, Flags = &h1
+		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
+		  Return pORM._
 		  Where(pForeignColumn, "=", Me.Pk)
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function HasManyThrough(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarTableName As String) As QueryBuilder
-		  Return DB.Find.From(pFarTableName)._
+	#tag Method, Flags = &h1
+		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
+		  Return pORM._
 		  Join(pPivotTableName)._
 		  On(pForeignColumn, "=", Me.Pk)
 		End Function
@@ -587,9 +593,15 @@ Inherits QueryBuilder
 		  
 		  For Each pFarKey As Variant In pFarKeys
 		    
-		    Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
-		    
-		    mRemove.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		    If Not RaiseEvent Changing Then
+		      
+		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
+		      
+		      mRemove.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		      
+		      RaiseEvent Changed
+		      
+		    End If
 		    
 		  Next
 		End Function

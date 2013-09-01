@@ -14,8 +14,8 @@ Inherits ORM
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Groups() As QueryBuilder
-		  Return HasMany("Groups", "user")
+		Function Groups() As GroupTest
+		  Return GroupTest(HasMany(New GroupTest, "user"))
 		End Function
 	#tag EndMethod
 
@@ -26,8 +26,8 @@ Inherits ORM
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Projects() As QueryBuilder
-		  Return HasManyThrough("Projects_Users", "user", "project", "Projects")
+		Function Projects() As ProjectTest
+		  Return ProjectTest(HasManyThrough(New ProjectTest, "Projects_Users", "user", "project"))
 		End Function
 	#tag EndMethod
 
