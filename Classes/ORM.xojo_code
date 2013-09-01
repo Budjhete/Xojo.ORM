@@ -2,6 +2,19 @@
 Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
+		Function Add() As Dictionary
+		  Dim pAdd As New Dictionary
+		  
+		  // Use a copy of mData to avoid external changes
+		  For Each pKey As Variant In mAdd.Keys()
+		    pAdd.Value(pKey) = mAdd.Value(pKey)
+		  Next
+		  
+		  Return pAdd
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
 		  For Each pFarKey As Variant In pFarKeys
 		    
@@ -9,7 +22,11 @@ Inherits QueryBuilder
 		      
 		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
 		      
-		      mAdd.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		      If mRemove.HasKey(pIdentifier) Then
+		        mRemove.Remove(pIdentifier)
+		      Else
+		        mAdd.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		      End If
 		      
 		      RaiseEvent Changed
 		      
@@ -236,39 +253,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub dumpChanges()
-		  // For debug purposes
-		  If Not Loaded Then
-		    System.DebugLog "Model is not loaded !"
-		  Else
-		    System.DebugLog "Dumping " + Str(mChanged.Count) + " changed values : "
-		    
-		    Dim i As Integer = 0
-		    Dim mesg As String
-		    For i = 0 To mChanged.Count-1
-		      mesg = mesg + " " + Str(mChanged.Key(i))
-		    Next
-		    System.DebugLog mesg
-		    
-		    
-		    For Each element As Variant In mChanged.Keys
-		      Dim msg As String = element.StringValue + " is : " _
-		      + mChanged.Value(element).StringValue
-		      
-		      If mData.HasKey(element) Then
-		        msg = msg + "; was : " + mData.Value(element).StringValue
-		      Else
-		        msg = msg + " (never was)"
-		      End If
-		      
-		      System.DebugLog msg
-		    Next
-		  End If
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Find() As ORM
 		  Return Me.Find(Me.Database)
 		End Function
@@ -451,7 +435,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Initial() As Dictionary
-		  Dim pData As Dictionary
+		  Dim pData As New Dictionary
 		  
 		  // Use a copy of mData to avoid external changes
 		  For Each pKey As Variant In mData.Keys()
@@ -584,6 +568,19 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Remove() As Dictionary
+		  Dim pRemove As New Dictionary
+		  
+		  // Use a copy of mData to avoid external changes
+		  For Each pKey As Variant In mRemove.Keys()
+		    pRemove.Value(pKey) = mRemove.Value(pKey)
+		  Next
+		  
+		  Return pRemove
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
 		  // Remove a HasManyThrough relationship
 		  
@@ -597,7 +594,11 @@ Inherits QueryBuilder
 		      
 		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
 		      
-		      mRemove.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		      If mAdd.HasKey(pIdentifier) Then
+		        mAdd.Remove(pIdentifier)
+		      Else
+		        mRemove.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		      End If
 		      
 		      RaiseEvent Changed
 		      
@@ -703,12 +704,17 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Updating() Then
 		    
-		    DB.Update(TableName()).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
-		    
-		    // Merge mData with mChanged
-		    For Each pKey As Variant In mChanged.Keys()
-		      mData.Value(pKey) = mChanged.Value(pKey)
-		    Next
+		    // Update only if there are changes
+		    If mChanged.Count > 0 Then
+		      
+		      DB.Update(TableName()).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		      
+		      // Merge mData with mChanged
+		      For Each pKey As Variant In mChanged.Keys()
+		        mData.Value(pKey) = mChanged.Value(pKey)
+		      Next
+		      
+		    End If
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mAdd.Values()

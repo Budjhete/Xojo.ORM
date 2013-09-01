@@ -65,8 +65,6 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile()
 		    
-		    pStatement = pStatement.ReplaceAll(Chr(0), "")
-		    
 		    pDatabase.SQLExecute(pStatement)
 		    
 		    If pDatabase.Error Then

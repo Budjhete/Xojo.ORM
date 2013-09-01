@@ -118,8 +118,12 @@ Protected Module QueryCompiler
 		    
 		  End Select
 		  
+		  pValue = ReplaceAll(pValue, Chr(0), "")
+		  
+		  pValue = ReplaceAll(pValue.StringValue, "'", "''")
+		  
 		  // Quote quotes ;)
-		  Return "'" + ReplaceAll(pValue.StringValue, "'", "''") + "'"
+		  Return "'" + pValue + "'"
 		  
 		End Function
 	#tag EndMethod
