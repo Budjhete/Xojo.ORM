@@ -548,6 +548,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Pk(Assigns pValue As Variant)
+		  Data(PrimaryKey()) = pValue
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
