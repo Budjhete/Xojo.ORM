@@ -18,17 +18,19 @@ Inherits QueryBuilder
 		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
 		  For Each pFarKey As Variant In pFarKeys
 		    
-		    If Not RaiseEvent Changing Then
+		    Dim pORMRelationHasManyThrough As ORMRelation = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		    
+		    If Not RaiseEvent Adding(pORMRelationHasManyThrough) Then
 		      
 		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
 		      
 		      If mRemove.HasKey(pIdentifier) Then
 		        mRemove.Remove(pIdentifier)
 		      Else
-		        mAdd.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		        mAdd.Value(pIdentifier) = pORMRelationHasManyThrough
 		      End If
 		      
-		      RaiseEvent Changed
+		      RaiseEvent Added pORMRelationHasManyThrough
 		      
 		    End If
 		    
@@ -68,16 +70,24 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Changed(pColumn as String) As Boolean
-		  return mChanged.HasKey(pColumn)
+		  Return mChanged.HasKey(pColumn)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Clear() As ORM
 		  // Clear changes, not data
-		  mChanged.Clear()
-		  mAdd.Clear()
-		  mRemove.Clear()
+		  
+		  If Not RaiseEvent Clearing() Then
+		    
+		    mChanged.Clear()
+		    mAdd.Clear()
+		    mRemove.Clear()
+		    
+		    RaiseEvent Cleared()
+		    
+		  End If
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -191,7 +201,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String, pValue As Variant) As ORM
-		  If Not RaiseEvent Changing() Then
+		  If Not RaiseEvent Changing(pColumn) Then
 		    
 		    // Database support Booleans as 1's and 0's
 		    If pValue.Type = pValue.TypeBoolean And pValue Then
@@ -207,7 +217,7 @@ Inherits QueryBuilder
 		      mChanged.Remove(pColumn)
 		    End If
 		    
-		    RaiseEvent Changed()
+		    RaiseEvent Changed(pColumn)
 		    
 		  End If
 		  
@@ -342,23 +352,20 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1
 		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
-		  Return pORM._
-		  Where(pForeignColumn, "=", Me.Pk)
+		  Return pORM.Where(pForeignColumn, "=", Me.Pk)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
 		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
-		  Return pORM._
-		  Join(pPivotTableName)._
-		  On(pForeignColumn, "=", Me.Pk)
+		  Return pORM.Join(pPivotTableName).On(pForeignColumn, "=", Me.Pk)
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Sub HasOne(pTableName As String, pFarKey As String, pORM As ORM)
-		  
-		End Sub
+	#tag Method, Flags = &h1
+		Protected Function HasOne(pORM As ORM, pForeignColumn As String) As ORM
+		  Return HasMany(pORM, pForeignColumn)
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -596,19 +603,21 @@ Inherits QueryBuilder
 		    pFarKeys.Append(DB.Expression("*"))
 		  End If
 		  
-		  For Each pFarKey As Variant In pFarKeys
+		  For Each pFarKey As Variant In pFarKeys 
 		    
-		    If Not RaiseEvent Changing Then
+		    Dim pORMRelationHasManyThrough As ORMRelationHasManyThrough = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		    
+		    If Not RaiseEvent Removing(pORMRelationHasManyThrough) Then
 		      
 		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
 		      
 		      If mAdd.HasKey(pIdentifier) Then
 		        mAdd.Remove(pIdentifier)
 		      Else
-		        mRemove.Value(pIdentifier) = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
+		        mRemove.Value(pIdentifier) = pORMRelationHasManyThrough
 		      End If
 		      
-		      RaiseEvent Changed
+		      RaiseEvent Removed(pORMRelationHasManyThrough)
 		      
 		    End If
 		    
@@ -695,8 +704,15 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Unload() As ORM
-		  // Vide les données, pas les changements
-		  mData.Clear()
+		  // Empties data, not changes
+		  
+		  If Not RaiseEvent Unloading() Then
+		    
+		    mData.Clear()
+		    
+		    RaiseEvent Unloaded()
+		    
+		  End If
 		  
 		  Return Me
 		End Function
@@ -811,11 +827,27 @@ Inherits QueryBuilder
 
 
 	#tag Hook, Flags = &h0
-		Event Changed()
+		Event Added(pORMRelation As ORMRelation)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Changing() As Boolean
+		Event Adding(pORMRelation As ORMRelation) As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Changed(pColumn As String)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Changing(pColumn As String) As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Cleared()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Clearing() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -843,11 +875,27 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event Removed(pORMRelation As ORMRelation)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Removing(pORMRelation As ORMRelation) As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Saved()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
 		Event Saving() As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Unloaded()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Unloading() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
