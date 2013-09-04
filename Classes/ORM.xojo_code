@@ -370,6 +370,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Having(pExpression As QueryBuilder) As ORM
+		  Call Super.Having(pExpression)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Having(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.Having(pColumn, pOperator, pValue)
 		  
@@ -488,6 +496,14 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As ORM
 		  Call Super.Offset(pOffset)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function On(pExpression As QueryExpression) As ORM
+		  Call Super.On(pExpression)
 		  
 		  Return Me
 		End Function
@@ -780,6 +796,14 @@ Inherits QueryBuilder
 		  For Each pKey As Variant in pCriterias.Keys
 		    Call Where(pKey, "=", pCriterias.Value(pKey))
 		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pExpression As QueryExpression) As ORM
+		  Call Super.Where(pExpression)
 		  
 		  Return Me
 		End Function
