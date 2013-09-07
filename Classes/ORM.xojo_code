@@ -619,7 +619,7 @@ Inherits QueryBuilder
 		    pFarKeys.Append(DB.Expression("*"))
 		  End If
 		  
-		  For Each pFarKey As Variant In pFarKeys 
+		  For Each pFarKey As Variant In pFarKeys
 		    
 		    Dim pORMRelationHasManyThrough As ORMRelationHasManyThrough = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
 		    

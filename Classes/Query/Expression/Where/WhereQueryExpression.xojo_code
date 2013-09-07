@@ -42,7 +42,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  If mQueryExpression <> Nil Then 
+		  If mQueryExpression <> Nil Then
 		    Return mQueryExpression.Compile
 		  End If
 		  
