@@ -358,7 +358,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1
 		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
-		  Return pORM.Join(pPivotTableName).On(pForeignColumn, "=", Me.Pk)
+		  // Pk must not be compiled as a column
+		  Return pORM.Join(pPivotTableName).On(pForeignColumn, "=", DB.Expression(Me.Pk))
 		End Function
 	#tag EndMethod
 
