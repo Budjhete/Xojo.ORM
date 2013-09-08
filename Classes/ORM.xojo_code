@@ -135,7 +135,7 @@ Inherits QueryBuilder
 		    Next
 		    
 		    // Clear changes, they are saved in mData
-		    Call Clear()
+		    Call mChanged.Clear()
 		    
 		    Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		    
@@ -150,6 +150,10 @@ Inherits QueryBuilder
 		    For Each pRelation As ORMRelation In mRemove.Values()
 		      Call pRelation.Remove(pDatabase)
 		    Next
+		    
+		    // Clear pending relationships
+		    mAdd.Clear()
+		    mRemove.Clear()
 		    
 		    RaiseEvent Created()
 		    
@@ -249,10 +253,14 @@ Inherits QueryBuilder
 		    DB.Delete(TableName()).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
 		    
 		    // Empty mData
-		    Call Unload()
+		    Call mData.Clear()
 		    
 		    // Empty mChanges
-		    Call Clear()
+		    Call mChanged.Clear()
+		    
+		    // Empty pending relationships
+		    Call mAdd.Clear()
+		    Call mRemove.Clear()
 		    
 		    RaiseEvent Deleted()
 		    
@@ -755,6 +763,9 @@ Inherits QueryBuilder
 		        mData.Value(pKey) = mChanged.Value(pKey)
 		      Next
 		      
+		      // Clear mChanged, they are merged in mData
+		      mChanged.Clear()
+		      
 		    End If
 		    
 		    // Execute pendings relationships
@@ -766,8 +777,9 @@ Inherits QueryBuilder
 		      Call pRelation.Remove(pDatabase)
 		    Next
 		    
-		    // Clear mChanged, they are merged in mData
-		    Call Clear()
+		    // Clear pending relationships
+		    mAdd.Clear()
+		    mRemove.Clear()
 		    
 		    RaiseEvent Updated()
 		    
