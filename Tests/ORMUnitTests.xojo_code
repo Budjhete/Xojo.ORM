@@ -2,32 +2,22 @@
 Protected Class ORMUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
-		Sub CountRelationsTest()
-		  // Initializes the model for the test
-		  Dim mORM As New UserTest(1)
-		  call mORM.Find(mORM.Database)
+		Sub CloneTest()
+		  Dim OriginalORM As New UserTest
 		  
-		  // Tests for any relation with another model in an
-		  // Has Many Through relationship
-		  Dim Relations As Integer = mORM.CountRelations("Project")
-		  Assert.AreEqual(Relations, 1)
+		  OriginalORM.Data("username", "Paul-Willy Jean")
+		  OriginalORM.Data("password", "Jean")
 		  
-		  // Test to see if a provided farkey gives enough constraint
-		  Relations = mORM.CountRelations("Project", 1)
-		  Assert.AreEqual(Relations, 1)
+		  Dim NewORM As UserTest = UserTest(OriginalORM.Clone())
+		  Assert.AreEqual(NewORM.TableName(), OriginalORM.TableName(), NewORM.TableName() + " " + OriginalORM.TableName())
+		  System.DebugLog(OriginalORM.Data("username"))
+		  System.DebugLog(NewORM.Data("username"))
+		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NewORM.Data("username").StringValue, "Both ORMs should have the same data.")
 		  
-		  // Makes sure that it never returns a match for an empty
-		  // primary key
-		  Relations = mORM.CountRelations("Project", 0)
-		  Assert.AreEqual(Relations, 0)
-		  
-		  // Does it work with a string?
-		  Relations = mORM.CountRelations("Project", "myProject")
-		  Assert.AreEqual(Relations, 0)
-		  
-		  // Does it work with many strings
-		  Relations = mORM.CountRelations("Project", Array(1,2,3,4))
-		  Assert.AreEqual(Relations, 1)
+		  NewORM.Data("username", "Paul")
+		  System.DebugLog(OriginalORM.Data("username"))
+		  System.DebugLog(NewORM.Data("username"))
+		  Assert.IsFalse(NewORM.Data("username") = OriginalORM.Data("username"), "Both ORMs should have different usernames.")
 		End Sub
 	#tag EndMethod
 
@@ -42,7 +32,7 @@ Inherits TestGroup
 		  pValues.Value("username") = "Jean"
 		  pValues.Value("password") = "LOL"
 		  
-		  Call pModel.Data(pValues).Create(ORMTestDatabase)
+		  pModel.Data(pValues).Create(ORMTestDatabase)
 		  
 		  Assert.IsTrue pModel.Loaded()
 		  Assert.IsFalse pModel.Changed(), "L'ORM a change"
@@ -51,137 +41,69 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DeleteTest()
-		  Dim pUserTest As New UserTest()
-		  
-		  Call pUserTest.Data("username", "Paul-Willy Jean").Data("password", "Jean").Create(ORMTestDatabase)
-		  
-		  Assert.IsTrue pUserTest.Loaded()
-		  Assert.IsFalse pUserTest.Changed(), "Le modele est enregistre, mais il a quand-meme change"
+		  Dim DeleteModel As New UserTest()
+		  DeleteModel.Data("username", "Paul-Willy Jean")
+		  DeleteModel.Data("password", "Jean")
+		  DeleteModel.Create(ORMTestDatabase)
+		  Assert.IsTrue(DeleteModel.Loaded())
+		  Assert.IsFalse(DeleteModel.Changed()), "Le modele est enregistre, mais il a quand-meme change"
 		  
 		  // Supprime le modele et verifie l'etat de l'ORM
-		  Call pUserTest.Delete(ORMTestDatabase)
+		  DeleteModel.Delete(ORMTestDatabase)
 		  
-		  Assert.IsFalse pUserTest.Loaded(), "Le modele reste tout de meme charge"
-		  Assert.IsFalse pUserTest.Changed(), "L'ORM a change, mais il n'existe plus."
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub FindTest()
-		  Dim pUserTest As New UserTest
-		  
-		  Call pUserTest.Data("username", "james").Data("password", "james22").Create(ORMTestDatabase)
-		  
-		  Assert.IsTrue pUserTest.Loaded
-		  
-		  Dim pk As Variant = pUserTest.Pk()
-		  
-		  Call pUserTest.Unload()
-		  
-		  Call pUserTest.Where("id", "=", pk).Find(ORMTestDatabase)
-		  
-		  Assert.AreEqual("james", pUserTest.username)
-		  
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub HasTest()
-		  Dim mUserTest As New UserTest(1)
-		  call mUserTest.Find()
-		  
-		  Assert.IsTrue(mUserTest.Has("Project"))
-		  Assert.IsTrue(mUserTest.Has("Project", 1), mUserTest.Data("username") + " should have one role.")
-		  Assert.IsFalse(mUserTest.Has("Project", 0))
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub InflateTest()
-		  Dim OriginalORM As New UserTest
-		  
-		  Dim username As String = "Kandjo"
-		  Dim password As String = "ca"
-		  
-		  Call OriginalORM.Data("username", username)
-		  Call OriginalORM.Data("password", password)
-		  
-		  Dim NewORM As New UserTest()
-		  Call NewORM.Inflate(OriginalORM)
-		  
-		  Assert.AreEqual(NewORM.TableName(), OriginalORM.TableName(), NewORM.TableName() + " " + OriginalORM.TableName())
-		  Assert.AreEqual(OriginalORM.Data("username"), username, "The original ORM's username should be " + username)
-		  System.DebugLog(NewORM.Data("username"))
-		  Assert.AreEqual(NewORM.Data("username"), username, "The new ORM's username should be " + username)
-		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NewORM.Data("username").StringValue, "Both ORMs should have the same data.")
-		  
-		  Call NewORM.Data("username", username + password)
-		  Assert.AreEqual(NewORM.Data("username"), username + password, "The new ORM's username should now be " + username + password)
-		  Assert.AreEqual(OriginalORM.Data("username"), username, "The original ORM's username should still be " + username)
-		  System.DebugLog(OriginalORM.Data("username"))
-		  System.DebugLog(NewORM.Data("username"))
-		  Assert.IsFalse(NewORM.Data("username") = OriginalORM.Data("username"), "Both ORMs should have different usernames.")
+		  Assert.IsFalse  DeleteModel.Loaded(), "Le modele reste tout de meme charge"
+		  Assert.IsFalse  DeleteModel.Changed(), "L'ORM a change, mais il n'existe plus."
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub ReloadTest()
-		  Dim pUserTest As New UserTest()
+		  Dim ReloadModel As New UserTest()
+		  ReloadModel.Data("username", "Paul-Willy Jean")
+		  ReloadModel.Data("password", "pile4626")
+		  ReloadModel.Save(ORMTestDatabase)
+		  Dim NewReloadModel As New UserTest()
+		  NewReloadModel.Where("id", "=", ReloadModel.Pk()).Find(ORMTestDatabase)
 		  
-		  Call pUserTest.Data("username", "Paul-Willy Jean").Data("password", "pile4626").Save(ORMTestDatabase)
+		  // S'assure qu'on aie repris la bonne entree en BD
+		  Assert.AreEqual(ReloadModel.Data("username").StringValue, NewReloadModel.Data("username").StringValue)
 		  
-		  Assert.IsTrue pUserTest.Loaded
-		  
-		  Dim pAnotherUserTest As New UserTest()
-		  Call pAnotherUserTest.Where("id", "=", pUserTest.Pk()).Find(ORMTestDatabase)
-		  Call pAnotherUserTest.Data("username", "Jean").Update(ORMTestDatabase)
-		  
-		  Assert.AreDifferent(pUserTest.Data("username"), pAnotherUserTest.Data("username"))
-		  
-		  // Reload data in pUserTest
-		  Call pUserTest.Reload(ORMTestDatabase)
-		  
-		  // pUserTest should be reloaded with the changed value
-		  Assert.AreEqual(pUserTest.Data("username").StringValue, pAnotherUserTest.Data("username").StringValue)
-		  
+		  ReloadModel.Data("username", "Paul")
+		  // Les deux objets ne doivent pas avoir le meme username
+		  Assert.IsFalse(ReloadModel.Data("username").StringValue = NewReloadModel.Data("username").StringValue)
+		  ReloadModel.Save(ORMTestDatabase)
+		  // Recharge du modele copie pour qu'il reprenne les valeurs de la BD
+		  NewReloadModel.Reload(ORMTestDatabase)
+		  // Les deux objects devraient avoir le meme username
+		  Assert.AreEqual(ReloadModel.Data("username").StringValue, NewReloadModel.Data("username").StringValue)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub SaveTest()
-		  Dim pUserTest As New UserTest()
-		  
+		  Dim SaveModel As New UserTest()
 		  // Modifie le modele et l'enregistre avec Save
-		  Call pUserTest.Data("username","Paul-Willy Jean").Data("password", "pile4626")
+		  SaveModel.Data("username","Paul-Willy Jean")
+		  SaveModel.Data("password", "pile4626")
+		  Assert.AreEqual(SaveModel.Data("username"), "Paul-Willy Jean")
+		  Assert.AreEqual(SaveModel.Data("password"), "pile4626")
+		  Assert.IsTrue SaveModel.Changed
+		  SaveModel.Save(ORMTestDatabase)
+		  Assert.IsFalse SaveModel.Changed
+		  Dim NewSaveModel As New UserTest()
+		  NewSaveModel.Where("id","=", SaveModel.Pk).Find(ORMTestDatabase)
+		  Assert.AreEqual(SaveModel.Data("username").StringValue,NewSaveModel.Data("username").StringValue), "SaveModel = " + SaveModel.Data("username") + ", NewSaveModel = " + NewSaveModel.Data("username")
 		  
-		  Assert.AreEqual("Paul-Willy Jean", pUserTest.Data("username"))
-		  Assert.AreEqual("pile4626", pUserTest.Data("password"))
-		  
-		  Assert.IsTrue pUserTest.Changed
-		  
-		  Call pUserTest.Save(ORMTestDatabase)
-		  
-		  Assert.IsFalse pUserTest.Changed
-		  Assert.IsTrue pUserTest.Loaded
-		  
-		  Call pUserTest.Unload()
-		  
-		  Assert.IsFalse pUserTest.Loaded()
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub TableColumnsTest()
-		  Dim pUser As UserTest = new UserTest
-		  
-		  Dim pColumns() As String = Array("id", "username", "password")
-		  
-		  Dim pTableColumns() As Variant = pUser.TableColumns(ORMTestDatabase)
-		  
-		  For i As Integer = 0 To pColumns.UBound
-		    Assert.AreEqual(pColumns(i), pTableColumns(i).StringValue)
-		  Next
+		  // Cree le modele et l'enregistre avec Save
+		  NewSaveModel = New UserTest()
+		  Assert.IsFalse NewSaveModel.Loaded
+		  Assert.IsFalse NewSaveModel.Changed
+		  NewSaveModel.Data("username", "Guillaume Poirier-Morency")
+		  NewSaveModel.Data("password", "pile4626")
+		  Assert.IsTrue NewSaveModel.Changed, "Le modele n'a pas change"
+		  NewSaveModel.Save(ORMTestDatabase)
+		  Assert.IsFalse NewSaveModel.Changed
+		  Assert.IsTrue NewSaveModel.Loaded, "La cle primaire egale " + Str(NewSaveModel.Pk)
 		End Sub
 	#tag EndMethod
 
@@ -189,18 +111,18 @@ Inherits TestGroup
 		Sub UpdateLoadedTest()
 		  Dim pModel As New UserTest()
 		  
-		  Call pModel.Data("username", "Jean Dupont")
-		  Call pModel.Data("password", pModel.Data("username"))
+		  pModel.Data("username", "Jean Dupont")
+		  pModel.Data("password", pModel.Data("username"))
 		  
-		  Call pModel.Create(ORMTestDatabase)
+		  pModel.Create(ORMTestDatabase)
 		  
 		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
 		  
-		  Call pModel.Data("password", "paul2012")
+		  pModel.Data("password", "paul2012")
 		  
 		  Assert.IsTrue pModel.Changed()
 		  
-		  Call pModel.Update(ORMTestDatabase)
+		  pModel.Update(ORMTestDatabase)
 		  
 		  Assert.IsFalse pModel.Changed()
 		  Assert.IsTrue pModel.Loaded()
@@ -211,8 +133,8 @@ Inherits TestGroup
 		Sub UpdateUnloadedTest()
 		  Dim pModel As New UserTest()
 		  
-		  Call pModel.Data("username", "Jean Dupont")
-		  Call pModel.Data("password", pModel.Data("username"))
+		  pModel.Data("username", "Jean Dupont")
+		  pModel.Data("password", pModel.Data("username"))
 		  
 		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
 		  
@@ -220,7 +142,7 @@ Inherits TestGroup
 		  Assert.IsFalse pModel.Loaded(), "L'ORM n'est pas charge 1"
 		  
 		  If pModel.Loaded() Then
-		    Call pModel.Update(ORMTestDatabase)
+		    pModel.Update(ORMTestDatabase)
 		  End If
 		  
 		  Assert.IsFalse pModel.Loaded(), "L'ORM est charge 2"
@@ -240,14 +162,12 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -276,19 +196,16 @@ Inherits TestGroup
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -301,7 +218,6 @@ Inherits TestGroup
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
