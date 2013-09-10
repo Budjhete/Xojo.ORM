@@ -1,11 +1,38 @@
 #tag Class
-Protected Class GroupTest
-Inherits ORM
+Protected Class UnionQueryExpression
+Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function TableName() As String
-		  Return "Groups"
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  // Part of the QueryExpression interface.
+		  If mAll Then
+		    Return "UNION ALL " + mQueryBuilder.Compile()
+		  Else
+		    Return "UNION " + mQueryBuilder.Compile()
+		  End If
 		End Function
 	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pQueryBuilder As QueryBuilder, pAll As Boolean = True)
+		  mQueryBuilder = pQueryBuilder
+		  mAll = pAll
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Nice() As Integer
+		  Return 7
+		End Function
+	#tag EndMethod
+
+
+	#tag Property, Flags = &h21
+		Private mAll As Boolean = True
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mQueryBuilder As QueryBuilder
+	#tag EndProperty
 
 
 	#tag ViewBehavior

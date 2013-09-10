@@ -1,64 +1,56 @@
 #tag Class
-Protected Class OnQueryExpression
-Implements QueryExpression
+Protected Class ORMRelationHasManyThrough
+Implements ORMRelation
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  If pLastQueryExpression IsA OnQueryExpression Then
-		    Return "AND " + Predicate()
-		  End If
+		Function Add(pDatabase As Database) As ORMRelation
+		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
+		  Values(mForeignKey, mFarKey)._
+		  Execute(pDatabase)
 		  
-		  Return "ON " + Predicate()
+		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pQueryExpression As QueryExpression)
-		  mQueryExpression = pQueryExpression
+		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pForeignKey As Variant, pFarColumn As String, pFarKey As Variant)
+		  mPivotTableName = pPivotTableName
+		  
+		  mForeignColumn = pForeignColumn
+		  mForeignKey = pForeignKey
+		  
+		  mFarColumn = pFarColumn
+		  mFarKey = pFarKey
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant)
-		  mLeftColumn = pLeftColumn
-		  mOperator = pOperator
-		  mRightColumn = pRightColumn
-		  
+		Sub Remove(pDatabase As Database)
+		  DB.Delete(mPivotTableName)._
+		  Where(mForeignColumn, "=", mForeignKey)._
+		  AndWhere(mFarColumn, "=", mFarKey)._
+		  Execute(pDatabase)
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  Return 3
-		  
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function Predicate() As String
-		  If mQueryExpression <> Nil Then
-		    Return mQueryExpression.Compile
-		  End If
-		  
-		  Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Column(mRightColumn)
-		End Function
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h21
-		Private mLeftColumn As Variant
+		Private mFarColumn As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOperator As String
+		Private mFarKey As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mQueryExpression As QueryExpression = Nil
+		Private mForeignColumn As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mRightColumn As Variant
+		Private mForeignKey As Variant
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mPivotTableName As String
 	#tag EndProperty
 
 

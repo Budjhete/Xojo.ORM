@@ -1,29 +1,17 @@
 #tag Class
-Protected Class OffsetQueryExpression
-Implements QueryExpression
+Protected Class ProjectTest
+Inherits ORM
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  return "OFFSET " + Str(mOffset)
-		  
+		Function Database() As Database
+		  return ORMTestDatabase
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pOffset As Integer)
-		  mOffset = pOffset
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  Return 10
+		Function TableName() As String
+		  return "Projets"
 		End Function
 	#tag EndMethod
-
-
-	#tag Property, Flags = &h21
-		Private mOffset As Integer
-	#tag EndProperty
 
 
 	#tag ViewBehavior

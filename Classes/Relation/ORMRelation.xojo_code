@@ -1,29 +1,16 @@
-#tag Class
-Protected Class OffsetQueryExpression
-Implements QueryExpression
+#tag Interface
+Protected Interface ORMRelation
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  return "OFFSET " + Str(mOffset)
+		Function Add(pDatabase As Database) As ORMRelation
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pOffset As Integer)
-		  mOffset = pOffset
+		Sub Remove(pDatabase As Database)
+		  
 		End Sub
 	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Nice() As Integer
-		  Return 10
-		End Function
-	#tag EndMethod
-
-
-	#tag Property, Flags = &h21
-		Private mOffset As Integer
-	#tag EndProperty
 
 
 	#tag ViewBehavior
@@ -66,5 +53,5 @@ Implements QueryExpression
 			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
-End Class
-#tag EndClass
+End Interface
+#tag EndInterface

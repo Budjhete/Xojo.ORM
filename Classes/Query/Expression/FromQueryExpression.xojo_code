@@ -3,13 +3,25 @@ Protected Class FromQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  Return "FROM " + QueryCompiler.TableName(mTableName, mTableAlias)
+		  Dim pStatement As String
+		  
+		  If pLastQueryExpression IsA FromQueryExpression Then
+		    pStatement = ", "
+		  Else
+		    pStatement = "FROM "
+		  End If
+		  
+		  If mTable.Type = 8 Then // String
+		    Return pStatement + QueryCompiler.TableName(mTable, mTableAlias)
+		  ElseIf mTable IsA QueryBuilder Then
+		    Return pStatement + QueryCompiler.Column(mTable) + " " + mTableAlias
+		  End If
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pTableAlias As String)
-		  mTableName = pTableName
+		Sub Constructor(pTable As Variant, pTableAlias As String)
+		  mTable = pTable
 		  mTableAlias = pTableAlias
 		End Sub
 	#tag EndMethod
@@ -22,11 +34,14 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mTableAlias As String
+		#tag Note
+			mTable can be either a String containing a table name, either a QueryExpression containing the definition of a temporary table
+		#tag EndNote
+		Private mTable As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableName As String
+		Private mTableAlias As String
 	#tag EndProperty
 
 

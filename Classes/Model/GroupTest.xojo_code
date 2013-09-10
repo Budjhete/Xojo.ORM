@@ -1,17 +1,32 @@
 #tag Class
-Protected Class ProjectTest
+Protected Class GroupTest
 Inherits ORM
 	#tag Method, Flags = &h0
 		Function Database() As Database
-		  return ORMTestDatabase
+		  Return ORMTestDatabase
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  return "Project"
+		  Return "Groups"
 		End Function
 	#tag EndMethod
+
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return New UserTest(Data("user"))
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Data("user") = value.Pk
+			End Set
+		#tag EndSetter
+		user As UserTest
+	#tag EndComputedProperty
 
 
 	#tag ViewBehavior

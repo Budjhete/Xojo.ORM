@@ -65,8 +65,6 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile()
 		    
-		    pStatement = pStatement.Replace(Chr(0), "")
-		    
 		    pDatabase.SQLExecute(pStatement)
 		    
 		    If pDatabase.Error Then
@@ -89,7 +87,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile()
 		    
-		    pStatement = pStatement.Replace(Chr(0), "")
+		    pStatement = pStatement.ReplaceAll(Chr(0), "")
 		    
 		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
 		    
@@ -106,6 +104,12 @@ Implements QueryExpression
 		    Return pRecordSet
 		    
 		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function From(pQueryBuilder As QueryBuilder, pTableAlias As String = "") As QueryBuilder
+		  Return Append(new FromQueryExpression(pQueryBuilder, pTableAlias))
 		End Function
 	#tag EndMethod
 
@@ -142,6 +146,12 @@ Implements QueryExpression
 		  Next
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Having(pExpression As QueryExpression) As QueryBuilder
+		  Return Append(new HavingQueryExpression(pExpression))
 		End Function
 	#tag EndMethod
 
@@ -231,6 +241,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function On(pExpression As QueryExpression) As QueryBuilder
+		  Return Append(new OnQueryExpression(pExpression))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function On(pColumn As Variant, pOperator As String, pValue As Variant) As QueryBuilder
 		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue))
 		End Function
@@ -298,6 +314,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Union(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  Return Append(New UnionQueryExpression(pQueryBuilder))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Using(pColumns() As Variant) As QueryBuilder
 		  Return Append(new UsingQueryExpression(pColumns))
 		End Function
@@ -336,7 +358,30 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Where(pExpression As QueryExpression) As QueryBuilder
+		  Return Append(new WhereQueryExpression(pExpression))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  If pRight.IsArray Then
+		    Dim pRights() As Variant = pRight
+		    pRight = "("
+		    
+		    // Parses the variant array for the query
+		    For i As Integer = 0 To pRights.Ubound
+		      pRight = pRight + "'" + pRights(i) + "'"
+		      // Adds a comma between each value
+		      If i < pRights.Ubound Then
+		        pRight = pRight + ","
+		      End If
+		    Next
+		    
+		    pRight = pRight + ")"
+		    Return Append(New WhereQueryExpression(pLeft, pOperator, New ExpressionQueryExpression(pRight)))
+		  End If
+		  
 		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
