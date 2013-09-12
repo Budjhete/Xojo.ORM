@@ -45,6 +45,18 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub CopyTest()
+		  Dim Users As ORM = new UserTest()
+		  
+		  Dim RealUsers As New UserTest()
+		  
+		  RealUsers.Data("username") = "Paul-Willy"
+		  RealUsers.Data("password") = "password"
+		  Users = RealUsers.Copy()
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub CreateGroups()
 		  DB.Delete("Groups").Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name", "userId").Values("Developpeurs", 1).Execute(ORMTestDatabase)

@@ -100,6 +100,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Copy() As ORM
+		  Dim ORMConstructors() As Introspection.ConstructorInfo = Introspection.GetType(Me).GetConstructors
+		  Dim CopyORM As ORM = ORMConstructors(0).Invoke()
+		  
+		  Return CopyORM.Deflate(Me)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function CountAll(pDatabase As Database) As Integer
 		  Return DB.Find(DB.Expression("COUNT(*) AS count")).From(TableName).Execute(pDatabase).Field("count").IntegerValue
 		  
