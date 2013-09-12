@@ -150,6 +150,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Having(pExpression As QueryExpression) As QueryBuilder
+		  Return Append(new HavingQueryExpression(pExpression))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Having(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  Return Append(new HavingQueryExpression(pLeft, pOperator, pRight))
 		End Function
@@ -231,6 +237,12 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As QueryBuilder
 		  Return Append(new OffsetQueryExpression(pOffset))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function On(pExpression As QueryExpression) As QueryBuilder
+		  Return Append(new OnQueryExpression(pExpression))
 		End Function
 	#tag EndMethod
 
@@ -342,6 +354,12 @@ Implements QueryExpression
 		  Next
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pExpression As QueryExpression) As QueryBuilder
+		  Return Append(new WhereQueryExpression(pExpression))
 		End Function
 	#tag EndMethod
 

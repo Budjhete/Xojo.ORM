@@ -21,9 +21,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  // Part of the QueryExpression interface.
-		  // @FIXME The nice value might not be good
-		  Return 4
+		  Return 7
 		End Function
 	#tag EndMethod
 
@@ -53,18 +51,6 @@ Implements QueryExpression
 			InitialValue="0"
 			Type="Integer"
 			InheritedFrom="Object"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mAll"
-			Group="Behavior"
-			InitialValue="True"
-			Type="Boolean"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mExpression"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
