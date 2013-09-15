@@ -3,9 +3,12 @@ Protected Class HavingOpenQueryExpression
 Inherits OpenQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  If pLastQueryExpression IsA HavingQueryExpression Then
+		  Select Case pLastQueryExpression
+		    
+		  Case IsA HavingQueryExpression, IsA HavingCloseQueryExpression
 		    Return "AND " + Super.Compile()
-		  End If
+		    
+		  End Select
 		  
 		  Return "HAVING " + Super.Compile()
 		End Function

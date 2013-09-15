@@ -2,8 +2,12 @@
 Protected Class AndHavingQueryExpression
 Inherits HavingQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile() As String
-		  return "AND " + Predicate()
+		Function Compile(pLastQueryExpression As QueryExpression) As String
+		  If pLastQueryExpression IsA HavingOpenQueryExpression Then
+		    Return Predicate()
+		  End If
+		  
+		  Return "AND " + Predicate()
 		  
 		End Function
 	#tag EndMethod
