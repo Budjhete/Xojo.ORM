@@ -367,8 +367,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
-		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
+	#tag Method, Flags = &h0
+		Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
 		  Return pORM.Where(pForeignColumn, "=", Me.Pk)
 		End Function
 	#tag EndMethod
