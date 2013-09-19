@@ -327,7 +327,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pDatabase As Database) As Boolean
+		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
