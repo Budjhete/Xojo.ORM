@@ -376,7 +376,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h1
 		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
 		  // Pk must not be compiled as a column
-		  Return pORM.Join(pPivotTableName).On(pForeignColumn, "=", DB.Expression(Me.Pk))
+		  Return pORM.Join(pPivotTableName).On(pForeignColumn, "=", DB.Expression(QueryCompiler.Value(Me.Pk)))
 		End Function
 	#tag EndMethod
 
@@ -983,7 +983,6 @@ Inherits QueryBuilder
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -991,21 +990,18 @@ Inherits QueryBuilder
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -1013,7 +1009,6 @@ Inherits QueryBuilder
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
