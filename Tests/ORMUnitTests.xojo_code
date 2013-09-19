@@ -9,11 +9,11 @@ Inherits TestGroup
 		  
 		  // Loads the UsertTest model from the database
 		  Dim pUserTest As New UserTest(1)
-		  Call pUserTest.Find()
+		  Call pUserTest.Find(ORMTestDatabase)
 		  
 		  // Loads the ProjectTest model from the database
 		  Dim pProjectTest As New ProjectTest(1)
-		  Call pProjectTest.Find()
+		  Call pProjectTest.Find(ORMTestDatabase)
 		  
 		  Assert.IsFalse pUserTest.Has(pProjectTest, ORMTestDatabase)
 		  
@@ -34,7 +34,7 @@ Inherits TestGroup
 		  CreateUsers
 		  Dim pUsers As New UserTest
 		  
-		  Dim pRecords As RecordSet = pUsers.FindAll
+		  Dim pRecords As RecordSet = pUsers.FindAll(ORMTestDatabase)
 		  
 		  While Not pRecords.EOF
 		    Dim pUser As UserTest = pRecords
@@ -142,7 +142,7 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub HasTest()
 		  Dim mUserTest As New UserTest(1)
-		  call mUserTest.Find()
+		  call mUserTest.Find(ORMTestDatabase)
 		  
 		  // Has for HasManyThrough
 		  Assert.IsTrue mUserTest.Has("UsersProjects", "user", "project", ORMTestDatabase)
@@ -190,7 +190,7 @@ Inherits TestGroup
 		  
 		  // Loads a first GroupTest model
 		  Dim pGroupTest As New GroupTest(1)
-		  Call pGroupTest.Find()
+		  Call pGroupTest.Find(ORMTestDatabase)
 		  
 		  // Tests a belongs to relationship
 		  Dim pUserTest As UserTest = UserTest(pGroupTest.user)
@@ -240,11 +240,11 @@ Inherits TestGroup
 		  
 		  // Loads the UsertTest model from the database
 		  Dim pUserTest As New UserTest(1)
-		  Call pUserTest.Find()
+		  Call pUserTest.Find(ORMTestDatabase)
 		  
 		  // Loads the ProjectTest model from the database
 		  Dim pProjectTest As New ProjectTest(1)
-		  Call pProjectTest.Find()
+		  Call pProjectTest.Find(ORMTestDatabase)
 		  
 		  // Makes sure that pUserTest is not related to pProjectTest
 		  Assert.IsFalse(pUserTest.Has(pProjectTest, ORMTestDatabase))
@@ -368,7 +368,6 @@ Inherits TestGroup
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -376,14 +375,12 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"
@@ -405,7 +402,6 @@ Inherits TestGroup
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="TestCount"
@@ -418,7 +414,6 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

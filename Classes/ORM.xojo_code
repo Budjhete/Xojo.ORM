@@ -239,12 +239,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Database() As Database
-		  return Nil
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Deflate(pORM As ORM) As ORM
 		  Call pORM.Inflate(Me)
 		  Return Me
@@ -280,12 +274,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find() As ORM
-		  Return Me.Find(Me.Database)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Find(pDatabase As Database) As ORM
 		  If Loaded() Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
@@ -313,12 +301,6 @@ Inherits QueryBuilder
 		  
 		  Return Me
 		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function FindAll() As RecordSet
-		  Return Me.FindAll(Me.Database)
 		End Function
 	#tag EndMethod
 
