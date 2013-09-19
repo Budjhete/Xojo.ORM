@@ -315,7 +315,13 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Union(pQueryBuilder As QueryBuilder) As QueryBuilder
-		  Return Append(New UnionQueryExpression(pQueryBuilder))
+		  Return Append(New UnionQueryExpression(pQueryBuilder, False))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function UnionAll(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  Return Append(New UnionQueryExpression(pQueryBuilder, True))
 		End Function
 	#tag EndMethod
 
@@ -420,7 +426,6 @@ Implements QueryExpression
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -428,21 +433,18 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -450,7 +452,6 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
