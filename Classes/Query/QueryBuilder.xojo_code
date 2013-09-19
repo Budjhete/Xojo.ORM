@@ -313,7 +313,13 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Union(pQueryBuilder As QueryBuilder) As QueryBuilder
-		  Return Append(New UnionQueryExpression(pQueryBuilder))
+		  Return Append(New UnionQueryExpression(pQueryBuilder, False))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function UnionAll(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  Return Append(New UnionQueryExpression(pQueryBuilder, True))
 		End Function
 	#tag EndMethod
 
