@@ -145,7 +145,7 @@ Inherits TestGroup
 		  call mUserTest.Find()
 		  
 		  // Has for HasManyThrough
-		  Assert.IsTrue mUserTest.Has("UsersProjects", "user", "project", ORMTestDatabase)
+		  ' Assert.IsTrue mUserTest.Has("UsersProjects", "user", "project", ORMTestDatabase)
 		  
 		  
 		  
