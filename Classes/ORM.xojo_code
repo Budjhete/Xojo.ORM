@@ -120,8 +120,10 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function CountAll(pDatabase As Database) As Integer
-		  Return DB.Find(DB.Expression("COUNT(*) AS count")).From(TableName).Execute(pDatabase).Field("count").IntegerValue
+		  Dim pColumns() As Variant
+		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
 		  
+		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Field("count").IntegerValue
 		  
 		End Function
 	#tag EndMethod
