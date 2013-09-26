@@ -63,6 +63,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Bind(pTableName As String, pForeignColumn As String) As ORM
+		  Return Me.Join(pTableName).On(pTableName + "." + pForeignColumn, "=", Me.TableName + "." + Me.PrimaryKey)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Changed() As Boolean
 		  Return mChanged.Keys().Ubound > -1 Or mAdd.Keys().Ubound > -1 Or mRemove.Keys.Ubound > -1
 		End Function
