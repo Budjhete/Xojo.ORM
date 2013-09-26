@@ -667,9 +667,9 @@ Inherits QueryBuilder
 		    
 		    RaiseEvent Saved
 		    
-		    Return Me
-		    
 		  End If
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
