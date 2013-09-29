@@ -224,13 +224,6 @@ Inherits QueryBuilder
 		Function Data(pColumn As String, pValue As Variant) As ORM
 		  If Not RaiseEvent Changing(pColumn) Then
 		    
-		    // Database support Booleans as 1's and 0's
-		    If pValue.Type = pValue.TypeBoolean And pValue Then
-		      pValue = 1
-		    ElseIf pValue.Type = pValue.TypeBoolean And Not pValue Then
-		      pValue = 0
-		    End
-		    
 		    // If it is different than the original data, it has changed
 		    If Initial(pColumn) <> pValue Then
 		      mChanged.Value(pColumn) = pValue
