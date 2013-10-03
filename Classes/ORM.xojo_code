@@ -370,16 +370,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Having(pValues As Dictionary) As ORM
-		  Call Super.Having(pValues)
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Having(pExpression As QueryBuilder) As ORM
-		  Call Super.Having(pExpression)
+		Function Having(pCriterias As Dictionary) As ORM
+		  Call Super.Having(pCriterias)
 		  
 		  Return Me
 		End Function
@@ -486,6 +478,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function LeftJoin(pTableName As String) As ORM
+		  Call Super.LeftJoin(pTableName)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftJoin(pTableName As String, pTableAlias As String) As ORM
+		  Call Super.LeftJoin(pTableName, pTableAlias)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Limit(pLimit As Integer) As ORM
 		  Call Super.Limit(pLimit)
 		  
@@ -504,14 +512,6 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As ORM
 		  Call Super.Offset(pOffset)
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function On(pExpression As QueryExpression) As ORM
-		  Call Super.On(pExpression)
 		  
 		  Return Me
 		End Function
@@ -814,17 +814,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Where(pCriterias As Dictionary) As ORM
-		  For Each pKey As Variant in pCriterias.Keys
-		    Call Where(pKey, "=", pCriterias.Value(pKey))
-		  Next
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Where(pExpression As QueryExpression) As ORM
-		  Call Super.Where(pExpression)
+		  Call Super.Where(pCriterias)
 		  
 		  Return Me
 		End Function

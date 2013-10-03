@@ -21,12 +21,6 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pQueryExpression As QueryExpression)
-		  mQueryExpression = pQueryExpression
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1000
 		Sub Constructor(pLeft As Variant, pOperator As String, pRight As Variant)
 		  mLeft = pLeft
 		  mOperator = pOperator
@@ -42,10 +36,6 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  If mQueryExpression <> Nil Then
-		    Return mQueryExpression.Compile
-		  End If
-		  
 		  Return QueryCompiler.Column(mLeft) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Value(mRight)
 		End Function
 	#tag EndMethod
@@ -60,10 +50,6 @@ Implements QueryExpression
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mQueryExpression As QueryExpression = Nil
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private mRight As Variant
 	#tag EndProperty
 
@@ -75,7 +61,6 @@ Implements QueryExpression
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -83,21 +68,18 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -105,7 +87,6 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
