@@ -157,7 +157,7 @@ Inherits QueryBuilder
 		    Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
 		    
 		    // Update primary key from the last row inserted in this table
-		    mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey())
+		    mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey()).Value
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mAdd.Values()
