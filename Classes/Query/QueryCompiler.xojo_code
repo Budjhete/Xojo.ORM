@@ -103,7 +103,7 @@ Protected Module QueryCompiler
 		    Return QueryExpression(pValue).Compile
 		    
 		  Case IsA Date
-		    Return pValue.DateValue.SQLDateTime
+		    pValue = pValue.DateValue.SQLDateTime
 		    
 		  Case Nil
 		    Return "NULL"
