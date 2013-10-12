@@ -215,7 +215,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Data(pcolumn As String, Assigns pValue As Variant)
+		Sub Data(pColumn As String, Assigns pValue As Variant)
 		  Call Data(pColumn, pValue)
 		End Sub
 	#tag EndMethod
@@ -328,10 +328,10 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
-		  // Tells if this model is in HasManyThrough relationship
+		Function Has(pTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
+		  // Tells if this model has at least one HasMany or HasMany relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pPivotTableName)._
+		  From(pTableName)._
 		  Where(pForeignColumn, "=", Me.Pk)._
 		  Execute(pDatabase)._
 		  Field("count").BooleanValue

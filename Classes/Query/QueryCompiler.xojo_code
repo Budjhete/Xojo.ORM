@@ -98,11 +98,15 @@ Protected Module QueryCompiler
 		  Case IsA QueryExpression
 		    Return QueryExpression(pValue).Compile
 		    
+		  Case IsA Date
+		    Return pValue.DateValue.SQLDateTime
+		    
 		  Case Nil
 		    Return "NULL"
 		    
 		  End Select
 		  
+		  // Tests for primitives
 		  Select Case pValue.Type
 		    
 		  Case Variant.TypeInteger, Variant.TypeLong, Variant.TypeDouble
@@ -118,11 +122,12 @@ Protected Module QueryCompiler
 		    
 		  End Select
 		  
+		  // Remove bad characters
 		  pValue = ReplaceAll(pValue, Chr(0), "")
 		  
+		  // Quote quotes
 		  pValue = ReplaceAll(pValue.StringValue, "'", "''")
 		  
-		  // Quote quotes ;)
 		  Return "'" + pValue + "'"
 		  
 		End Function
