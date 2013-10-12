@@ -90,6 +90,10 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Value(pValue As Variant) As String
+		  If pValue.IsArray Then
+		    Return "( " + QueryCompiler.Values(pValue) + " )"
+		  End If
+		  
 		  Select Case pValue
 		    
 		  Case IsA QueryBuilder
