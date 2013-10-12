@@ -3,9 +3,21 @@ Protected Class ORMException
 Inherits RuntimeException
 	#tag Method, Flags = &h1000
 		Sub Constructor(pMessage As String)
-		  Message = pMessage
+		  Constructor(pMessage, "")
 		End Sub
 	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pMessage As String, pStatement As String)
+		  Message = pMessage
+		  Statement = pStatement
+		End Sub
+	#tag EndMethod
+
+
+	#tag Property, Flags = &h0
+		Statement As String
+	#tag EndProperty
 
 
 	#tag ViewBehavior
@@ -14,7 +26,6 @@ Inherits RuntimeException
 			Group="Behavior"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="RuntimeException"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -22,7 +33,6 @@ Inherits RuntimeException
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -30,28 +40,24 @@ Inherits RuntimeException
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Message"
 			Group="Behavior"
 			Type="String"
 			EditorType="MultiLineEditor"
-			InheritedFrom="RuntimeException"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -59,7 +65,6 @@ Inherits RuntimeException
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

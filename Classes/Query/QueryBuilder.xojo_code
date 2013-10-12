@@ -68,7 +68,7 @@ Implements QueryExpression
 		    pDatabase.SQLExecute(pStatement)
 		    
 		    If pDatabase.Error Then
-		      Raise New ORMException(pDatabase.ErrorMessage + " " + pStatement)
+		      Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		    End If
 		    
 		    pDatabase.Commit()
@@ -90,7 +90,7 @@ Implements QueryExpression
 		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
 		    
 		    If pDatabase.Error Then
-		      Raise New ORMException(pDatabase.ErrorMessage + " " + pStatement)
+		      Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		    End If
 		    
 		    pDatabase.Commit()
