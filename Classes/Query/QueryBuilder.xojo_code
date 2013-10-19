@@ -60,7 +60,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Execute(pDatabase As Database)
+		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
 		  If Not RaiseEvent Executing() Then
 		    
 		    Dim pStatement As String = Compile()
@@ -68,10 +68,12 @@ Implements QueryExpression
 		    pDatabase.SQLExecute(pStatement)
 		    
 		    If pDatabase.Error Then
-		      Raise New ORMException(pDatabase.ErrorMessage, pStatement)
+		      Raise New ORMException(pDatabase.ErrorMessage, pStatement, pDatabase.ErrorCode)
 		    End If
 		    
-		    pDatabase.Commit()
+		    If pCommit Then
+		      pDatabase.Commit()
+		    End If
 		    
 		    Call Reset()
 		    
@@ -82,7 +84,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Execute(pDatabase As Database) As RecordSet
+		Function Execute(pDatabase As Database, pCommit As Boolean = True) As RecordSet
 		  If Not RaiseEvent Executing() Then
 		    
 		    Dim pStatement As String = Compile()
@@ -93,7 +95,9 @@ Implements QueryExpression
 		      Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		    End If
 		    
-		    pDatabase.Commit()
+		    If pCommit Then
+		      pDatabase.Commit()
+		    End If
 		    
 		    Call Reset()
 		    

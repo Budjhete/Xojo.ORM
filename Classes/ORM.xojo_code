@@ -135,7 +135,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Create(pDatabase As Database) As ORM
+		Function Create(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  if Loaded() then
@@ -144,7 +144,7 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating() Then
 		    
-		    DB.Insert(TableName(), mChanged.Keys()).Values(mChanged.Values()).Execute(pDatabase)
+		    DB.Insert(TableName(), mChanged.Keys()).Values(mChanged.Values()).Execute(pDatabase, pCommit)
 		    
 		    // Update data
 		    For Each pKey As Variant In mChanged.Keys()
@@ -247,14 +247,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Delete(pDatabase As Database) As ORM
+		Function Delete(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  if Not Loaded() then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
 		  
 		  If Not RaiseEvent Deleting() Then
 		    
-		    DB.Delete(TableName()).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		    DB.Delete(TableName()).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase, pCommit)
 		    
 		    // Empty mData
 		    Call mData.Clear()
@@ -271,6 +271,12 @@ Inherits QueryBuilder
 		  End If
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function FieldSchema(pDatabase As Database) As RecordSet
+		  Return pDatabase.FieldSchema(Me.TableName)
 		End Function
 	#tag EndMethod
 
@@ -736,7 +742,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Update(pDatabase As Database) As ORM
+		Function Update(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  If Not Loaded() then
@@ -748,7 +754,7 @@ Inherits QueryBuilder
 		    // Update only if there are changes
 		    If mChanged.Count > 0 Then
 		      
-		      DB.Update(TableName()).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase)
+		      DB.Update(TableName()).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase, pCommit)
 		      
 		      // Merge mData with mChanged
 		      For Each pKey As Variant In mChanged.Keys()

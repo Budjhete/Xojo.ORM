@@ -8,12 +8,17 @@ Inherits RuntimeException
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pMessage As String, pStatement As String)
+		Sub Constructor(pMessage As String, pStatement As String, pCode As Integer = 0)
 		  Message = pMessage
 		  Statement = pStatement
+		  Code = pCode
 		End Sub
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h0
+		Code As Integer
+	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		Statement As String
@@ -21,6 +26,11 @@ Inherits RuntimeException
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="Code"
+			Group="Behavior"
+			Type="Integer"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="ErrorNumber"
 			Group="Behavior"
@@ -52,6 +62,12 @@ Inherits RuntimeException
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Statement"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
