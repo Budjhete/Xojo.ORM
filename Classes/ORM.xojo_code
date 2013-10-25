@@ -3,37 +3,47 @@ Protected Class ORM
 Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Add() As Dictionary
-		  Dim pAdd As New Dictionary
+		  Dim pAdded As New Dictionary
 		  
 		  // Use a copy of mData to avoid external changes
-		  For Each pKey As Variant In mAdd.Keys()
-		    pAdd.Value(pKey) = mAdd.Value(pKey)
+		  For Each pKey As Variant In mAdded.Keys()
+		    pAdded.Value(pKey) = mAdded.Value(pKey)
 		  Next
 		  
-		  Return pAdd
+		  Return pAdded
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Add(pORMRelation As ORMRelation) As ORM
+		  If Not RaiseEvent Adding(pORMRelation) Then
+		    
+		    If mRemoved.HasKey(pORMRelation) Then
+		      mRemoved.Remove(pORMRelation)
+		    Else
+		      mAdded.Value(pORMRelation) = pORMRelation
+		    End If
+		    
+		    RaiseEvent Added(pORMRelation)
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Add(pForeignColumn As String, pORMs() As ORM) As ORM
+		  For Each pORM As ORM In pORMs
+		    Call Me.Add(New ORMRelationHasMany(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		  Next
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
 		  For Each pFarKey As Variant In pFarKeys
-		    
-		    Dim pORMRelationHasManyThrough As ORMRelation = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
-		    
-		    If Not RaiseEvent Adding(pORMRelationHasManyThrough) Then
-		      
-		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
-		      
-		      If mRemove.HasKey(pIdentifier) Then
-		        mRemove.Remove(pIdentifier)
-		      Else
-		        mAdd.Value(pIdentifier) = pORMRelationHasManyThrough
-		      End If
-		      
-		      RaiseEvent Added pORMRelationHasManyThrough
-		      
-		    End If
-		    
+		    Call Add(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pFarKey))
 		  Next
 		  
 		  Return Me
@@ -70,7 +80,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Changed() As Boolean
-		  Return mChanged.Keys().Ubound > -1 Or mAdd.Keys().Ubound > -1 Or mRemove.Keys.Ubound > -1
+		  Return mChanged.Keys().Ubound > -1 Or mAdded.Keys().Ubound > -1 Or mRemoved.Keys.Ubound > -1
 		End Function
 	#tag EndMethod
 
@@ -87,8 +97,8 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Clearing() Then
 		    
 		    mChanged.Clear()
-		    mAdd.Clear()
-		    mRemove.Clear()
+		    mAdded.Clear()
+		    mRemoved.Clear()
 		    
 		    RaiseEvent Cleared()
 		    
@@ -102,8 +112,8 @@ Inherits QueryBuilder
 		Sub Constructor()
 		  mData = New Dictionary
 		  mChanged = New Dictionary
-		  mAdd = New Dictionary
-		  mRemove = New Dictionary
+		  mAdded = New Dictionary
+		  mRemoved = New Dictionary
 		End Sub
 	#tag EndMethod
 
@@ -160,17 +170,17 @@ Inherits QueryBuilder
 		    mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey()).Value
 		    
 		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mAdd.Values()
-		      Call pRelation.Add(pDatabase)
+		    For Each pRelation As ORMRelation In mAdded.Values()
+		      Call pRelation.Add(Me.Pk, pDatabase)
 		    Next
 		    
-		    For Each pRelation As ORMRelation In mRemove.Values()
-		      Call pRelation.Remove(pDatabase)
+		    For Each pRelation As ORMRelation In mRemoved.Values()
+		      Call pRelation.Remove(Me.Pk, pDatabase)
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdd.Clear()
-		    mRemove.Clear()
+		    mAdded.Clear()
+		    mRemoved.Clear()
 		    
 		    RaiseEvent Created()
 		    
@@ -263,8 +273,8 @@ Inherits QueryBuilder
 		    Call mChanged.Clear()
 		    
 		    // Empty pending relationships
-		    Call mAdd.Clear()
-		    Call mRemove.Clear()
+		    Call mAdded.Clear()
+		    Call mRemoved.Clear()
 		    
 		    RaiseEvent Deleted()
 		    
@@ -334,10 +344,10 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
-		  // Tells if this model has at least one HasMany or HasMany relationship
+		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
+		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pTableName)._
+		  From(pPivotTableName)._
 		  Where(pForeignColumn, "=", Me.Pk)._
 		  Execute(pDatabase)._
 		  Field("count").BooleanValue
@@ -345,7 +355,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As Variant, pFarKey As Variant, pDatabase As Database) As Boolean
+		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKey As Variant, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
@@ -430,18 +440,18 @@ Inherits QueryBuilder
 		    pORM.mChanged.Value(pKey) = mChanged.Value(pKey)
 		  Next
 		  
-		  pORM.mAdd.Clear
+		  pORM.mAdded.Clear
 		  
 		  // Use a copy of mAdd to avoid external changes
-		  For Each pKey As Variant In mAdd.Keys()
-		    pORM.mAdd.Value(pKey) = mAdd.Value(pKey)
+		  For Each pKey As Variant In mAdded.Keys()
+		    pORM.mAdded.Value(pKey) = mAdded.Value(pKey)
 		  Next
 		  
-		  pORM.mRemove.Clear
+		  pORM.mRemoved.Clear
 		  
 		  // Use a copy of mRemove to avoid external changes
-		  For Each pKey As Variant In mRemove.Keys()
-		    pORM.mRemove.Value(pKey) = mRemove.Value(pKey)
+		  For Each pKey As Variant In mRemoved.Keys()
+		    pORM.mRemoved.Value(pKey) = mRemoved.Value(pKey)
 		  Next
 		  
 		  Return Me
@@ -607,44 +617,58 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Remove() As Dictionary
-		  Dim pRemove As New Dictionary
+		  Dim pRemoved As New Dictionary
 		  
 		  // Use a copy of mData to avoid external changes
-		  For Each pKey As Variant In mRemove.Keys()
-		    pRemove.Value(pKey) = mRemove.Value(pKey)
+		  For Each pKey As Variant In mRemoved.Keys()
+		    pRemoved.Value(pKey) = mRemoved.Value(pKey)
 		  Next
 		  
-		  Return pRemove
+		  Return pRemoved
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Remove(pORMRelation As ORMRelation) As ORM
+		  If Not RaiseEvent Removing(pORMRelation) Then
+		    
+		    If mAdded.HasKey(pORMRelation) Then
+		      mAdded.Remove(pORMRelation)
+		    Else
+		      mRemoved.Value(pORMRelation) = pORMRelation
+		    End If
+		    
+		    RaiseEvent Removed(pORMRelation)
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Remove(pForeignColumn As String, pORMs() As ORM) As ORM
+		  For Each pORM As ORM In pORMs
+		    Call Me.Remove(New ORMRelationHasMany(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Remove(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
+		  Return Remove(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
-		  // Remove a HasManyThrough relationship
-		  
-		  If pFarKeys.Ubound = -1 Then
-		    pFarKeys.Append(DB.Expression("*"))
-		  End If
-		  
 		  For Each pFarKey As Variant In pFarKeys
-		    
-		    Dim pORMRelationHasManyThrough As ORMRelationHasManyThrough = New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, Me.Pk, pFarColumn, pFarKey)
-		    
-		    If Not RaiseEvent Removing(pORMRelationHasManyThrough) Then
-		      
-		      Dim pIdentifier As String = pForeignColumn + "=" + Me.Pk + "&" + pFarColumn + "=" + pFarKey + "@" + pPivotTableName
-		      
-		      If mAdd.HasKey(pIdentifier) Then
-		        mAdd.Remove(pIdentifier)
-		      Else
-		        mRemove.Value(pIdentifier) = pORMRelationHasManyThrough
-		      End If
-		      
-		      RaiseEvent Removed(pORMRelationHasManyThrough)
-		      
-		    End If
-		    
+		    Call Remove(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pFarKey))
 		  Next
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -767,17 +791,17 @@ Inherits QueryBuilder
 		    End If
 		    
 		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mAdd.Values()
-		      Call pRelation.Add(pDatabase)
+		    For Each pRelation As ORMRelation In mAdded.Values()
+		      Call pRelation.Add(Me.Pk, pDatabase)
 		    Next
 		    
-		    For Each pRelation As ORMRelation In mRemove.Values()
-		      Call pRelation.Remove(pDatabase)
+		    For Each pRelation As ORMRelation In mRemoved.Values()
+		      Call pRelation.Remove(Me.Pk, pDatabase)
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdd.Clear()
-		    mRemove.Clear()
+		    mAdded.Clear()
+		    mRemoved.Clear()
 		    
 		    RaiseEvent Updated()
 		    
@@ -939,7 +963,7 @@ Inherits QueryBuilder
 
 
 	#tag Property, Flags = &h21
-		Private mAdd As Dictionary
+		Private mAdded As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -951,7 +975,7 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mRemove As Dictionary
+		Private mRemoved As Dictionary
 	#tag EndProperty
 
 

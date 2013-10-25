@@ -1,13 +1,13 @@
 #tag Interface
 Protected Interface ORMRelation
 	#tag Method, Flags = &h0
-		Function Add(pDatabase As Database) As ORMRelation
+		Sub Add(pForeignKey As Variant, pDatabase As Database)
 		  
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pDatabase As Database)
+		Sub Remove(pForeignKey As Variant, pDatabase As Database)
 		  
 		End Sub
 	#tag EndMethod
@@ -20,7 +20,6 @@ Protected Interface ORMRelation
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -28,21 +27,18 @@ Protected Interface ORMRelation
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -50,7 +46,6 @@ Protected Interface ORMRelation
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Interface

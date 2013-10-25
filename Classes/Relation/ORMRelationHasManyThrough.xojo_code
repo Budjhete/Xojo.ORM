@@ -2,21 +2,18 @@
 Protected Class ORMRelationHasManyThrough
 Implements ORMRelation
 	#tag Method, Flags = &h0
-		Function Add(pDatabase As Database) As ORMRelation
+		Sub Add(pForeignKey As Variant, pDatabase As Database)
 		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
-		  Values(mForeignKey, mFarKey)._
+		  Values(pForeignKey, mFarKey)._
 		  Execute(pDatabase)
-		  
-		  Return Me
-		End Function
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pForeignKey As Variant, pFarColumn As String, pFarKey As Variant)
+		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKey As Variant)
 		  mPivotTableName = pPivotTableName
 		  
 		  mForeignColumn = pForeignColumn
-		  mForeignKey = pForeignKey
 		  
 		  mFarColumn = pFarColumn
 		  mFarKey = pFarKey
@@ -24,9 +21,9 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pDatabase As Database)
+		Sub Remove(pForeignKey As Variant, pDatabase As Database)
 		  DB.Delete(mPivotTableName)._
-		  Where(mForeignColumn, "=", mForeignKey)._
+		  Where(mForeignColumn, "=", pForeignKey)._
 		  AndWhere(mFarColumn, "=", mFarKey)._
 		  Execute(pDatabase)
 		End Sub
@@ -46,10 +43,6 @@ Implements ORMRelation
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mForeignKey As Variant
-	#tag EndProperty
-
-	#tag Property, Flags = &h21
 		Private mPivotTableName As String
 	#tag EndProperty
 
@@ -61,7 +54,6 @@ Implements ORMRelation
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -69,21 +61,18 @@ Implements ORMRelation
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -91,7 +80,6 @@ Implements ORMRelation
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

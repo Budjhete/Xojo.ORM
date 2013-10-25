@@ -26,6 +26,8 @@ Inherits TestGroup
 		  Assert.IsTrue pUserTest.Has(pProjectTest, ORMTestDatabase)
 		  
 		  
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -246,20 +248,24 @@ Inherits TestGroup
 		  Dim pProjectTest As New ProjectTest(1)
 		  Call pProjectTest.Find(ORMTestDatabase)
 		  
-		  // Makes sure that pUserTest is not related to pProjectTest
-		  Assert.IsFalse(pUserTest.Has(pProjectTest, ORMTestDatabase))
+		  // Remove all relationships
+		  Call pUserTest.Remove("UsersProjects", "user", "project").Update(ORMTestDatabase)
+		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", ORMTestDatabase)
 		  
-		  // Adds a relation between pUserTest and pProjectTest
-		  Call pUserTest.Add(pProjectTest)
-		  Assert.IsTrue pUserTest.Has(pProjectTest, ORMTestDatabase)
+		  // Add a single relationship
+		  Call pUserTest.Add("UsersProjects", "user", "project", pProjectTest.Pk).Update(ORMTestDatabase)
+		  Assert.IsTrue pUserTest.Has("UsersProjects", "user", "test", pProjectTest.Pk, ORMTestDatabase)
 		  
-		  // Removes any relation between pUserTest and any ProjectTest
-		  Call pUserTest.Remove("UsersProjects", "user", "project")
-		  Assert.IsFalse(pUserTest.Has(pProjectTest, ORMTestDatabase))
+		  // Remove a single relationship
+		  Call pUserTest.Remove("UsersProjects", "user", "project", pProjectTest.Pk).Update(ORMTestDatabase)
+		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", "test", pProjectTest.Pk, ORMTestDatabase)
 		  
-		  Call pUserTest.Add("UsersProjects", "user", "project", 1).Update(ORMTestDatabase)
+		  // Add multiple relationships
 		  
-		  Assert.IsTrue(pUserTest.Has("UsersProjects", "user", "project", 1, ORMTestDatabase))
+		  // Remove multiple relationships
+		  
+		  
+		  
 		End Sub
 	#tag EndMethod
 

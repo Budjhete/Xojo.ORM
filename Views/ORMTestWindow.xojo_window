@@ -7,6 +7,7 @@ Begin Window ORMTestWindow
    Composite       =   False
    Frame           =   0
    FullScreen      =   False
+   FullScreenButton=   False
    HasBackColor    =   False
    Height          =   280
    ImplicitInstance=   True
@@ -37,6 +38,7 @@ Begin Window ORMTestWindow
       TabPanelIndex   =   0
       TabStop         =   True
       Top             =   40
+      username        =   ""
       Visible         =   True
       Width           =   "32"
    End
@@ -495,6 +497,14 @@ End
 	#tag EndViewProperty
 	#tag ViewProperty
 		Name="FullScreen"
+		Visible=true
+		Group="Appearance"
+		InitialValue="False"
+		Type="Boolean"
+		EditorType="Boolean"
+	#tag EndViewProperty
+	#tag ViewProperty
+		Name="FullScreenButton"
 		Visible=true
 		Group="Appearance"
 		InitialValue="False"
