@@ -63,6 +63,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function AddHard(pForeignColumn As String, pORMs() As ORM) As ORM
+		  For Each pORM As ORM In pORMs
+		    Call Me.Add(New ORMRelationHasManyHard(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function AddHard(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
+		  Return Me.AddHard(pForeignColumn, pORMs)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndHaving(pLeft, pOperator, pRight)
 		  
@@ -675,7 +691,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Remove(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
-		  Return Remove(pForeignColumn, pORMs)
+		  Return Me.Remove(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
 
@@ -692,6 +708,22 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pFarKeys As Variant) As ORM
 		  Return Remove(pPivotTableName, pForeignColumn, pFarColumn, pFarKeys)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function RemoveHard(pForeignColumn As String, pORMs() As ORM) As ORM
+		  For Each pORM As ORM In pORMs
+		    Call Me.Remove(New ORMRelationHasManyHard(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function RemoveHard(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
+		  Return Me.RemoveHard(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
 
