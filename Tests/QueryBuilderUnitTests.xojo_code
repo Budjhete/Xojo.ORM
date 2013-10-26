@@ -77,18 +77,18 @@ Inherits TestGroup
 		  DB.Delete("Users").Execute(ORMTestDatabase)
 		  
 		  DB.Insert("Users", "username", "password").Values("Hete.ca", "hete").Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "userId").Values("Developpeur", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "user").Values("Developpeur", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name").Values("Gestionnaire").Execute(ORMTestDatabase)
 		  
 		  // Tests for a simple left join on the Users table. The syntax is likely to change very soon
-		  pStatement = DB.Find().From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").Compile()
-		  pRecordSet = DB.Find().From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
-		  Assert.AreEqual ("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`userId`", pStatement)
+		  pStatement = DB.Find().From("Users").Join("Groups").On("Users.id", "=", "Groups.user").Compile()
+		  pRecordSet = DB.Find().From("Users").Join("Groups").On("Users.id", "=", "Groups.user").Execute(ORMTestDatabase)
+		  Assert.AreEqual ("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`user`", pStatement)
 		  
 		  // Tests for a simple left join on the Groups table.
-		  pStatement = DB.Find.From("Groups").Join("Users").On("Groups.userId", "=", "Users.id").Compile()
-		  pRecordSet = DB.Find.From("Groups").Join("Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
-		  Assert.AreEqual ("SELECT * FROM `Groups` AS `Groups` JOIN `Users` AS `Users` ON `Groups`.`userId` = `Users`.`id`", pStatement)
+		  pStatement = DB.Find.From("Groups").Join("Users").On("Groups.user", "=", "Users.id").Compile()
+		  pRecordSet = DB.Find.From("Groups").Join("Users").On("Groups.user", "=", "Users.id").Execute(ORMTestDatabase)
+		  Assert.AreEqual ("SELECT * FROM `Groups` AS `Groups` JOIN `Users` AS `Users` ON `Groups`.`user` = `Users`.`id`", pStatement)
 		  
 		  // Join with different alias
 		  pStatement =  DB.Find.From("Users", "U").Join("Groups", "G").Where("U.username", "LIKE", "%ete%").Compile()
@@ -112,18 +112,18 @@ Inherits TestGroup
 		  DB.Delete("Users").Execute(ORMTestDatabase)
 		  
 		  DB.Insert("Users", "username", "password").Values("Hete.ca", "hete").Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "userId").Values("Developpeur", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "user").Values("Developpeur", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name").Values("Gestionnaire").Execute(ORMTestDatabase)
 		  
 		  // Tests for a simple left join on the Users table. The syntax is likely to change very soon
-		  pStatement = DB.Find().From("Users").LeftOuterJoin("Groups").On("Users.id", "=", "Groups.userId").Compile()
-		  pRecordSet = DB.Find().From("Users").LeftOuterJoin("Groups").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
-		  Assert.AreEqual ("SELECT * FROM `Users` AS `Users` LEFT OUTER JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`userId`", pStatement)
+		  pStatement = DB.Find().From("Users").LeftOuterJoin("Groups").On("Users.id", "=", "Groups.user").Compile()
+		  pRecordSet = DB.Find().From("Users").LeftOuterJoin("Groups").On("Users.id", "=", "Groups.user").Execute(ORMTestDatabase)
+		  Assert.AreEqual ("SELECT * FROM `Users` AS `Users` LEFT OUTER JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`user`", pStatement)
 		  
 		  // Tests for a simple left join on the Groups table.
-		  pStatement = DB.Find.From("Groups").LeftOuterJoin("Users").On("Groups.userId", "=", "Users.id").Compile()
-		  pRecordSet = DB.Find.From("Groups").LeftOuterJoin("Users").On("Groups.userId", "=", "Users.id").Execute(ORMTestDatabase)
-		  Assert.AreEqual ("SELECT * FROM `Groups` AS `Groups` LEFT OUTER JOIN `Users` AS `Users` ON `Groups`.`userId` = `Users`.`id`", pStatement)
+		  pStatement = DB.Find.From("Groups").LeftOuterJoin("Users").On("Groups.user", "=", "Users.id").Compile()
+		  pRecordSet = DB.Find.From("Groups").LeftOuterJoin("Users").On("Groups.user", "=", "Users.id").Execute(ORMTestDatabase)
+		  Assert.AreEqual ("SELECT * FROM `Groups` AS `Groups` LEFT OUTER JOIN `Users` AS `Users` ON `Groups`.`user` = `Users`.`id`", pStatement)
 		  
 		  // Join with different alias
 		  pStatement =  DB.Find.From("Users", "U").LeftOuterJoin("Groups", "G").Where("U.username", "LIKE", "%ete%").Compile()
@@ -154,9 +154,9 @@ Inherits TestGroup
 		  Dim pStatement As String
 		  Dim pRecordSet As RecordSet
 		  
-		  pStatement = DB.Find.From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").On("Users.id", "=", "Groups.userId").Compile()
-		  pRecordSet = DB.Find.From("Users").Join("Groups").On("Users.id", "=", "Groups.userId").On("Users.id", "=", "Groups.userId").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`userId` AND `Users`.`id` = `Groups`.`userId`", pStatement)
+		  pStatement = DB.Find.From("Users").Join("Groups").On("Users.id", "=", "Groups.user").On("Users.id", "=", "Groups.user").Compile()
+		  pRecordSet = DB.Find.From("Users").Join("Groups").On("Users.id", "=", "Groups.user").On("Users.id", "=", "Groups.user").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` ON `Users`.`id` = `Groups`.`user` AND `Users`.`id` = `Groups`.`user`", pStatement)
 		End Sub
 	#tag EndMethod
 
@@ -259,13 +259,13 @@ Inherits TestGroup
 		  
 		  // Creates a new entry in the Database
 		  pRecordSet = DB.Insert("Users", "username", "password").Values("Paul", "Willy").Execute(ORMTestDatabase)
-		  pRecordSet = DB.Insert("Users", "username", "password").Values("Paul", "1234").Execute(ORMTestDatabase)
+		  pRecordSet = DB.Insert("Users", "username", "password").Values("Henri", "1234").Execute(ORMTestDatabase)
 		  
 		  // Creates a second entry with an empty field in the Database
-		  pRecordSet = DB.Insert("Users", "username").Values("John Lajoie").Execute(ORMTestDatabase)
+		  pRecordSet = DB.Insert("Users", "username").Values("James").Execute(ORMTestDatabase)
 		  
 		  // Create a third entry with all fields set
-		  pRecordSet = DB.Insert("Users", "username", "password").Values("John Lajoie", "1234").Execute(ORMTestDatabase)
+		  pRecordSet = DB.Insert("Users", "username", "password").Values("Arnold", "1234").Execute(ORMTestDatabase)
 		  
 		  // Looks up a record where the username contains "John" and where
 		  // the password is NULL or where the username contains "John" and where the password is "1234"
@@ -294,6 +294,9 @@ Inherits TestGroup
 		  pStatement = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Where("username", "=", "Paul").Compile()
 		  pRecordSet = DB.Find.From("Users").WhereOpen.Where("username", "=", "Paul").WhereClose.Where("username", "=", "Paul").Execute(ORMTestDatabase)
 		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` WHERE ( `username` = 'Paul' ) AND `username` = 'Paul'", pStatement)
+		  
+		  // Clean the database
+		  DB.Delete("Users").Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
 
@@ -303,14 +306,12 @@ Inherits TestGroup
 			Name="FailedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="IncludeGroup"
 			Group="Behavior"
 			InitialValue="True"
 			Type="Boolean"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -318,7 +319,6 @@ Inherits TestGroup
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -326,45 +326,38 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="PassedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="RunTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="SkippedTestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="TestCount"
 			Group="Behavior"
 			Type="Integer"
-			InheritedFrom="TestGroup"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -372,7 +365,6 @@ Inherits TestGroup
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

@@ -25,6 +25,22 @@ Inherits TestGroup
 		  
 		  Assert.IsTrue pUserTest.Has(pProjectTest, ORMTestDatabase)
 		  
+		  // HasMany
+		  
+		  Dim pGroup As New GroupTest
+		  Call pGroup.Create(ORMTestDatabase)
+		  
+		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
+		  Call pUserTest.Add("user", pGroup).Update(ORMTestDatabase)
+		  Assert.IsTrue pUserTest.Has("user", pGroup, ORMTestDatabase)
+		  
+		  Call pGroup.Reload(ORMTestDatabase)
+		  Assert.AreEqual(pUserTest.Pk.IntegerValue, pGroup.Data("user").IntegerValue)
+		  
+		  
+		  
+		  
+		  
 		  
 		  
 		  
@@ -263,6 +279,32 @@ Inherits TestGroup
 		  // Add multiple relationships
 		  
 		  // Remove multiple relationships
+		  
+		  // HasMany
+		  
+		  Dim pGroup As New GroupTest
+		  Call pGroup.Create(ORMTestDatabase)
+		  
+		  // Add a relationship
+		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
+		  Call pUserTest.Add("user", pGroup).Update(ORMTestDatabase)
+		  Assert.IsTrue pUserTest.Has("user", pGroup, ORMTestDatabase)
+		  
+		  // Remove a relationship
+		  Call pUserTest.Remove("user", pGroup).Update(ORMTestDatabase)
+		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
+		  
+		  // Add the same relationship
+		  Call pUserTest.Add("user", pGroup).Update(ORMTestDatabase)
+		  
+		  // Hard-remove the relationship
+		  Call pUserTest.Remove(New ORMRelationHasManyHard(pGroup.TableName, "user", pGroup.PrimaryKey, pGroup.Pk)).Update(ORMTestDatabase)
+		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
+		  Assert.IsFalse pGroup.Reload(ORMTestDatabase).Loaded
+		  
+		  // Cleanup
+		  Call pGroup.Delete(ORMTestDatabase)
+		  
 		  
 		  
 		  

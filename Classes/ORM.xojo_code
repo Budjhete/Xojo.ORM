@@ -41,6 +41,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Add(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
+		  Return Me.Add(pForeignColumn, pORMs)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
 		  For Each pFarKey As Variant In pFarKeys
 		    Call Add(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pFarKey))
@@ -340,6 +346,17 @@ Inherits QueryBuilder
 		  Call Super.GroupBy(pColumns)
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pORM.TableName)._
+		  Where(pORM.PrimaryKey, "=", pORM.Pk). _
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  Execute(pDatabase)._
+		  Field("count").BooleanValue
 		End Function
 	#tag EndMethod
 

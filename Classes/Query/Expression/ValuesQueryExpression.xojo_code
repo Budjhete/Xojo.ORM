@@ -3,6 +3,7 @@ Protected Class ValuesQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  // Multiple insertions
 		  If pLastQueryExpression IsA ValuesQueryExpression Then
 		    Return ", ( " + QueryCompiler.Values(mValues) + " )"
 		  End If

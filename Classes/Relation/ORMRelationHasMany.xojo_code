@@ -3,8 +3,10 @@ Protected Class ORMRelationHasMany
 Implements ORMRelation
 	#tag Method, Flags = &h0
 		Sub Add(pForeignKey As Variant, pDatabase As Database)
-		  Raise New ORMException("Model cannot be added in HasMany relation.")
-		  
+		  DB.Update(mTableName). _
+		  Set(mForeignColumn : pForeignKey) ._
+		  Where(mPrimaryColumn, "=", mPrimaryKey). _
+		  Execute(pDatabase)
 		  
 		End Sub
 	#tag EndMethod
@@ -22,28 +24,31 @@ Implements ORMRelation
 
 	#tag Method, Flags = &h0
 		Sub Remove(pForeignKey As Variant, pDatabase As Database)
-		  DB.Delete(mTableName)._
+		  DB.Update(mTableName). _
+		  Set(mForeignColumn : Nil) ._
 		  Where(mPrimaryColumn, "=", mPrimaryKey). _
 		  AndWhere(mForeignColumn, "=", pForeignKey). _
 		  Execute(pDatabase)
+		  
+		  
 		End Sub
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h21
-		Private mForeignColumn As String
+	#tag Property, Flags = &h1
+		Protected mForeignColumn As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private mPrimaryColumn As String
+	#tag Property, Flags = &h1
+		Protected mPrimaryColumn As String
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private mPrimaryKey As Variant
+	#tag Property, Flags = &h1
+		Protected mPrimaryKey As Variant
 	#tag EndProperty
 
-	#tag Property, Flags = &h0
-		mTableName As String
+	#tag Property, Flags = &h1
+		Protected mTableName As String
 	#tag EndProperty
 
 
