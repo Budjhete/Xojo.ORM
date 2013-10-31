@@ -37,6 +37,8 @@ Inherits QueryBuilder
 		  For Each pORM As ORM In pORMs
 		    Call Me.Add(New ORMRelationHasMany(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
 		  Next
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -170,41 +172,55 @@ Inherits QueryBuilder
 		Function Create(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
-		  if Loaded() then
-		    Raise new ORMException("Cannot create " + TableName() + " model because it is already loaded.")
-		  end
+		  If Loaded Then
+		    Raise new ORMException("Cannot create " + TableName + " model because it is already loaded.")
+		  End
 		  
-		  If Not RaiseEvent Creating() Then
+		  If Not RaiseEvent Creating Then
 		    
-		    DB.Insert(TableName(), mChanged.Keys()).Values(mChanged.Values()).Execute(pDatabase, pCommit)
+		    Dim pChanged As New Dictionary
 		    
-		    // Update data
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In TableColumns(pDatabase)
+		      If mChanged.HasKey(pColumn) Then
+		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		      End If
+		    Next
+		    
+		    If pChanged.Count = 0 Then
+		      // Insert NULL as primary key will increment it
+		      DB.Insert(TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
+		    Else
+		      DB.Insert(TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
+		    End If
+		    
+		    // Update mData from mChanged
 		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
 		    // Clear changes, they are saved in mData
-		    Call mChanged.Clear()
+		    Call mChanged.Clear
 		    
-		    Dim pRecordSet As RecordSet = DB.Find(PrimaryKey()).From(TableName).OrderBy(PrimaryKey(), "DESC").Execute(pDatabase)
+		    Dim pRecordSet As RecordSet = DB.Find(PrimaryKey).From(TableName).OrderBy(PrimaryKey, "DESC").Execute(pDatabase)
 		    
 		    // Update primary key from the last row inserted in this table
-		    mData.Value(PrimaryKey()) = pRecordSet.Field(PrimaryKey()).Value
+		    mData.Value(PrimaryKey) = pRecordSet.Field(PrimaryKey).Value
 		    
 		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mAdded.Values()
+		    For Each pRelation As ORMRelation In mAdded.Values
 		      Call pRelation.Add(Me.Pk, pDatabase)
 		    Next
 		    
-		    For Each pRelation As ORMRelation In mRemoved.Values()
+		    For Each pRelation As ORMRelation In mRemoved.Values
 		      Call pRelation.Remove(Me.Pk, pDatabase)
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdded.Clear()
-		    mRemoved.Clear()
+		    mAdded.Clear
+		    mRemoved.Clear
 		    
-		    RaiseEvent Created()
+		    RaiseEvent Created
 		    
 		  End If
 		  
@@ -320,13 +336,18 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Finding() Then
 		    
+		    Dim pColumns() As Variant
+		    
+		    For Each pColumn As Variant In TableColumns(pDatabase)
+		      pColumns.Append(TableName + "." + pColumn)
+		    Next
+		    
 		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Limit(1).Execute(pDatabase)
+		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Limit(1).Execute(pDatabase)
 		    
 		    If pRecordSet <> Nil Then
 		      
 		      // Fetch record set
-		      
 		      For i As Integer = 1 To pRecordSet.FieldCount
 		        Dim pColumn As String = pRecordSet.IdxField(i).Name
 		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
@@ -345,7 +366,13 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FindAll(pDatabase As Database) As RecordSet
-		  Return Append(new SelectQueryExpression(TableColumns(pDatabase))).From(TableName).Execute(pDatabase)
+		  Dim pColumns() As Variant
+		  
+		  For Each pColumn As Variant In TableColumns(pDatabase)
+		    pColumns.Append(TableName + "." + pColumn)
+		  Next
+		  
+		  Return Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Execute(pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -763,7 +790,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Set(ParamArray pValues As Pair) As ORM
-		  Dim pDictionary As Dictionary
+		  Dim pDictionary As New Dictionary
 		  
 		  For Each pValue As Pair In pValues
 		    pDictionary.Value(pValue.Left) = pValue.Right
@@ -782,8 +809,8 @@ Inherits QueryBuilder
 		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
 		  
 		  While Not pRecordSet.EOF
-		    pColumns.Append(TableName() + "." + pRecordSet.Field("ColumnName").Value)
-		    pRecordSet.MoveNext()
+		    pColumns.Append(pRecordSet.Field("ColumnName").Value)
+		    pRecordSet.MoveNext
 		  WEnd
 		  
 		  Return pColumns
@@ -824,20 +851,26 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Updating() Then
 		    
-		    // Update only if there are changes
-		    If mChanged.Count > 0 Then
-		      
-		      DB.Update(TableName()).Set(mChanged).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase, pCommit)
-		      
-		      // Merge mData with mChanged
-		      For Each pKey As Variant In mChanged.Keys()
-		        mData.Value(pKey) = mChanged.Value(pKey)
-		      Next
-		      
-		      // Clear mChanged, they are merged in mData
-		      mChanged.Clear()
-		      
+		    Dim pChanged As New Dictionary
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In TableColumns(pDatabase)
+		      If mChanged.HasKey(pColumn) Then
+		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		      End If
+		    Next
+		    
+		    If pChanged.Count > 0 Then
+		      DB.Update(TableName).Set(pChanged).Where(PrimaryKey, "=", Pk).Execute(pDatabase, pCommit)
 		    End If
+		    
+		    // Merge mData with mChanged
+		    For Each pKey As Variant In mChanged.Keys
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear mChanged, they are merged in mData
+		    mChanged.Clear
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mAdded.Values()

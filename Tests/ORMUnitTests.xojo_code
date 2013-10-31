@@ -77,9 +77,9 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub CreateGroups()
 		  DB.Delete("Groups").Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "userId").Values("Developpeurs", 1).Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "userId").Values("Designers", 2).Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "userId").Values("Junior", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "user").Values("Developpeurs", 1).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "user").Values("Designers", 2).Execute(ORMTestDatabase)
+		  DB.Insert("Groups", "name", "user").Values("Junior", 1).Execute(ORMTestDatabase)
 		  DB.Insert("Groups", "name").Values("Senior").Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
@@ -204,7 +204,7 @@ Inherits TestGroup
 		  CreateUsers()
 		  CreateGroups()
 		  CreateProjects()
-		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
+		  DB.Delete("UsersProjects").Execute(ORMTestDatabase)
 		  
 		  // Loads a first GroupTest model
 		  Dim pGroupTest As New GroupTest(1)
@@ -254,7 +254,7 @@ Inherits TestGroup
 		Sub RemoveTest()
 		  CreateUsers()
 		  CreateProjects()
-		  DB.Delete("Projects_Users").Execute(ORMTestDatabase)
+		  DB.Delete("UsersProjects").Execute(ORMTestDatabase)
 		  
 		  // Loads the UsertTest model from the database
 		  Dim pUserTest As New UserTest(1)
@@ -270,11 +270,11 @@ Inherits TestGroup
 		  
 		  // Add a single relationship
 		  Call pUserTest.Add("UsersProjects", "user", "project", pProjectTest.Pk).Update(ORMTestDatabase)
-		  Assert.IsTrue pUserTest.Has("UsersProjects", "user", "test", pProjectTest.Pk, ORMTestDatabase)
+		  Assert.IsTrue pUserTest.Has("UsersProjects", "user", "project", pProjectTest.Pk, ORMTestDatabase)
 		  
 		  // Remove a single relationship
 		  Call pUserTest.Remove("UsersProjects", "user", "project", pProjectTest.Pk).Update(ORMTestDatabase)
-		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", "test", pProjectTest.Pk, ORMTestDatabase)
+		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", "project", pProjectTest.Pk, ORMTestDatabase)
 		  
 		  // Add multiple relationships
 		  
@@ -284,6 +284,8 @@ Inherits TestGroup
 		  
 		  Dim pGroup As New GroupTest
 		  Call pGroup.Create(ORMTestDatabase)
+		  
+		  Assert pGroup.Loaded
 		  
 		  // Add a relationship
 		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
@@ -301,9 +303,6 @@ Inherits TestGroup
 		  Call pUserTest.Remove(New ORMRelationHasManyHard(pGroup.TableName, "user", pGroup.PrimaryKey, pGroup.Pk)).Update(ORMTestDatabase)
 		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
 		  Assert.IsFalse pGroup.Reload(ORMTestDatabase).Loaded
-		  
-		  // Cleanup
-		  Call pGroup.Delete(ORMTestDatabase)
 		  
 		  
 		  
@@ -343,7 +342,7 @@ Inherits TestGroup
 		  Dim pTableColumns() As Variant = pUser.TableColumns(ORMTestDatabase)
 		  
 		  For i As Integer = 0 To pColumns.UBound
-		    Assert.AreEqual(pUser.TableName + "." + pColumns(i), pTableColumns(i).StringValue)
+		    Assert.AreEqual(pColumns(i), pTableColumns(i).StringValue)
 		  Next
 		End Sub
 	#tag EndMethod

@@ -293,7 +293,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Set(ParamArray pValues As Pair) As QueryBuilder
-		  Dim pDictionary As Dictionary
+		  Dim pDictionary As New Dictionary
 		  
 		  For Each pValue As Pair In pValues
 		    pDictionary.Value(pValue.Left) = pValue.Right
