@@ -1,8 +1,12 @@
 #tag Module
 Protected Module DB
 	#tag Method, Flags = &h0
-		Function Count(pColumn As Variant) As QueryExpression
-		  Return Expression("COUNT ( " + QueryCompiler.Column(pColumn) + " )")
+		Function Count(pColumn As Variant, pAlias As Variant = Nil) As QueryExpression
+		  If Not pAlias.IsNull Then
+		    Return Expression("COUNT ( " + QueryCompiler.Column(pColumn) + " ) AS " + pAlias)
+		  Else
+		    Return Expression("COUNT ( " + QueryCompiler.Column(pColumn) + " )")
+		  End If
 		End Function
 	#tag EndMethod
 
@@ -88,7 +92,6 @@ Protected Module DB
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -96,21 +99,18 @@ Protected Module DB
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -118,7 +118,6 @@ Protected Module DB
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-			InheritedFrom="Object"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Module
