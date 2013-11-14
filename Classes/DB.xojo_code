@@ -1,12 +1,20 @@
 #tag Module
 Protected Module DB
 	#tag Method, Flags = &h0
-		Function Count(pColumn As Variant, pAlias As Variant = Nil) As QueryExpression
-		  If Not pAlias.IsNull Then
-		    Return Expression("COUNT ( " + QueryCompiler.Column(pColumn) + " ) AS " + pAlias)
-		  Else
-		    Return Expression("COUNT ( " + QueryCompiler.Column(pColumn) + " )")
-		  End If
+		Function Count() As QueryExpression
+		  Return DB.Count("*")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Count(pColumn As Variant) As QueryExpression
+		  Return DB.Expression("COUNT( " + QueryCompiler.Column(pColumn) + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Count(pColumn As Variant, pAlias As Variant) As QueryExpression
+		  Return DB.Expression("COUNT( " + QueryCompiler.Column(pColumn) + " ) AS `" + pAlias + "`")
 		End Function
 	#tag EndMethod
 

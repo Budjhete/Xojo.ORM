@@ -24,7 +24,16 @@ Inherits TestGroup
 		  // Count Expression in SELECT
 		  pStatement = DB.Find(DB.Count("id"), "username").From("Users").Compile()
 		  pRecordSet = DB.Find(DB.Count("id"), "username").From("Users").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT COUNT ( `id` ), `username` FROM `Users` AS `Users`", pStatement)
+		  Assert.AreEqual("SELECT COUNT( `id` ), `username` FROM `Users` AS `Users`", pStatement)
+		  
+		  pStatement = DB.Find(DB.Count("id", "count"), "username").From("Users").Compile()
+		  pRecordSet = DB.Find(DB.Count("id", "count"), "username").From("Users").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT COUNT( `id` ) AS `count`, `username` FROM `Users` AS `Users`", pStatement)
+		  
+		  pStatement = DB.Find(DB.Count(), "username").From("Users").Compile()
+		  pRecordSet = DB.Find(DB.Count(), "username").From("Users").Execute(ORMTestDatabase)
+		  Assert.AreEqual("SELECT COUNT( * ), `username` FROM `Users` AS `Users`", pStatement)
+		  
 		  
 		  // Distinct Expression in SELECT
 		  pStatement = DB.Find(DB.Distinct("id"), "username").From("Users").Compile()
