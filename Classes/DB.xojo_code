@@ -13,8 +13,8 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Count(pColumn As Variant, pAlias As Variant) As QueryExpression
-		  Return DB.Expression("COUNT( " + QueryCompiler.Column(pColumn) + " ) AS `" + pAlias + "`")
+		Function Count(pColumn As Variant, pAlias As String) As QueryExpression
+		  Return DB.Expression("COUNT( " + QueryCompiler.Column(pColumn) + " ) AS " + QueryCompiler.Alias(pAlias))
 		End Function
 	#tag EndMethod
 
@@ -81,6 +81,30 @@ Protected Module DB
 	#tag Method, Flags = &h0
 		Function Set(ParamArray pValues As Variant) As QueryExpression
 		  Return Set(pValues)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Sum(pColumn As Variant) As QueryExpression
+		  Return DB.Expression("SUM( " + QueryCompiler.Column(pColumn) + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Sum(pColumn As Variant, pAlias As String) As QueryExpression
+		  Return DB.Expression("SUM( " + QueryCompiler.Column(pColumn) + " ) AS " + QueryCompiler.Alias(pAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Total(pColumn As Variant) As QueryExpression
+		  Return DB.Expression("TOTAL( " + QueryCompiler.Column(pColumn) + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Total(pColumn As Variant, pAlias As String) As QueryExpression
+		  Return DB.Expression("TOTAL( " + QueryCompiler.Column(pColumn) + " ) AS " + QueryCompiler.Alias(pAlias))
 		End Function
 	#tag EndMethod
 

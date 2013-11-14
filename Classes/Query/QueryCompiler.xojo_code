@@ -1,6 +1,12 @@
 #tag Module
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
+		Function Alias(pAlias As String) As String
+		  Return "`" + pAlias + "`"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Column(pColumn As Variant) As String
 		  Select Case pColumn
 		    
