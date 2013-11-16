@@ -119,7 +119,7 @@ Protected Module QueryCompiler
 		  // Tests for primitives
 		  Select Case pValue.Type
 		    
-		  Case Variant.TypeInteger, Variant.TypeLong, Variant.TypeDouble
+		  Case Variant.TypeInteger, Variant.TypeLong, Variant.TypeDouble, Variant.TypeCurrency
 		    Return pValue.StringValue
 		    
 		  Case Variant.TypeBoolean
