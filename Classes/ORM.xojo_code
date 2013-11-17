@@ -5,7 +5,6 @@ Inherits QueryBuilder
 		Function Add() As Dictionary
 		  Dim pAdded As New Dictionary
 		  
-		  // Use a copy of mData to avoid external changes
 		  For Each pKey As Variant In mAdded.Keys()
 		    pAdded.Value(pKey) = mAdded.Value(pKey)
 		  Next
