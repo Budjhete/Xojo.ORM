@@ -324,24 +324,17 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Dump() As String
 		  // Dump ORM content for logs
-		  Dim pDump As String
-		  
-		  If Me.Loaded Then
-		    pDump = pDump + "Dumping " + Me.Pk + "@" + Me.TableName + EndOfLine
-		  Else
-		    pDump = pDump +  "Dumping an unloaded " + Me.TableName + EndOfLine
-		  End If
+		  Dim pDump As String = "Dumping " + QueryCompiler.Value(Me.Pk) + "@" + QueryCompiler.TableName(Me.TableName) + EndOfLine
 		  
 		  // If Me.Changed Then
-		  
 		  Dim pChanged() As String
 		  
-		  For Each pKey As String In Me.Data.Keys()
+		  For Each pKey As String In Me.Data.Keys
 		    
-		    pChanged.Append(pKey + ": " + Me.Initial(pKey))
+		    pChanged.Append(QueryCompiler.Column(pKey) + ": " + QueryCompiler.Value(Me.Initial(pKey)))
 		    
 		    If Me.Initial(pKey) <> Me.Data(pKey) Then
-		      pChanged(pChanged.Ubound) = pChanged(pChanged.Ubound) +  " => " + Me.Data(pKey)
+		      pChanged(pChanged.Ubound) = pChanged(pChanged.Ubound) +  " => " + QueryCompiler.Value(Me.Data(pKey))
 		    End If
 		    
 		  Next
