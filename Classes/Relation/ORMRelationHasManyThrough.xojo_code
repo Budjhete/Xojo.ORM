@@ -21,6 +21,12 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Dump() As String
+		  Return mPivotTableName + ":" + Str(mFarKey)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Remove(pForeignKey As Variant, pDatabase As Database)
 		  DB.Delete(mPivotTableName)._
 		  Where(mForeignColumn, "=", pForeignKey)._

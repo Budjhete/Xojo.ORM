@@ -5,7 +5,6 @@ Inherits QueryBuilder
 		Function Add() As Dictionary
 		  Dim pAdded As New Dictionary
 		  
-		  // Use a copy of mData to avoid external changes
 		  For Each pKey As Variant In mAdded.Keys()
 		    pAdded.Value(pKey) = mAdded.Value(pKey)
 		  Next
@@ -319,6 +318,53 @@ Inherits QueryBuilder
 		  End If
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Dump() As String
+		  // Dump ORM content for logs
+		  Dim pDump As String
+		  
+		  If Me.Loaded Then
+		    pDump = pDump + "Dumping " + Me.Pk + "@" + Me.TableName + EndOfLine
+		  Else
+		    pDump = pDump +  "Dumping an unloaded " + Me.TableName + EndOfLine
+		  End If
+		  
+		  // If Me.Changed Then
+		  
+		  Dim pChanged() As String
+		  
+		  For Each pKey As String In Me.Data.Keys()
+		    
+		    pChanged.Append(pKey + ": " + Me.Initial(pKey))
+		    
+		    If Me.Initial(pKey) <> Me.Data(pKey) Then
+		      pChanged(pChanged.Ubound) = pChanged(pChanged.Ubound) +  " => " + Me.Data(pKey)
+		    End If
+		    
+		  Next
+		  
+		  pDump = pDump + "Changed: " + Join(pChanged, ", ") + EndOfLine
+		  
+		  Dim pAdd As String
+		  
+		  For Each pKey As Variant In Me.Add.Keys
+		    pAdd = pAdd + " " + ORMRelation(pKey).Dump
+		  Next
+		  
+		  pDump = pDump + "Added: " + pAdd + EndOfLine
+		  
+		  Dim pRemove As String
+		  
+		  For Each pKey As Variant In Me.Remove.Keys
+		    pRemove = pRemove + " " + ORMRelation(pKey).Dump
+		  Next
+		  
+		  pDump = pDump + "Removed: " + pRemove + EndOfLine
+		  
+		  Return pDump
 		End Function
 	#tag EndMethod
 
