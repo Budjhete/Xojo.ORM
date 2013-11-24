@@ -860,7 +860,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  Return Introspection.GetType(Me).Name
+		  Raise New ORMException("TableName must be implemented or be called from its implementation.")
 		End Function
 	#tag EndMethod
 
