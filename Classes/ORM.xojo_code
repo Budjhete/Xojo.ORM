@@ -369,15 +369,16 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Find(pDatabase As Database) As ORM
-		  If Loaded() Then
+		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
-		  If Not RaiseEvent Finding() Then
+		  If Not RaiseEvent Finding Then
 		    
 		    Dim pColumns() As Variant
 		    
-		    For Each pColumn As Variant In TableColumns(pDatabase)
+		    // Prepend table to prevent collision with join
+		    For Each pColumn As String In Me.TableColumns(pDatabase)
 		      pColumns.Append(TableName + "." + pColumn)
 		    Next
 		    
@@ -842,13 +843,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableColumns(pDatabase As Database) As Variant()
-		  Dim pColumns() As Variant
+		Function TableColumns(pDatabase As Database) As String()
+		  Dim pColumns() As String
 		  
 		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
 		  
 		  While Not pRecordSet.EOF
-		    pColumns.Append(pRecordSet.Field("ColumnName").Value)
+		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
 		    pRecordSet.MoveNext
 		  WEnd
 		  

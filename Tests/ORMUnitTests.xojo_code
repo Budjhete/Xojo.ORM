@@ -339,10 +339,10 @@ Inherits TestGroup
 		  
 		  Dim pColumns() As String = Array("id", "username", "password")
 		  
-		  Dim pTableColumns() As Variant = pUser.TableColumns(ORMTestDatabase)
+		  Dim pTableColumns() As String = pUser.TableColumns(ORMTestDatabase)
 		  
 		  For i As Integer = 0 To pColumns.UBound
-		    Assert.AreEqual(pColumns(i), pTableColumns(i).StringValue)
+		    Assert.AreEqual(pColumns(i), pTableColumns(i))
 		  Next
 		End Sub
 	#tag EndMethod
