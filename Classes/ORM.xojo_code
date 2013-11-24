@@ -995,6 +995,20 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function XMLValue() As XMLNode
+		  Dim pXML As New XmlDocument
+		  Dim pXMLNode As XmlNode = pXML.CreateElement(TableName)
+		  
+		  // Adds each column as an Attribute
+		  For Each pColumn As String In Data.Keys
+		    pXMLNode.SetAttribute(pColumn, Data(pColumn))
+		  Next
+		  
+		  Return pXMLNode
+		End Function
+	#tag EndMethod
+
 
 	#tag Hook, Flags = &h0
 		Event Added(pORMRelation As ORMRelation)
