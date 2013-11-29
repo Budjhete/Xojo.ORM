@@ -997,16 +997,23 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function XMLValue() As XMLNode
-		  Dim pXML As New XmlDocument
-		  Dim pXMLNode As XmlNode = pXML.CreateElement(TableName)
+		Function XMLValue(pXmlDocument As XmlDocument) As XmlNode
+		  // Shallow export
+		  Dim pXmlNode As XmlNode = pXmlDocument.CreateElement(Me.TableName)
 		  
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Data.Keys
-		    pXMLNode.SetAttribute(pColumn, Data(pColumn))
+		    pXmlNode.SetAttribute(pColumn, Data(pColumn))
 		  Next
 		  
-		  Return pXMLNode
+		  Return pXmlNode
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function XMLValue(pXmlDocument As XmlDocument, pDatabase As Database) As XmlNode
+		  // Deep export
+		  Return Me.XMLValue(pXmlDocument)
 		End Function
 	#tag EndMethod
 
