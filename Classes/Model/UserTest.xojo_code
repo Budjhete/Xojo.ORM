@@ -3,7 +3,7 @@ Protected Class UserTest
 Inherits ORM
 	#tag Method, Flags = &h0
 		Function Add(pProjectTest As ProjectTest) As ORM
-		  Return Add("UsersProjects", "user", "project", pProjectTest.Pk)
+		  Return Add("UsersProjects", "user", "project", pProjectTest)
 		End Function
 	#tag EndMethod
 
@@ -21,7 +21,7 @@ Inherits ORM
 
 	#tag Method, Flags = &h0
 		Function Has(pProject As ProjectTest, pDatabase As Database) As Boolean
-		  Return Has("UsersProjects", "user", "project", pProject.Pk, pDatabase)
+		  Return Has("UsersProjects", "user", "project", pProject, pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -102,6 +102,12 @@ Inherits ORM
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="password"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"

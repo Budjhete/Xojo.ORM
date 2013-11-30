@@ -3,7 +3,7 @@ Protected Class ProjectTest
 Inherits ORM
 	#tag Method, Flags = &h0
 		Function Has(pUserTest As UserTest, pDatabase As Database) As Boolean
-		  Return Super.Has("UsersProjects", "project", "user", pUserTest.Pk, pDatabase)
+		  Return Super.Has("UsersProjects", "project", "user", pUserTest, pDatabase)
 		End Function
 	#tag EndMethod
 

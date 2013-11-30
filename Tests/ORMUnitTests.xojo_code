@@ -218,6 +218,9 @@ Inherits TestGroup
 		  Dim pGroupTest As New GroupTest(1)
 		  Call pGroupTest.Find(ORMTestDatabase)
 		  
+		  Dim pProject As New ProjectTest(1)
+		  Call pProject.Find(ORMTestDatabase)
+		  
 		  // Tests a belongs to relationship
 		  Dim pUserTest As UserTest = UserTest(pGroupTest.user)
 		  
@@ -225,7 +228,7 @@ Inherits TestGroup
 		  Assert.AreEqual(pUserTest.Data("id").StringValue, pGroupTest.user.Data("id"))
 		  
 		  // Adds a has many through relationship to the UserTest model
-		  Call pUserTest.Add("UsersProjects", "user", "project", 1)
+		  Call pUserTest.Add("UsersProjects", "user", "project", pProject)
 		  // Tests the has many through relationship
 		  Dim pProjectTest As ProjectTest = ProjectTest(pUserTest.Projects)
 		  Dim Records As RecordSet = pProjectTest.FindAll(ORMTestDatabase)
@@ -327,12 +330,12 @@ Inherits TestGroup
 		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", ORMTestDatabase)
 		  
 		  // Add a single relationship
-		  Call pUserTest.Add("UsersProjects", "user", "project", pProjectTest.Pk).Update(ORMTestDatabase)
-		  Assert.IsTrue pUserTest.Has("UsersProjects", "user", "project", pProjectTest.Pk, ORMTestDatabase)
+		  Call pUserTest.Add("UsersProjects", "user", "project", pProjectTest).Update(ORMTestDatabase)
+		  Assert.IsTrue pUserTest.Has("UsersProjects", "user", "project", pProjectTest, ORMTestDatabase)
 		  
 		  // Remove a single relationship
-		  Call pUserTest.Remove("UsersProjects", "user", "project", pProjectTest.Pk).Update(ORMTestDatabase)
-		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", "project", pProjectTest.Pk, ORMTestDatabase)
+		  Call pUserTest.Remove("UsersProjects", "user", "project", pProjectTest).Update(ORMTestDatabase)
+		  Assert.IsFalse pUserTest.Has("UsersProjects", "user", "project", pProjectTest, ORMTestDatabase)
 		  
 		  // Add multiple relationships
 		  
@@ -358,7 +361,7 @@ Inherits TestGroup
 		  Call pUserTest.Add("user", pGroup).Update(ORMTestDatabase)
 		  
 		  // Hard-remove the relationship
-		  Call pUserTest.Remove(New ORMRelationHasManyHard(pGroup.TableName, "user", pGroup.PrimaryKey, pGroup.Pk)).Update(ORMTestDatabase)
+		  Call pUserTest.Remove(New ORMRelationHasManyHard("user", pGroup)).Update(ORMTestDatabase)
 		  Assert.IsFalse pUserTest.Has("user", pGroup, ORMTestDatabase)
 		  Assert.IsFalse pGroup.Reload(ORMTestDatabase).Loaded
 		  

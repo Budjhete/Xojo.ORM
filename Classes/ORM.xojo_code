@@ -34,7 +34,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Add(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
-		    Call Me.Add(New ORMRelationHasMany(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		    Call Me.Add(New ORMRelationHasMany(pForeignColumn, pORM))
 		  Next
 		  
 		  Return Me
@@ -48,9 +48,9 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
-		  For Each pFarKey As Variant In pFarKeys
-		    Call Add(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pFarKey))
+		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORMs() As ORM) As ORM
+		  For Each pORM As ORM In pORMs
+		    Call Add(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pORM))
 		  Next
 		  
 		  Return Me
@@ -58,15 +58,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pFarKeys As Variant) As ORM
-		  Return Add(pPivotTableName, pForeignColumn, pFarColumn, pFarKeys)
+		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pORMs As ORM) As ORM
+		  Return Add(pPivotTableName, pForeignColumn, pFarColumn, pORMs)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function AddHard(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
-		    Call Me.Add(New ORMRelationHasManyHard(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		    Call Me.Add(New ORMRelationHasManyHard(pForeignColumn, pORM))
 		  Next
 		  
 		  Return Me
@@ -209,11 +209,11 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me.Pk, pDatabase)
+		      Call pRelation.Add(Me, pDatabase)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mRemoved.Values
-		      Call pRelation.Remove(Me.Pk, pDatabase)
+		      Call pRelation.Remove(Me, pDatabase)
 		    Next
 		    
 		    // Clear pending relationships
@@ -302,13 +302,7 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Deleting() Then
 		    
-		    Dim pPrimaryKeys As New Dictionary
-		    
-		    For Each pPrimaryKey As String In Me.PrimaryKeys
-		      pPrimaryKeys.Value(pPrimaryKey) = Me.Initial(pPrimaryKey)
-		    Next
-		    
-		    DB.Delete(Me.TableName).Where(pPrimaryKeys).Execute(pDatabase, pCommit)
+		    DB.Delete(Me.TableName).Where(Me.Pks).Execute(pDatabase, pCommit)
 		    
 		    // Empty mData
 		    Call mData.Clear()
@@ -443,7 +437,7 @@ Inherits QueryBuilder
 		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pORM.TableName)._
-		  Where(pORM.PrimaryKey, "=", pORM.Pk). _
+		  Where(pORM.Pks). _
 		  Where(pForeignColumn, "=", Me.Pk)._
 		  Execute(pDatabase)._
 		  Field("count").BooleanValue
@@ -462,12 +456,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKey As Variant, pDatabase As Database) As Boolean
+		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
 		  Where(pForeignColumn, "=", Me.Pk)._
-		  AndWhere(pFarColumn, "=", pFarKey)._
+		  AndWhere(pFarColumn, "=", pORM.Pk)._
 		  Execute(pDatabase)._
 		  Field("count").BooleanValue
 		End Function
@@ -709,6 +703,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Pks() As Dictionary
+		  Dim pDictionary As New Dictionary
+		  
+		  For Each pPrimaryKey As String In Me.PrimaryKeys
+		    pDictionary.Value(pPrimaryKey) = Me.Initial(pPrimaryKey)
+		  Next
+		  
+		  Return pDictionary
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
@@ -768,7 +774,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Remove(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
-		    Call Me.Remove(New ORMRelationHasMany(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		    Call Me.Remove(New ORMRelationHasMany(pForeignColumn, pORM))
 		  Next
 		  
 		  Return Me
@@ -800,7 +806,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function RemoveHard(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
-		    Call Me.Remove(New ORMRelationHasManyHard(pORM.TableName, pForeignColumn, pORM.PrimaryKey, pORM.Pk))
+		    Call Me.Remove(New ORMRelationHasManyHard(pForeignColumn, pORM))
 		  Next
 		  
 		  Return Me
@@ -920,13 +926,7 @@ Inherits QueryBuilder
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      Dim pPrimaryKeys As New Dictionary
-		      
-		      For Each pPrimaryKey As String In Me.PrimaryKeys
-		        pPrimaryKeys.Value(pPrimaryKey) = Me.Initial(pPrimaryKey)
-		      Next
-		      
-		      DB.Update(TableName).Set(pChanged).Where(pPrimaryKeys).Execute(pDatabase, pCommit)
+		      DB.Update(TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, pCommit)
 		    End If
 		    
 		    // Merge mData with mChanged
@@ -939,11 +939,11 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mAdded.Values()
-		      Call pRelation.Add(Me.Pk, pDatabase)
+		      Call pRelation.Add(Me, pDatabase)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mRemoved.Values()
-		      Call pRelation.Remove(Me.Pk, pDatabase)
+		      Call pRelation.Remove(Me, pDatabase)
 		    Next
 		    
 		    // Clear pending relationships

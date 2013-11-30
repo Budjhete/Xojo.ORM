@@ -2,35 +2,35 @@
 Protected Class ORMRelationHasManyThrough
 Implements ORMRelation
 	#tag Method, Flags = &h0
-		Sub Add(pForeignKey As Variant, pDatabase As Database)
+		Sub Add(pORM As ORM, pDatabase As Database)
 		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
-		  Values(pForeignKey, mFarKey)._
+		  Values(pORM.Pk, mORM.Pk)._
 		  Execute(pDatabase)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKey As Variant)
+		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM)
 		  mPivotTableName = pPivotTableName
 		  
 		  mForeignColumn = pForeignColumn
-		  
 		  mFarColumn = pFarColumn
-		  mFarKey = pFarKey
+		  
+		  mORM = pORM
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Dump() As String
-		  Return mPivotTableName + ":" + Str(mFarKey)
+		  Return mPivotTableName + ":" + Str(mORM.Pk)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pForeignKey As Variant, pDatabase As Database)
+		Sub Remove(pORM As ORM, pDatabase As Database)
 		  DB.Delete(mPivotTableName)._
-		  Where(mForeignColumn, "=", pForeignKey)._
-		  AndWhere(mFarColumn, "=", mFarKey)._
+		  Where(mForeignColumn, "=", pORM.Pk)._
+		  AndWhere(mFarColumn, "=", mORM.Pk)._
 		  Execute(pDatabase)
 		End Sub
 	#tag EndMethod
@@ -41,11 +41,11 @@ Implements ORMRelation
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mFarKey As Variant
+		Private mForeignColumn As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mForeignColumn As String
+		Private mORM As ORM
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

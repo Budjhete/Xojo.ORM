@@ -2,38 +2,35 @@
 Protected Class ORMRelationHasMany
 Implements ORMRelation
 	#tag Method, Flags = &h0
-		Sub Add(pForeignKey As Variant, pDatabase As Database)
-		  DB.Update(mTableName). _
-		  Set(mForeignColumn : pForeignKey) ._
-		  Where(mPrimaryColumn, "=", mPrimaryKey). _
+		Sub Add(pORM As ORM, pDatabase As Database)
+		  DB.Update(mORM.TableName). _
+		  Set(mForeignColumn : pORM.Pk) ._
+		  Where(mORM.Pks). _
 		  Execute(pDatabase)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pForeignColumn As String, pPrimaryColumn As String, pPrimaryKey As Variant)
-		  mTableName = pTableName
-		  
+		Sub Constructor(pForeignColumn As String, pORM As ORM)
 		  mForeignColumn = pForeignColumn
 		  
-		  mPrimaryColumn = pPrimaryColumn
-		  mPrimaryKey = pPrimaryKey
+		  mORM = pORM
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Dump() As String
-		  Return mTableName + ":" + Str(mPrimaryKey)
+		  Return mORM.TableName + ":" + Str(mORM.Pk)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pForeignKey As Variant, pDatabase As Database)
-		  DB.Update(mTableName). _
+		Sub Remove(pORM As ORM, pDatabase As Database)
+		  DB.Update(mORM.TableName). _
 		  Set(mForeignColumn : Nil) ._
-		  Where(mPrimaryColumn, "=", mPrimaryKey). _
-		  AndWhere(mForeignColumn, "=", pForeignKey). _
+		  Where(mORM.Pks). _
+		  AndWhere(mForeignColumn, "=", pORM.Pk). _
 		  Execute(pDatabase)
 		  
 		  
@@ -46,15 +43,7 @@ Implements ORMRelation
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mPrimaryColumn As String
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mPrimaryKey As Variant
-	#tag EndProperty
-
-	#tag Property, Flags = &h1
-		Protected mTableName As String
+		Protected mORM As ORM
 	#tag EndProperty
 
 
