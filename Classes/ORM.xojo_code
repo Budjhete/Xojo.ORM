@@ -894,11 +894,31 @@ Inherits QueryBuilder
 		Function Unload() As ORM
 		  // Empties data, not changes
 		  
-		  If Not RaiseEvent Unloading() Then
+		  If Not RaiseEvent Unloading Then
 		    
-		    mData.Clear()
+		    For Each pPrimaryKey As String In PrimaryKeys
+		      If mData.HasKey(pPrimaryKey) Then
+		        mData.Remove(pPrimaryKey)
+		      End If
+		    Next
 		    
-		    RaiseEvent Unloaded()
+		    RaiseEvent Unloaded
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function UnloadAll() As ORM
+		  // Empties data, not changes
+		  
+		  If Not RaiseEvent UnloadingAll Then
+		    
+		    mData.Clear
+		    
+		    RaiseEvent UnloadedAll
 		    
 		  End If
 		  
@@ -1111,7 +1131,15 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event UnloadedAll()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Unloading() As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event UnloadingAll() As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0

@@ -33,6 +33,7 @@ Begin Window ORMTestWindow
       InitialParent   =   ""
       Left            =   40
       LockedInPosition=   False
+      password        =   ""
       Scope           =   "0"
       TabIndex        =   "0"
       TabPanelIndex   =   0
