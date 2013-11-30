@@ -1,15 +1,15 @@
 #tag Class
-Protected Class ProjectTest
+Protected Class UserProjectTest
 Inherits ORM
 	#tag Method, Flags = &h0
-		Function Has(pUserTest As UserTest, pDatabase As Database) As Boolean
-		  Return Super.Has("UsersProjects", "project", "user", pUserTest.Pk, pDatabase)
+		Function PrimaryKeys() As String()
+		  Return Array("user", "project")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  return "Projects"
+		  Return "UsersProjects"
 		End Function
 	#tag EndMethod
 
@@ -17,15 +17,29 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return Data("name")
+			  Return New ProjectTest(Data("project"))
 			End Get
 		#tag EndGetter
 		#tag Setter
 			Set
-			  Data("name") = value
+			  Data("project") = value.Pk
 			End Set
 		#tag EndSetter
-		name As String
+		project As ProjectTest
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return New UserTest(Data("user"))
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Data("user") = value.Pk
+			End Set
+		#tag EndSetter
+		user As UserTest
 	#tag EndComputedProperty
 
 

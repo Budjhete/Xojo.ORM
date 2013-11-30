@@ -41,6 +41,35 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
+			  Return New GroupTest(Me.Data("group"))
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  Me.Data("group") = value.Pk
+			End Set
+		#tag EndSetter
+		group As GroupTest
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
+			  Return Me.Data("password")
+			End Get
+		#tag EndGetter
+		#tag Setter
+			Set
+			  // You can encrypt your password here
+			  Me.Data("password") = value
+			End Set
+		#tag EndSetter
+		password As String
+	#tag EndComputedProperty
+
+	#tag ComputedProperty, Flags = &h0
+		#tag Getter
+			Get
 			  Return Data("username")
 			End Get
 		#tag EndGetter

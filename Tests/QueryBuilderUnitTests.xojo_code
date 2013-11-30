@@ -244,15 +244,18 @@ Inherits TestGroup
 		  Dim pRecordSet As RecordSet
 		  Dim pStatement As String
 		  
+		  DB.Delete("Users").Execute(ORMTestDatabase)
+		  DB.Delete("Projects").Execute(ORMTestDatabase)
+		  
 		  // Inserts a new entry with ParamArrays in Values
 		  pStatement = DB.Insert("Users", "username", "password").Values("Hete", ".ca").Compile()
 		  pRecordSet = DB.Insert("Users", "username", "password").Values("Hete", ".ca").Execute(ORMTestDatabase)
 		  Assert.AreEqual("INSERT INTO `Users` ( `username`, `password` ) VALUES ( 'Hete', '.ca' )", pStatement)
 		  
 		  // Set a value to Nil
-		  pStatement = DB.Insert("Users", "username", "password").Values(Nil, Nil).Compile()
-		  pRecordSet = DB.Insert("Users", "username", "password").Values(Nil, Nil).Execute(ORMTestDatabase)
-		  Assert.AreEqual("INSERT INTO `Users` ( `username`, `password` ) VALUES ( NULL, NULL )", pStatement)
+		  pStatement = DB.Insert("Projects", "name", "description").Values("Rock & Roll", Nil).Compile()
+		  pRecordSet = DB.Insert("Projects", "name", "description").Values("Rock & Roll", Nil).Execute(ORMTestDatabase)
+		  Assert.AreEqual("INSERT INTO `Projects` ( `name`, `description` ) VALUES ( 'Rock & Roll', NULL )", pStatement)
 		  
 		  // Use a QueryExpression
 		  pStatement = DB.Insert("Users", "username").Values(DB.Expression("John")).Compile()

@@ -86,11 +86,11 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub CreateProjects()
-		  DB.Delete("Projets").Execute(ORMTestDatabase)
-		  DB.Insert("Projets", "name").Values("Budjhete").Execute(ORMTestDatabase)
-		  DB.Insert("Projets", "name").Values("Kanjo").Execute(ORMTestDatabase)
-		  DB.Insert("Projets", "name").Values("Hete").Execute(ORMTestDatabase)
-		  DB.Insert("Projets", "name").Values("Vee").Execute(ORMTestDatabase)
+		  DB.Delete("Projects").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Budjhete").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Kanjo").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Hete").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Vee").Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
 
@@ -117,6 +117,14 @@ Inherits TestGroup
 		  DB.Delete("Users").Execute(ORMTestDatabase)
 		  DB.Insert("Users", "username", "password").Values("Budjhete", ".com").Execute(ORMTestDatabase)
 		  DB.Insert("Users", "username", "password").Values("Kanjo", ".com").Execute(ORMTestDatabase)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub DataTest()
+		  Dim pUser As New UserTest
+		  
+		  Assert.IsFalse pUser.Changed
 		End Sub
 	#tag EndMethod
 
@@ -220,10 +228,60 @@ Inherits TestGroup
 		  Call pUserTest.Add("UsersProjects", "user", "project", 1)
 		  // Tests the has many through relationship
 		  Dim pProjectTest As ProjectTest = ProjectTest(pUserTest.Projects)
-		  Dim Records As RecordSet = pProjectTest.FindAll(pProjectTest.Database)
+		  Dim Records As RecordSet = pProjectTest.FindAll(ORMTestDatabase)
 		  
 		  // Tests a has many relationship with the UserTest's related groups
-		  Assert.AreEqual(pUserTest.Groups.Execute(pGroupTest.Database).RecordCount, 2)
+		  Assert.AreEqual(pUserTest.Groups.Execute(ORMTestDatabase).RecordCount, 2)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub PrimaryKeysTest()
+		  Dim pUserProject As New UserProjectTest
+		  Dim pUser As New UserTest
+		  Dim pAnotherUser As New UserTest
+		  Dim pProject As New ProjectTest
+		  
+		  pUser.username = "John"
+		  pUser.password = "Michael"
+		  Call pUser.Create(ORMTestDatabase)
+		  
+		  pAnotherUser.username = "James"
+		  pAnotherUser.password = "Norton"
+		  Call pAnotherUser.Create(ORMTestDatabase)
+		  
+		  pProject.name = "Work in a store!"
+		  Call pProject.Create(ORMTestDatabase)
+		  
+		  Assert.IsFalse pUserProject.Loaded
+		  
+		  pUserProject.user = pUser
+		  pUserProject.project = pProject
+		  
+		  Assert.IsFalse pUserProject.Loaded
+		  Assert.IsTrue pUserProject.Changed
+		  
+		  Call pUserProject.Create(ORMTestDatabase)
+		  
+		  Assert.IsTrue pUserProject.Loaded
+		  Assert.IsFalse pUserProject.Changed
+		  
+		  Assert.IsTrue pUser.Has(pProject, ORMTestDatabase)
+		  Assert.IsTrue pProject.Has(pUser, ORMTestDatabase)
+		  
+		  // Update
+		  System.DebugLog pUserProject.Dump
+		  pUserProject.user = pAnotherUser
+		  System.DebugLog pUserProject.Dump
+		  
+		  Call pUserProject.Update(ORMTestDatabase)
+		  
+		  Assert.IsTrue pUserProject.Loaded
+		  
+		  // Delete
+		  Call pUserProject.Delete(ORMTestDatabase)
+		  
+		  Assert.IsFalse pUserProject.Loaded
 		End Sub
 	#tag EndMethod
 

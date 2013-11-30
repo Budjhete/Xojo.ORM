@@ -172,7 +172,7 @@ Inherits QueryBuilder
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  If Loaded Then
-		    Raise new ORMException("Cannot create " + TableName + " model because it is already loaded.")
+		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
 		  End
 		  
 		  If Not RaiseEvent Creating Then
@@ -180,7 +180,7 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn) Then
 		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
 		      End If
@@ -188,9 +188,9 @@ Inherits QueryBuilder
 		    
 		    If pChanged.Count = 0 Then
 		      // Insert NULL as primary key will increment it
-		      DB.Insert(TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
+		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
 		    Else
-		      DB.Insert(TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
+		      DB.Insert(Me.TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
 		    End If
 		    
 		    // Update mData from mChanged
@@ -201,10 +201,11 @@ Inherits QueryBuilder
 		    // Clear changes, they are saved in mData
 		    Call mChanged.Clear
 		    
-		    Dim pRecordSet As RecordSet = DB.Find(PrimaryKey).From(TableName).OrderBy(PrimaryKey, "DESC").Execute(pDatabase)
-		    
-		    // Update primary key from the last row inserted in this table
-		    mData.Value(PrimaryKey) = pRecordSet.Field(PrimaryKey).Value
+		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      Dim pRecordSet As RecordSet = DB.Find(Me.PrimaryKey).From(Me.TableName).OrderBy(Me.PrimaryKey, "DESC").Execute(pDatabase)
+		      // Update primary key from the last row inserted in this table
+		      mData.Value(PrimaryKey) = pRecordSet.Field(PrimaryKey).Value
+		    End If
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mAdded.Values
@@ -301,7 +302,13 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Deleting() Then
 		    
-		    DB.Delete(TableName()).Where(PrimaryKey(), "=", Pk()).Execute(pDatabase, pCommit)
+		    Dim pPrimaryKeys As New Dictionary
+		    
+		    For Each pPrimaryKey As String In Me.PrimaryKeys
+		      pPrimaryKeys.Value(pPrimaryKey) = Me.Initial(pPrimaryKey)
+		    Next
+		    
+		    DB.Delete(Me.TableName).Where(pPrimaryKeys).Execute(pDatabase, pCommit)
 		    
 		    // Empty mData
 		    Call mData.Clear()
@@ -620,7 +627,13 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Loaded() As Boolean
 		  // Model must have a primary key and that primary key must not be Nil
-		  Return Initial(PrimaryKey()) <> Nil
+		  For Each pPrimaryKey As String In Me.PrimaryKeys
+		    If Me.Initial(pPrimaryKey) Is Nil Then
+		      Return False
+		    End If
+		  Next
+		  
+		  Return True
 		  
 		End Function
 	#tag EndMethod
@@ -685,13 +698,13 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Pk() As Variant
 		  // Initial primary key value
-		  Return Initial(PrimaryKey())
+		  Return Me.Initial(Me.PrimaryKey)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Pk(Assigns pValue As Variant)
-		  Data(PrimaryKey()) = pValue
+		  Me.Data(Me.PrimaryKey) = pValue
 		End Sub
 	#tag EndMethod
 
@@ -699,6 +712,12 @@ Inherits QueryBuilder
 		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function PrimaryKeys() As String()
+		  Return Array(Me.PrimaryKey)
 		End Function
 	#tag EndMethod
 
@@ -901,7 +920,13 @@ Inherits QueryBuilder
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      DB.Update(TableName).Set(pChanged).Where(PrimaryKey, "=", Pk).Execute(pDatabase, pCommit)
+		      Dim pPrimaryKeys As New Dictionary
+		      
+		      For Each pPrimaryKey As String In Me.PrimaryKeys
+		        pPrimaryKeys.Value(pPrimaryKey) = Me.Initial(pPrimaryKey)
+		      Next
+		      
+		      DB.Update(TableName).Set(pChanged).Where(pPrimaryKeys).Execute(pDatabase, pCommit)
 		    End If
 		    
 		    // Merge mData with mChanged
