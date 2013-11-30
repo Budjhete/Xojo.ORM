@@ -208,12 +208,12 @@ Inherits QueryBuilder
 		    End If
 		    
 		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me, pDatabase)
-		    Next
-		    
 		    For Each pRelation As ORMRelation In mRemoved.Values
 		      Call pRelation.Remove(Me, pDatabase)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase)
 		    Next
 		    
 		    // Clear pending relationships
@@ -938,14 +938,13 @@ Inherits QueryBuilder
 		    mChanged.Clear
 		    
 		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mAdded.Values()
-		      Call pRelation.Add(Me, pDatabase)
-		    Next
-		    
 		    For Each pRelation As ORMRelation In mRemoved.Values()
 		      Call pRelation.Remove(Me, pDatabase)
 		    Next
 		    
+		    For Each pRelation As ORMRelation In mAdded.Values()
+		      Call pRelation.Add(Me, pDatabase)
+		    Next
 		    // Clear pending relationships
 		    mAdded.Clear()
 		    mRemoved.Clear()
