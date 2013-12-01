@@ -611,6 +611,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function LeftOuterJoin(pTableName As String) As ORM
+		  Call Super.LeftOuterJoin(pTableName)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As ORM
+		  Call Super.LeftOuterJoin(pTableName, pTableAlias)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Limit(pLimit As Integer) As ORM
 		  Call Super.Limit(pLimit)
 		  
