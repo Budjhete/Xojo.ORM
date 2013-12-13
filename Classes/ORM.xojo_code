@@ -96,6 +96,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Append(pQueryExpression As QueryExpression) As ORM
+		  Call Super.Append(pQueryExpression)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Bind(pTableName As String, pForeignColumn As String) As ORM
 		  Return Me.Join(pTableName).On(pTableName + "." + pForeignColumn, "=", Me.TableName + "." + Me.PrimaryKey)
 		End Function
