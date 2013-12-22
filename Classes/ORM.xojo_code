@@ -476,6 +476,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function HasMany(pORM As ORM, pForeignColumns() As String) As ORM
+		  // pForeignColumns must be specified in the same order as PrimaryKeys
+		  
+		  For pIndex As Integer = 0 To Me.PrimaryKeys.Ubound
+		    Call pORM.Where(pForeignColumns(pIndex), "=", Me.Pks.Value(Me.PrimaryKeys(pIndex)))
+		  Next
+		  
+		  Return pORM
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
 		  Return pORM.Where(pForeignColumn, "=", Me.Pk)
 		End Function
@@ -748,6 +760,14 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function PrimaryKeys() As String()
 		  Return Array(Me.PrimaryKey)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function PrimaryKeys(pIndex As Integer) As String
+		  Dim pPrimaryKeys() As String = Me.PrimaryKeys
+		  
+		  Return pPrimaryKeys(pIndex)
 		End Function
 	#tag EndMethod
 
