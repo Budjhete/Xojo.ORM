@@ -1,6 +1,25 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
+	#tag Event
+		Sub Close()
+		  RaiseEvent Close
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub CreatePane()
+		  RaiseEvent CreatePane
+		End Sub
+	#tag EndEvent
+
+	#tag Event
+		Sub Open()
+		  RaiseEvent Open
+		End Sub
+	#tag EndEvent
+
+
 	#tag Method, Flags = &h0
 		Function Add() As Dictionary
 		  Dim pAdded As New Dictionary
@@ -1131,7 +1150,15 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event Close()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Created()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event CreatePane()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -1152,6 +1179,10 @@ Inherits QueryBuilder
 
 	#tag Hook, Flags = &h0
 		Event Found()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Open()
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -1220,6 +1251,12 @@ Inherits QueryBuilder
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="Handle"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
@@ -1234,10 +1271,28 @@ Inherits QueryBuilder
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="MouseX"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="MouseY"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="PanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -1246,11 +1301,53 @@ Inherits QueryBuilder
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="TabPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Top"
 			Visible=true
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Window"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mInitialParent"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mWindow"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
