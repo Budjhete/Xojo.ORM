@@ -34,6 +34,7 @@ Begin Window ORMTestWindow
       LockedInPosition=   False
       password        =   ""
       Scope           =   0
+      TabIndex        =   "0"
       TabPanelIndex   =   0
       Top             =   40
       username        =   ""
