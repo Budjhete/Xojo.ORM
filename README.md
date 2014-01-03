@@ -58,14 +58,14 @@ In ModelGroup.PrimaryKey
     Return "id"
 
 #### Handling multiple primary keys (or none)
-It often happens that models have multiple column as a primary key or simply does not have any. To implement those behaviours, just overload PrimaryKey and return an array of primary keys.
+It often happens that models have multiple column as a primary key or simply does not have any. To implement those behaviours, just overload PrimaryKeys and return an array of primary keys. By default, an array containing ORM.PrimaryKey is returned.
 
-In ModelUser.PrimaryKey
+In ModelUser.PrimaryKeys
     Return Array("username", "email")
 
 If your model has no primary key, just return an empty array
 
-In ModelUser.PrimaryKey
+In ModelUser.PrimaryKeys
     Return Array()
 
 All right! At this point, your models are ready-to-use! But not so fast, as we can make things better.
