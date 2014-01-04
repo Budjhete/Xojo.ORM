@@ -15,6 +15,8 @@ Inherits QueryBuilder
 
 	#tag Event
 		Sub Open()
+		  mChanged.Clear
+		  
 		  RaiseEvent Open
 		End Sub
 	#tag EndEvent
