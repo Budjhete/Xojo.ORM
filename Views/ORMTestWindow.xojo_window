@@ -27,28 +27,17 @@ Begin Window ORMTestWindow
    Visible         =   True
    Width           =   488
    Begin UserTest mUserTest
-      Handle          =   0
       Height          =   32
       Index           =   -2147483648
       InitialParent   =   ""
       Left            =   40
       LockedInPosition=   False
-      MouseX          =   0
-      MouseY          =   0
-      PanelIndex      =   0
       password        =   ""
-      Scope           =   "0"
-      TabIndex        =   "0"
+      Scope           =   0
       TabPanelIndex   =   0
       Top             =   40
       username        =   ""
       Width           =   32
-      Window          =   "0"
-      _mIndex         =   0
-      _mInitialParent =   ""
-      _mName          =   ""
-      _mPanelIndex    =   0
-      _mWindow        =   "0"
    End
    Begin PushButton bFind
       AutoDeactivate  =   True
@@ -69,7 +58,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
@@ -108,7 +97,7 @@ Begin Window ORMTestWindow
       Mask            =   ""
       Password        =   False
       ReadOnly        =   False
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   1
       TabPanelIndex   =   0
       TabStop         =   True
@@ -142,7 +131,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   2
       TabPanelIndex   =   0
       TabStop         =   True
@@ -173,7 +162,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   3
       TabPanelIndex   =   0
       TabStop         =   True
@@ -204,7 +193,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   4
       TabPanelIndex   =   0
       TabStop         =   True
@@ -243,7 +232,7 @@ Begin Window ORMTestWindow
       Mask            =   ""
       Password        =   False
       ReadOnly        =   False
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   5
       TabPanelIndex   =   0
       TabStop         =   True
@@ -276,7 +265,7 @@ Begin Window ORMTestWindow
       LockRight       =   False
       LockTop         =   True
       Multiline       =   False
-      Scope           =   "0"
+      Scope           =   0
       Selectable      =   False
       TabIndex        =   6
       TabPanelIndex   =   0
@@ -310,7 +299,7 @@ Begin Window ORMTestWindow
       LockRight       =   False
       LockTop         =   True
       Multiline       =   False
-      Scope           =   "0"
+      Scope           =   0
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
@@ -353,7 +342,7 @@ Begin Window ORMTestWindow
       Mask            =   ""
       Password        =   False
       ReadOnly        =   False
-      Scope           =   "0"
+      Scope           =   0
       TabIndex        =   8
       TabPanelIndex   =   0
       TabStop         =   True
@@ -401,11 +390,6 @@ End
 		  MsgBox "Finding"
 		  
 		End Function
-	#tag EndEvent
-	#tag Event
-		Sub Open()
-		  
-		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events bFind
