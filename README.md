@@ -2,7 +2,6 @@
 ORM is a object-relation-mapper for Xojo applications. It is fast, consise, lightweight and secure!
 
 ## What's so great about it?
-
 * It is database-independant
 You may fetch a model from a database and save it in another if that pleases you! Also, basic SQL is used, so it is compatible with pretty much any database supported by Xojo.
 
@@ -15,6 +14,11 @@ It implements closures for doing builder-like syntax, function parameters and na
 * It is fast and memory efficient
 Do not fear an overheap, ORM is nearly stateless and does not load unecessary information.
 
+* It is based on native class such as RecordSet, Database
+
+* Is is independent from the database
+Many ORM handles Database`object internally, but that's restrictive when you want to work on multiple database.
+
 * It is unit-tested
 It will not break in your hand! 
 
@@ -25,7 +29,7 @@ It can be efficiently implemented as a control.
 Yep, look below.
 
 ## Quick tour of ORM internals
-ORM is coded surprisingly simply. It has 4 internal state: mData, mChange, mAdd and mRemove.
+ORM is coded surprisingly simply. It has 4 internal state: mData, mChanged, mAdd and mRemove.
 * mData contains fetched data matching the content of the database.
 * mChanged contains the changes done by the user
 * mAdd contains the added related models
@@ -33,12 +37,57 @@ ORM is coded surprisingly simply. It has 4 internal state: mData, mChange, mAdd 
 
 All other information are deduced from these information.
 
-## Usage
-Using ORM is very simple. They are designed to make programming efficient. For the following examples, two models will be defined: ModelClient and ModelGroup, both inheriting from ORM. Reading this section in order should prepare you for creating and using your own models.
+Using ORM is very simple. They are designed to make programming efficient. For the following examples, two models will be defined: ModelUser and ModelGroup, both inheriting from ORM. Reading this section in order should prepare you for creating and using your own models.
 
 User and Group models are available in the module for testing purposes and examples.
 
-### Defining models
+More specific documentation is providen here <url>.
+
+## Defining models
+Let's say we have the following table definition
+
+Our users
+
+    CREATE TABLE `Users` (
+        `id` INTEGER PRIMARY KEY,
+        `group` INTEGER REFERENCES Groups(id),
+        `username` TEXT NOT NULL,
+        `password` TEXT,
+        UNIQUE ( `username` )
+    )
+
+Our groups of users
+
+    CREATE TABLE `Groups` (
+        `id` INTEGER PRIMARY KEY,
+        `user` INTEGER REFERENCES Users(id),
+        `name` TEXT NOT NULL,
+        UNIQUE ( `name` )
+    )
+
+Some projects for our users
+
+    CREATE TABLE `Projects` (
+        `id` INTEGER PRIMARY KEY,
+        `name` TEXT NOT NULL,
+    )
+
+And project memberships
+
+    CREATE TABLE `UsersProjects` (
+        `project` INTEGER REFERENCES Projects(id)
+        `user` INTEGER REFERENCES Users(id)
+        PRIMARY KEY ( `project`, `user` )
+    )
+
+We need models to map those data conveniently. Let's create two new class that subclass ORM.
+
+    ModelClient As ORM
+
+    ModelGroup As ORM
+
+Prepending "Model" is a recommended convention, but you can call the models the way you wishes.
+
 The basic definition of a model implies the definition of ORM.TableName and ORM.PrimaryKey functions in your model. ORM.TableName will tell the ORM where your model is stored in the database and ORM.PrimaryKey will indicate which row it is related to.
 
 By default, the ORM pluralizes the class name without the "Model" prefix, but if you need a custom table name, you must override ORM.TableName
@@ -57,20 +106,28 @@ In ModelUser.PrimaryKey
 In ModelGroup.PrimaryKey
     Return "id"
 
-#### Handling multiple primary keys (or none)
-It often happens that models have multiple column as a primary key or simply does not have any. To implement those behaviours, just overload PrimaryKey and return an array of primary keys.
+Also, for convenience, you can define computed properties for your table columns like so
 
-In ModelUser.PrimaryKey
+In ModelUser.user
+    Get As String
+        Return Me.Data("user")
+    Set
+        Me.Data("user") = value
+
+It is very useful to define computed properties with built-in types like String, Date or Integer. Be cautious with NULL values, as native types cannot take that value nor return it.
+
+### Handling multiple primary keys
+It often happens that models have multiple column as a primary key or simply does not have any. To implement those behaviours, just overload PrimaryKeys and return an array of primary keys.
+
+In ModelUser.PrimaryKeys As String()
     Return Array("username", "email")
 
-If your model has no primary key, just return an empty array
-
-In ModelUser.PrimaryKey
-    Return Array()
+At any moment, you can fetch your primary key values with ORM.Pks, which returns a dictionary of column to value.
+    Dim pPks As Dictionary = pUser.Pks
 
 All right! At this point, your models are ready-to-use! But not so fast, as we can make things better.
 
-#### Defining relationships
+### Defining relationships
 Relationships are very important for models, otherwise they will feel lonely. This ORM supports 3 kind of relationships:
 * BelongsTo
 * HasMany and HasOne
@@ -78,7 +135,7 @@ Relationships are very important for models, otherwise they will feel lonely. Th
 
 HasOne is only a special case of HasMany where you call Find instead of FindAll.
 
-##### BelongsTo
+#### BelongsTo
 BelongsTo are implemented through computed property like the following:
 
 In ModelUser.group
@@ -87,7 +144,7 @@ Get
 Set
     Me.Data("group") = value.Pk
 
-##### HasMany And HasOne
+#### HasMany And HasOne
 HasMany are implemented in a method using the HasMany helper.
 
 In ModelGroup.users
@@ -95,7 +152,7 @@ In ModelGroup.users
 
 HasOne is implemented using the ORM.HasOne helper instead, but it is only an alias for HasMany. Just make sure you call ORM.Find instead of ORM.FindAll.
 
-##### HasManyThrough
+#### HasManyThrough
 HasManyThrough are a little more complex as you have to specify the pivot table
 
 In ModelUser.projects
@@ -116,65 +173,129 @@ In ModelGroup.Has(ParamArray pUsers As ModelUser)
 
 Now, you have friendly methods to deal with relationships :)
 
-### Basic model utilization
+## Basic model utilization
 This section convers basic model utilization. 
 
-#### Creating new entries
+### Creating new entries
 To create a new entry in your database for a given model, the ORM.Create function is given.
 
-    pClient = New ModelClient()
+    pUser = New ModelUser()
 
-    pClient.name = "John" // Through a computed property
-    pClient.Data("name") = "John" // Directly using Data
+    pUser.name = "John" // Through a computed property
+    pUser.Data("name") = "John" // Directly using Data
 
-    pClient.Create(pDatabase)
+    pUser.Create(pDatabase)
 
-#### Fetching models
+### Fetching a single model
+    pUser = New ModelUser(pPk) // Given its primary key (which applies a WHERE PrimaryKey = pPk)
+    pUser.Find(pDatabase)
 
-##### Fetching a single model
-    pClient = New ModelClient(pPk) // Given its primary key (which applies a WHERE PrimaryKey = pPk)
-    pClient.Find(pDatabase)
-
-    pClient = New ModelClient
-    pClient.Where("name", "=", "John") // Using conditional expression
-    pClient.Find(pDatabase)
+    pUser = New ModelUser
+    pUser.Where("name", "=", "John") // Using conditional expression
+    pUser.Find(pDatabase)
 
 Whenever you want to know if what you have fetched exists, just call ORM.Loaded
 
-    If pClient.Loaded Then
+    If pUser.Loaded Then
         // Do some work
     Else
         // Do other work (like creating a new model!)
 
-This method will check if the defined primary key (ORM.PrimaryKey) is not Nil. Explicitly setting the parimary key value to Nil will not unload the model, as it check the initial value.
+This method will check if any defined primary key (ORM.PrimaryKeys) has a Nil value and otherwise returns True.
 
-If your model may not exist, but should be updated if it does and created otherwise, it is strongly suggested to use the ORM.Save method which can avoid writing too much code. This method will be covered below.
+### Fetching multiple models
 
-##### Fetching multiple models
-    pClient = New ModelClient
-    pClient.
-    pRecordSet = pClient.FindAll(pDatabase)
+    pUser = New ModelUser
+    pUser.Where("group", "=", 1)
+    pRecordSet = pUser.FindAll(pDatabase) // returns all users from group 1
 
-#### Changing your models
+Then you can fetch the data by looping through the RecordSet
 
-#### Updating your changes
+    While Not pRecordSet.EOF
+        Dim pUser As New ModelUser(pRecordSet)
+        // Do stuff with your user...
+    WEnd
 
-#### Deleting existing entries
+## Changing your models
+Changing models is done through ORM.Data
+
+    pUser.Data("name") = "John"
+
+Using a dictionary of values
+
+    pDictionary As New Dictionary("name": "John")
+    pUser.Data(pDictionary) // Using any dictionary
+
+Using a ParamArray of Pair
+
+    pUser.Data("name" : "John") // Using a ParamArray of Pair
+
+Or using predefined computed property
+
+    pUser.name = "John" // Using a precomputed property
+
+### Adding and removing relationship
+With HasMany and HasOne
+
+    pUser.Add("group", pGroup)
+
+    pUser.Remove("group", pGroup)
+
+With HasManyThrough
+
+    pUser.Add("UsersGroups", "user", "group", pGroup)
+
+    pUser.Remove("UsersGroups", "user", "group", pGroup)
+
+It is explicit, but you can avoid specifying all these parameters by writing a signature for Add and Remove specifically for the ModelGroup.
+
+In ModelUser.Add(ParamArray pGroups As ModelGroup)
+    Return Add("UsersGroups", "user", "group", pGroups)
+
+Now you may write
+
+    pUser.Add(pGroup)
+
+Which is cleaner, undoubtly.
+
+## Updating your changes
+Sending your changes back in the database is done through ORM.Update.
+
+    pUser.Update(pDatabase)
+
+ORM.Update throws an ORMException if it happens not to be loaded.
+
+If your model might be unloaded, you will prefer the ORM.Save method which call ORM.Create if ORM.Loaded is False
+    pUser.Save(pDatabase)
+
+## Deleting existing entries
+Removing an entry from the database is straight forward!
+
+    pUser.Delete(pDatabase)
+
+ORM.Delete throws an ORMException if it happens not to be loaded.
 
 ## Advanced usages
 This section convers most of advanced usages you can do with the ORM.
 
 ### Properly clearing data
 ORM offers 3 way to clear internal data and one to reset them:
-* Clear clear changes, not data
-* Unload clear data, not changes
-* Reset clear the QueryBuilder (inherited)
-* Reload which call Unload the call Find
+* ORM.Clear clears changes, not data
+* ORM.Unload clears the primary keys
+* ORM.UnloadAll clears data, not changes
+* ORM.Reset clears the QueryBuilder (inherited)
+* ORM.Reload which call Unload then call Find
+
+ORM.Clear is used mainly for clearing
+
+ORM.Unload is useful for making in-place copies of your models.
 
 Use these methods with caution. Events will be thrown to give you scopes to cancel these operations. Event-driven model is covered below.
 
 ### Event-driven programming
-ORM is completely event-driven in the sense that it provides events definition to do and not do pretty much all actions possible. This is extremely useful for calcelling Delete for instance. It raises events before the action and after.
+ORM is completely event-driven in the sense that it provides events definition to do and not do pretty much all actions possible. This is extremely useful for user confirmations.
+
+Events are raised before (ex. Saving) and after (ex. Saved). Returning True in the first event will not trigger the action. Once the action is triggered, you get the second event called.
 
 A complete example of event-drived interface with ORM is shown in the Views folder.
 
@@ -185,14 +306,80 @@ bFind.Action
     mUser.Where("id", "=", 1).Find(pDatabase)
 
 Calling Find on the model will trigger Finding, you may check if the user will not wipe the model if its changed
-User.Finding
+User.Finding As Boolean
     If mUser.Changed Then
-         // Confirm with the user and return True to cancel the find
+         Dim pMessageDialog As New MessageDialog
+         pMessageDialog.Title = "Clear your changes?"
+         pMessageDialog.Description = "Do you want to clear your changes?"
+         pMessageDialog.ActionButton.Caption = "Clear"
+         pMessageDialog.AlternateAction.Caption = "Don't clear"
+         pMessageDialog.AlternateAction.Visible = True
+         // Logic is negative for events: return True not to trigger the action.
+         Return pMessageDialog.ShowModal = pMessageDialog.AlternateAction
     End If
 
 Found is called, it's time to present the model
 User.Found
     tName.Text = Me.name
 
-### Make complex request with the QueryBuilder
+## Make complex request with the QueryBuilder
+This section describes some advanced usage with the QueryBuilder. As you have probably already noticed, the ORM inherit from the QueryBuilder, so all that will be explained here is reusable in the fetching process.
 
+The main advantages of using a QueryBuilder for any requests are
+* Safety against SQL injections
+* Proper quoting for columns and values
+* SQL is validated at compile-time (if you do not abuse of QueryExpression)
+* Resuable and extendable queries
+
+Find, Create, Update and Delete all have an equivalent in SQL: SELECT, INSERT, UPDATE, DELETE. You never have to specify any of these when you are using the ORM. But if you are using the QueryBuilder directly, there are helpers for that!
+
+    DB.Find.From("Users") // SELECT * FROM `Users`
+    DB.Insert("Users") // INSERT INTO `Users`
+    DB.Update("Users") // UPDATE `Users`
+    DB.Delete("Users") // DELETE `Users`
+
+There are also other useful helpers in DB
+
+    DB.Count() // To count a specified column like COUNT ( `id` )
+    DB.Set() // To define a set of values like ( 'a', 'b', 'c' )
+
+Then, you start building pretty much what is required
+
+    DB.Find.From("Users").Where("name", "LIKE", "John")
+
+An interesting feature is that most duplicate expressions will compile into a single one
+
+    DB.Find.From("Users").OrderBy("name").OrderBy("id") 
+
+This will simply make a sort by name and id columns.
+
+If you need any complex custom expression, use DB.Expression. This piece of request will appear raw in the SQL result.
+
+    DB.Expression("TOTAL ( `Users`.`id` )")
+
+### Executing your request
+Once you're done, call QueryBuilder.Execute on a database.
+
+    Dim pRecordSet As RecordSet = DB.Find.From("Users").Where("name", "LIKE", "John").Execute(pDatabase)
+
+If no result is found, Nil will be returned instead of an empty RecordSet. If it might be Nil, you must check it.
+
+    If pRecordSet <> Nil Then
+        // Process data
+    Else
+        // No record founds :(
+    End If
+
+If you do not capture the RecordSet, it won't be generated.
+
+    DB.Create("Users").Values("name": "John").Execute(pDatabase)
+
+### Debugging your request
+To debug your request, you can log the compiled value instead of executing it.
+
+    System.DebugLog DB.Find.From("Users").Compile
+
+This is useful to identify your mistakes, or a bug in ORM.
+
+## Contributing
+If you have ideas or patches to improve the ORM, please don't hesitate to get in touch with us. Send us a pull request or create a new issue right here on GitHub.
