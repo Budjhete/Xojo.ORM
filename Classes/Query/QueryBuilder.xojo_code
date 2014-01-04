@@ -1,6 +1,5 @@
 #tag Class
 Protected Class QueryBuilder
-Inherits Control
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
