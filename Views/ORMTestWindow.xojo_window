@@ -37,7 +37,8 @@ Begin Window ORMTestWindow
       MouseY          =   0
       PanelIndex      =   0
       password        =   ""
-      Scope           =   0
+      Scope           =   "0"
+      TabIndex        =   "0"
       TabPanelIndex   =   0
       Top             =   40
       username        =   ""
@@ -68,7 +69,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
@@ -107,7 +108,7 @@ Begin Window ORMTestWindow
       Mask            =   ""
       Password        =   False
       ReadOnly        =   False
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   1
       TabPanelIndex   =   0
       TabStop         =   True
@@ -141,7 +142,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   2
       TabPanelIndex   =   0
       TabStop         =   True
@@ -172,7 +173,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   3
       TabPanelIndex   =   0
       TabStop         =   True
@@ -203,7 +204,7 @@ Begin Window ORMTestWindow
       LockLeft        =   True
       LockRight       =   False
       LockTop         =   True
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   4
       TabPanelIndex   =   0
       TabStop         =   True
@@ -242,7 +243,7 @@ Begin Window ORMTestWindow
       Mask            =   ""
       Password        =   False
       ReadOnly        =   False
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   5
       TabPanelIndex   =   0
       TabStop         =   True
@@ -275,7 +276,7 @@ Begin Window ORMTestWindow
       LockRight       =   False
       LockTop         =   True
       Multiline       =   False
-      Scope           =   0
+      Scope           =   "0"
       Selectable      =   False
       TabIndex        =   6
       TabPanelIndex   =   0
@@ -309,7 +310,7 @@ Begin Window ORMTestWindow
       LockRight       =   False
       LockTop         =   True
       Multiline       =   False
-      Scope           =   0
+      Scope           =   "0"
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
@@ -352,7 +353,7 @@ Begin Window ORMTestWindow
       Mask            =   ""
       Password        =   False
       ReadOnly        =   False
-      Scope           =   0
+      Scope           =   "0"
       TabIndex        =   8
       TabPanelIndex   =   0
       TabStop         =   True
