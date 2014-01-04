@@ -55,7 +55,7 @@ Inherits TestGroup
 		  Dim pRecords As RecordSet = pUsers.FindAll(ORMTestDatabase)
 		  
 		  While Not pRecords.EOF
-		    Dim pUser As UserTest = pRecords
+		    Dim pUser As New UserTest(pRecords)
 		    Assert.AreEqual(pRecords.Field("username").StringValue, pUser.Data("username").StringValue)
 		    pRecords.MoveNext
 		  Wend

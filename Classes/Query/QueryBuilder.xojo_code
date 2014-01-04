@@ -1,5 +1,6 @@
 #tag Class
 Protected Class QueryBuilder
+Inherits Control
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
@@ -56,6 +57,24 @@ Implements QueryExpression
 		  
 		  Return Join(pStatements, " ")
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pQuery() As QueryExpression)
+		  Me.mQuery = pQuery
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(ParamArray pQuery As QueryExpression)
+		  Me.Constructor(pQuery)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Copy() As QueryBuilder
+		  Return New QueryBuilder(Me.Query)
 		End Function
 	#tag EndMethod
 
@@ -275,6 +294,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Query() As QueryExpression()
+		  Return Me.mQuery
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset() As QueryBuilder
 		  // Réinitalise le Query Builder
 		  Redim mQuery(-1)
@@ -405,6 +430,12 @@ Implements QueryExpression
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="Handle"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
@@ -419,10 +450,28 @@ Implements QueryExpression
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="MouseX"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="MouseY"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="PanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
@@ -431,11 +480,53 @@ Implements QueryExpression
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="TabPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Top"
 			Visible=true
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Window"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mInitialParent"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mWindow"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
