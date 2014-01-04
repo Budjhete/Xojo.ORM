@@ -17,13 +17,16 @@ Do not fear an overheap, ORM is nearly stateless and does not load unecessary in
 * It is based on native class such as RecordSet, Database
 
 * Is is independent from the database
-Many ORM handles Database`object internally, but that's restrictive when you want to work on multiple database.
+Many ORM handles Database object internally, but that's restrictive when you want to work on multiple database.
 
 * It is unit-tested
 It will not break in your hand! 
 
 * It is event-driven
 It can be efficiently implemented as a control.
+
+* ORM and QueryBuilder inherit from Control
+There are fully qualified to be used as such.
 
 * It has a documentation
 Yep, look below.
@@ -52,7 +55,7 @@ Our users
         `id` INTEGER PRIMARY KEY,
         `group` INTEGER REFERENCES Groups(id),
         `username` TEXT NOT NULL,
-        `password` TEXT,
+        `password` TEXT, --- unset password is NULL
         UNIQUE ( `username` )
     )
 
@@ -60,7 +63,7 @@ Our groups of users
 
     CREATE TABLE `Groups` (
         `id` INTEGER PRIMARY KEY,
-        `user` INTEGER REFERENCES Users(id),
+        `user` INTEGER REFERENCES Users(id), --- an administrator
         `name` TEXT NOT NULL,
         UNIQUE ( `name` )
     )
@@ -75,35 +78,34 @@ Some projects for our users
 And project memberships
 
     CREATE TABLE `UsersProjects` (
-        `project` INTEGER REFERENCES Projects(id)
-        `user` INTEGER REFERENCES Users(id)
+        `project` INTEGER REFERENCES Projects(id),
+        `user` INTEGER REFERENCES Users(id),
+        `role` TEXT, -- role occupied by the member
         PRIMARY KEY ( `project`, `user` )
     )
 
 We need models to map those data conveniently. Let's create two new class that subclass ORM.
 
-    ModelClient As ORM
+    ModelUser As ORM
 
     ModelGroup As ORM
 
-Prepending "Model" is a recommended convention, but you can call the models the way you wishes.
+    ModelProject As ORM
+
+    ModelUserProject As ORM
+
+Prepending "Model" is a recommended convention, but you can call the models the way you wish.
 
 The basic definition of a model implies the definition of ORM.TableName and ORM.PrimaryKey functions in your model. ORM.TableName will tell the ORM where your model is stored in the database and ORM.PrimaryKey will indicate which row it is related to.
 
 By default, the ORM pluralizes the class name without the "Model" prefix, but if you need a custom table name, you must override ORM.TableName
 
-In ModelUser.TableName
-    Return "Users"
-
-In ModelGroup.TableName
-    Return "Groups"
+    ModelUser.TableName As String
+        Return "Users"
 
 By default, the ORM defines PrimaryKey as "id", but if your model has a custom primary key name, you must override ORM.PrimaryKey
 
 In ModelUser.PrimaryKey
-    Return "id"
-
-In ModelGroup.PrimaryKey
     Return "id"
 
 Also, for convenience, you can define computed properties for your table columns like so
@@ -111,18 +113,21 @@ Also, for convenience, you can define computed properties for your table columns
 In ModelUser.user
     Get As String
         Return Me.Data("user")
-    Set
+    Set(value As String)
         Me.Data("user") = value
 
 It is very useful to define computed properties with built-in types like String, Date or Integer. Be cautious with NULL values, as native types cannot take that value nor return it.
 
+When using ORM as a Control, computed properties might are set without any consent. Yet, we are looking forward solution to this problem.
+
 ### Handling multiple primary keys
 It often happens that models have multiple column as a primary key or simply does not have any. To implement those behaviours, just overload PrimaryKeys and return an array of primary keys.
 
-In ModelUser.PrimaryKeys As String()
-    Return Array("username", "email")
+    In ModelUser.PrimaryKeys As String()
+        Return Array("username", "email")
 
 At any moment, you can fetch your primary key values with ORM.Pks, which returns a dictionary of column to value.
+
     Dim pPks As Dictionary = pUser.Pks
 
 All right! At this point, your models are ready-to-use! But not so fast, as we can make things better.
@@ -138,43 +143,43 @@ HasOne is only a special case of HasMany where you call Find instead of FindAll.
 #### BelongsTo
 BelongsTo are implemented through computed property like the following:
 
-In ModelUser.group
-Get
-    Return New ModelGroup(Me.Data("group"))
-Set
-    Me.Data("group") = value.Pk
+ModelUser.group
+    Get As ORM
+        Return Me.BelongsTo("group", New ModelGroupe)
+    Set(value As ORM)
+        Me.BelongsTo("group", value)
 
 #### HasMany And HasOne
 HasMany are implemented in a method using the HasMany helper.
 
-In ModelGroup.users
-    Return ModelUser(Me.HasMany(New ModelUser, "group")) // The second parameter is the column in Users that relates to the group it belongs
+    ModelGroup.users As ModelUser
+        Return ModelUser(Me.HasMany(New ModelUser, "group")) // The second parameter is the column in Users that relates to the group it belongs
 
 HasOne is implemented using the ORM.HasOne helper instead, but it is only an alias for HasMany. Just make sure you call ORM.Find instead of ORM.FindAll.
 
 #### HasManyThrough
 HasManyThrough are a little more complex as you have to specify the pivot table
 
-In ModelUser.projects
-    Return ModelProject("UsersProjects", "user", "project", New ModelProject)
+    ModelUser.projects As ModelProject
+        Return ModelProject("UsersProjects", "user", "project", New ModelProject)
 
 You have now defined all the relationships you need to avoid complicated joins!
 
 To deal with relationships, you can use ORM.Add, ORM.Remove and ORM.Has. These three methods are not very practical as you have to specify everything every time, but you can make it much simpler by overriding it with a custom signature like:
 
-In ModelGroup.Add(ParamArray pUsers As ModelUser)
-    Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
+    ModelGroup.Add(ParamArray pUsers As ModelUser)
+        Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 
-In ModelGroup.Remove(ParamArray pUsers As ModelUser)
-    Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
+    ModelGroup.Remove(ParamArray pUsers As ModelUser)
+        Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 
-In ModelGroup.Has(ParamArray pUsers As ModelUser)
-    Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
+    ModelGroup.Has(ParamArray pUsers As ModelUser)
+        Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 
 Now, you have friendly methods to deal with relationships :)
 
 ## Basic model utilization
-This section convers basic model utilization. 
+This section convers basic model utilization.
 
 ### Creating new entries
 To create a new entry in your database for a given model, the ORM.Create function is given.
@@ -184,15 +189,18 @@ To create a new entry in your database for a given model, the ORM.Create functio
     pUser.name = "John" // Through a computed property
     pUser.Data("name") = "John" // Directly using Data
 
-    pUser.Create(pDatabase)
+    Call pUser.Create(pDatabase)
 
 ### Fetching a single model
-    pUser = New ModelUser(pPk) // Given its primary key (which applies a WHERE PrimaryKey = pPk)
-    pUser.Find(pDatabase)
-
     pUser = New ModelUser
     pUser.Where("name", "=", "John") // Using conditional expression
-    pUser.Find(pDatabase)
+    Call pUser.Find(pDatabase)
+
+    pUser = New ModelUser(New Dictionary("id": 5)) // from a dictionary of criterias
+
+    Dim pAdministrator As ModelUser = New ModelUser(pUser) // New ModelUser(pUser.Pks)
+
+    pUser = New ModelUser(pRecordSet) // from a RecordSet
 
 Whenever you want to know if what you have fetched exists, just call ORM.Loaded
 
@@ -220,6 +228,8 @@ Then you can fetch the data by looping through the RecordSet
 Changing models is done through ORM.Data
 
     pUser.Data("name") = "John"
+
+    Call pUser.Data("name", "John") // can be used like a closure
 
 Using a dictionary of values
 
@@ -256,22 +266,20 @@ Now you may write
 
     pUser.Add(pGroup)
 
-Which is cleaner, undoubtly.
-
 ## Updating your changes
 Sending your changes back in the database is done through ORM.Update.
 
-    pUser.Update(pDatabase)
+    Call pUser.Update(pDatabase)
 
 ORM.Update throws an ORMException if it happens not to be loaded.
 
 If your model might be unloaded, you will prefer the ORM.Save method which call ORM.Create if ORM.Loaded is False
-    pUser.Save(pDatabase)
+    Call pUser.Save(pDatabase)
 
 ## Deleting existing entries
 Removing an entry from the database is straight forward!
 
-    pUser.Delete(pDatabase)
+    Call pUser.Delete(pDatabase)
 
 ORM.Delete throws an ORMException if it happens not to be loaded.
 
