@@ -15,6 +15,8 @@ Inherits QueryBuilder
 
 	#tag Event
 		Sub Open()
+		  mChanged.Clear
+		  
 		  RaiseEvent Open
 		End Sub
 	#tag EndEvent
@@ -934,7 +936,11 @@ Inherits QueryBuilder
 		Function TableColumns(pDatabase As Database) As String()
 		  Dim pColumns() As String
 		  
-		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
+		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(Me.TableName)
+		  
+		  If pRecordSet Is Nil Then
+		    Raise New ORMException(Me.TableName + " is not an existing table.")
+		  End If
 		  
 		  While Not pRecordSet.EOF
 		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
