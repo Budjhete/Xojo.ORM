@@ -206,20 +206,21 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    Dim pChanged As New Dictionary
+		    Dim pRaw As Dictionary = Me.Data
+		    Dim pData As New Dictionary
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      If mChanged.HasKey(pColumn) Then
-		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
 		    
-		    If pChanged.Count = 0 Then
+		    If pData.Count = 0 Then
 		      // Insert NULL as primary key will increment it
 		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
 		    Else
-		      DB.Insert(Me.TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
+		      DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, pCommit)
 		    End If
 		    
 		    // Update mData from mChanged
@@ -961,7 +962,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Unload() As ORM
-		  // Empties data, not changes
+		  // Empties only the primary keys
 		  
 		  If Not RaiseEvent Unloading Then
 		    
@@ -981,7 +982,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function UnloadAll() As ORM
-		  // Empties data, not changes
+		  // Empties all data, but not changes
 		  
 		  If Not RaiseEvent UnloadingAll Then
 		    
