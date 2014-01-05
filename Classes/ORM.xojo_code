@@ -123,6 +123,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function BelongsTo(pPks As Dictionary, pORM As ORM) As ORM
+		  Return pORM.Where(pPks)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function BelongsTo(pForeignKey As String, pORM As ORM) As ORM
+		  Return pORM.Where(pORM.PrimaryKey, "=", Me.Data(pForeignKey))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Bind(pTableName As String, pForeignColumn As String) As ORM
 		  Return Me.Join(pTableName).On(pTableName + "." + pForeignColumn, "=", Me.TableName + "." + Me.PrimaryKey)
 		End Function
@@ -160,6 +172,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor()
+		  Super.Constructor
+		  
 		  mData = New Dictionary
 		  mChanged = New Dictionary
 		  mAdded = New Dictionary
@@ -168,19 +182,55 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pPrimaryKey As Variant)
-		  Constructor()
+		Sub Constructor(pCriterias As Dictionary)
+		  Me.Constructor
 		  
-		  Call Where(PrimaryKey(), "=", pPrimaryKey)
+		  Call Me.Where(pCriterias)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pORM As ORM)
+		  Me.Constructor(pORM.Pks)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pRecordSet As RecordSet)
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.FieldCount
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value
+		  Next
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Copy() As ORM
-		  Dim ORMConstructors() As Introspection.ConstructorInfo = Introspection.GetType(Me).GetConstructors
-		  Dim CopyORM As ORM = ORMConstructors(0).Invoke()
+		  Dim pConstructors() As Introspection.ConstructorInfo = Introspection.GetType(Me).GetConstructors
 		  
-		  Return CopyORM.Deflate(Me)
+		  Dim pParameters() As Variant
+		  pParameters.Append(Me.Query)
+		  
+		  Dim pCopy As ORM = pConstructors(0).Invoke(pParameters)
+		  
+		  For Each pColumn As String In mData.Keys
+		    pCopy.mData.Value(pColumn) = Me.mData.Value(pColumn)
+		  Next
+		  
+		  For Each pColumn As String In mChanged.Keys
+		    pCopy.mChanged.Value(pColumn) = Me.mChanged.Value(pColumn)
+		  Next
+		  
+		  For Each pKey As Variant In mAdded.Keys
+		    pCopy.mAdded.Value(pKey) = Me.mAdded.Value(pKey)
+		  Next
+		  
+		  For Each pKey As Variant In mRemoved.Keys
+		    pCopy.mRemoved.Value(pKey) = Me.mRemoved.Value(pKey)
+		  Next
+		  
+		  Return pCopy
 		End Function
 	#tag EndMethod
 
@@ -222,17 +272,31 @@ Inherits QueryBuilder
 		    End If
 		    
 		    // Update mData from mChanged
-		    For Each pKey As Variant In mChanged.Keys()
-		      mData.Value(pKey) = mChanged.Value(pKey)
+		    For Each pKey As Variant In mChanged.Keys
+		      Me.mData.Value(pKey) = Me.mChanged.Value(pKey)
 		    Next
 		    
 		    // Clear changes, they are saved in mData
-		    Call mChanged.Clear
+		    Call Me.mChanged.Clear
 		    
 		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
-		      Dim pRecordSet As RecordSet = DB.Find(Me.PrimaryKey).From(Me.TableName).OrderBy(Me.PrimaryKey, "DESC").Execute(pDatabase)
-		      // Update primary key from the last row inserted in this table
-		      mData.Value(PrimaryKey) = pRecordSet.Field(PrimaryKey).Value
+		      
+		      // Biggest primary key
+		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		      From(Me.TableName). _
+		      OrderBy(Me.PrimaryKey, "DESC"). _
+		      Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      
+		      // Best guess for SQLite
+		      If pDatabase IsA SQLiteDatabase Then
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		      End If
+		      
+		      // Best guess for MySQL
+		      If pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      End If
+		      
 		    End If
 		    
 		    // Execute pendings relationships
@@ -317,6 +381,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Deflate(pORM As ORM) As ORM
+		  // @deprecated
+		  
 		  Call pORM.Inflate(Me)
 		  Return Me
 		End Function
@@ -412,15 +478,19 @@ Inherits QueryBuilder
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Limit(1).Execute(pDatabase)
+		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)). _
+		    From(Me.TableName). _
+		    Limit(1). _
+		    Execute(pDatabase)
 		    
 		    If pRecordSet <> Nil Then
 		      
 		      // Fetch record set
-		      For i As Integer = 1 To pRecordSet.FieldCount
-		        Dim pColumn As String = pRecordSet.IdxField(i).Name
-		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		      For pIndex As Integer = 1 To pRecordSet.FieldCount
+		        mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value
 		      Next
+		      
+		      pRecordSet.Close
 		      
 		    End If
 		    
@@ -560,6 +630,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Inflate(pORM As ORM) As ORM
+		  // @deprecated
+		  
 		  // Inflate this ORM on another ORM
 		  
 		  // Call QueryBuilder Inflate
@@ -705,12 +777,11 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Operator_Convert(pRecord As RecordSet)
-		  Constructor
-		  For i As Integer = 1 To pRecord.FieldCount
-		    mData.Value(pRecord.IdxField(i).Name) = pRecord.IdxField(i).Value
-		  Next
-		End Sub
+		Function Operator_Convert(pRecordSet As RecordSet) As ORM
+		  Me.Constructor(pRecordSet)
+		  
+		  Return Me
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
