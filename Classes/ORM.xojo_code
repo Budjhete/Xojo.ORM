@@ -416,15 +416,11 @@ Inherits QueryBuilder
 		    // Add SELECT and LIMIT 1 to the query
 		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Limit(1).Execute(pDatabase)
 		    
-		    If pRecordSet <> Nil Then
-		      
-		      // Fetch record set
-		      For i As Integer = 1 To pRecordSet.FieldCount
-		        Dim pColumn As String = pRecordSet.IdxField(i).Name
-		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		      Next
-		      
-		    End If
+		    // Fetch record set
+		    For i As Integer = 1 To pRecordSet.FieldCount
+		      Dim pColumn As String = pRecordSet.IdxField(i).Name
+		      mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		    Next
 		    
 		    RaiseEvent Found()
 		    
