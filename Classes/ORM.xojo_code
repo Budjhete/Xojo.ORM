@@ -197,7 +197,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Create(pDatabase As Database, pCommit As Boolean = True) As ORM
+		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  If Loaded Then
@@ -215,11 +215,11 @@ Inherits QueryBuilder
 		      End If
 		    Next
 		    
-		    If pChanged.Count = 0 Then
+		    If pChanged.Count > 0 Then
+		      DB.Insert(Me.TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase)
+		    ElseIf Me.PrimaryKeys.Ubound = 0 Then
 		      // Insert NULL as primary key will increment it
-		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
-		    Else
-		      DB.Insert(Me.TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
+		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase)
 		    End If
 		    
 		    // Update mData from mChanged
@@ -233,7 +233,7 @@ Inherits QueryBuilder
 		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
 		      Dim pRecordSet As RecordSet = DB.Find(Me.PrimaryKey).From(Me.TableName).OrderBy(Me.PrimaryKey, "DESC").Execute(pDatabase)
 		      // Update primary key from the last row inserted in this table
-		      mData.Value(PrimaryKey) = pRecordSet.Field(PrimaryKey).Value
+		      mData.Value(PrimaryKey) = pRecordSet.Field(Me.PrimaryKey).Value
 		    End If
 		    
 		    // Execute pendings relationships
@@ -324,26 +324,26 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Delete(pDatabase As Database, pCommit As Boolean = True) As ORM
-		  if Not Loaded() then
+		Function Delete(pDatabase As Database) As ORM
+		  if Not Me.Loaded then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
 		  
-		  If Not RaiseEvent Deleting() Then
+		  If Not RaiseEvent Deleting Then
 		    
-		    DB.Delete(Me.TableName).Where(Me.Pks).Execute(pDatabase, pCommit)
+		    DB.Delete(Me.TableName).Where(Me.Pks).Execute(pDatabase)
 		    
 		    // Empty mData
-		    Call mData.Clear()
+		    Call mData.Clear
 		    
 		    // Empty mChanges
-		    Call mChanged.Clear()
+		    Call mChanged.Clear
 		    
 		    // Empty pending relationships
-		    Call mAdded.Clear()
-		    Call mRemoved.Clear()
+		    Call mAdded.Clear
+		    Call mRemoved.Clear
 		    
-		    RaiseEvent Deleted()
+		    RaiseEvent Deleted
 		    
 		  End If
 		  
@@ -957,7 +957,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Unload() As ORM
-		  // Empties data, not changes
+		  // Empties primary keys
 		  
 		  If Not RaiseEvent Unloading Then
 		    
@@ -966,15 +966,6 @@ Inherits QueryBuilder
 		        mData.Remove(pPrimaryKey)
 		      End If
 		    Next
-		    
-		    // Merge data from mData to mChanged
-		    For Each pKey As String  In mData.Keys
-		      If Not mChanged.HasKey(pKey) Then
-		        mChanged.Value(pKey) = mData.Value(pKey)
-		      End If
-		    Next
-		    
-		    mData.Clear
 		    
 		    RaiseEvent Unloaded
 		    
