@@ -967,6 +967,15 @@ Inherits QueryBuilder
 		      End If
 		    Next
 		    
+		    // Merge data from mData to mChanged
+		    For Each pKey As String  In mData.Keys
+		      If Not mChanged.HasKey(pKey) Then
+		        mChanged.Value(pKey) = mData.Value(pKey)
+		      End If
+		    Next
+		    
+		    mData.Clear
+		    
 		    RaiseEvent Unloaded
 		    
 		  End If
