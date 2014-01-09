@@ -15,6 +15,8 @@ Inherits QueryBuilder
 
 	#tag Event
 		Sub Open()
+		  mChanged.Clear
+		  
 		  RaiseEvent Open
 		End Sub
 	#tag EndEvent
@@ -257,6 +259,11 @@ Inherits QueryBuilder
 		    Dim pRaw As Dictionary = Me.Data
 		    Dim pData As New Dictionary
 		    
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If pRaw.HasKey(pColumn) Then
@@ -264,16 +271,11 @@ Inherits QueryBuilder
 		      End If
 		    Next
 		    
-		    If pData.Count = 0 Then
-		      // Insert NULL as primary key will increment it
-		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
-		    Else
-		      DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, pCommit)
-		    End If
+		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, pCommit)
 		    
-		    // Update mData from mChanged
-		    For Each pKey As Variant In mChanged.Keys
-		      Me.mData.Value(pKey) = Me.mChanged.Value(pKey)
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
 		    // Clear changes, they are saved in mData
@@ -483,11 +485,11 @@ Inherits QueryBuilder
 		    Limit(1). _
 		    Execute(pDatabase)
 		    
-		    If pRecordSet <> Nil Then
-		      
-		      // Fetch record set
-		      For pIndex As Integer = 1 To pRecordSet.FieldCount
-		        mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value
+		    // Fetch record set
+		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
+		      For i As Integer = 1 To pRecordSet.FieldCount
+		        Dim pColumn As String = pRecordSet.IdxField(i).Name
+		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		      Next
 		      
 		      pRecordSet.Close
@@ -1006,7 +1008,11 @@ Inherits QueryBuilder
 		Function TableColumns(pDatabase As Database) As String()
 		  Dim pColumns() As String
 		  
-		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
+		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(Me.TableName)
+		  
+		  If pRecordSet Is Nil Then
+		    Raise New ORMException(Me.TableName + " is not an existing table.")
+		  End If
 		  
 		  While Not pRecordSet.EOF
 		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
@@ -1065,8 +1071,8 @@ Inherits QueryBuilder
 		Function Update(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
-		  If Not Loaded() then
-		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
+		  If Not Me.Loaded then
+		    Raise new ORMException("Cannot update " + Me.TableName + " model because it is not loaded.")
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
@@ -1074,14 +1080,14 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn) Then
 		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
 		      End If
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      DB.Update(TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, pCommit)
+		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase)
 		    End If
 		    
 		    // Merge mData with mChanged

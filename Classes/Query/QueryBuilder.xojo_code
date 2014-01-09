@@ -79,10 +79,20 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Copy() As QueryBuilder
+		  // Returns an exact copy of this QueryBuilder
+		  
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Return pQueryBuilder.Append(Me.mQuery)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
-		  If Not RaiseEvent Executing() Then
+		  If Not RaiseEvent Executing Then
 		    
-		    Dim pStatement As String = Compile()
+		    Dim pStatement As String = Compile
 		    
 		    pDatabase.SQLExecute(pStatement)
 		    
@@ -91,12 +101,12 @@ Implements QueryExpression
 		    End If
 		    
 		    If pCommit Then
-		      pDatabase.Commit()
+		      pDatabase.Commit
 		    End If
 		    
-		    Call Reset()
+		    Call Reset
 		    
-		    RaiseEvent Executed()
+		    RaiseEvent Executed(Nil)
 		    
 		  End If
 		End Sub
@@ -104,9 +114,9 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Execute(pDatabase As Database, pCommit As Boolean = True) As RecordSet
-		  If Not RaiseEvent Executing() Then
+		  If Not RaiseEvent Executing Then
 		    
-		    Dim pStatement As String = Compile()
+		    Dim pStatement As String = Compile
 		    
 		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
 		    
@@ -115,12 +125,12 @@ Implements QueryExpression
 		    End If
 		    
 		    If pCommit Then
-		      pDatabase.Commit()
+		      pDatabase.Commit
 		    End If
 		    
-		    Call Reset()
+		    Call Reset
 		    
-		    RaiseEvent Executed()
+		    RaiseEvent Executed(pRecordSet)
 		    
 		    Return pRecordSet
 		    
@@ -415,7 +425,7 @@ Implements QueryExpression
 
 
 	#tag Hook, Flags = &h0
-		Event Executed()
+		Event Executed(pRecordSet As RecordSet)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0

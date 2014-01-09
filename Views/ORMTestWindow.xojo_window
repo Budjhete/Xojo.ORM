@@ -28,20 +28,30 @@ Begin Window ORMTestWindow
    Width           =   488
    Begin UserTest mUserTest
       Enabled         =   True
+      Handle          =   0
       Height          =   "32"
       Index           =   -2147483648
       InitialParent   =   ""
       Left            =   40
       LockedInPosition=   False
+      MouseX          =   0
+      MouseY          =   0
+      PanelIndex      =   0
       password        =   ""
       Scope           =   0
-      TabIndex        =   "0"
+      TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
       Top             =   40
       username        =   ""
       Visible         =   True
       Width           =   "32"
+      Window          =   "0"
+      _mIndex         =   0
+      _mInitialParent =   ""
+      _mName          =   ""
+      _mPanelIndex    =   0
+      _mWindow        =   "0"
    End
    Begin PushButton bFind
       AutoDeactivate  =   True
@@ -382,8 +392,8 @@ End
 	#tag EndEvent
 	#tag Event
 		Sub Found()
-		  MsgBox "Found"
 		  tNom.Text = mUserTest.Data("nom")
+		  
 		End Sub
 	#tag EndEvent
 	#tag Event
@@ -396,6 +406,11 @@ End
 		  MsgBox "Finding"
 		  
 		End Function
+	#tag EndEvent
+	#tag Event
+		Sub Open()
+		  
+		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events bFind
