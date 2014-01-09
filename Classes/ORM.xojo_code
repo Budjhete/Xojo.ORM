@@ -967,6 +967,15 @@ Inherits QueryBuilder
 		      End If
 		    Next
 		    
+		    // Move all data to changes
+		    For Each pKey As String In mData.Keys
+		      If Not mChanged.HasKey(pKey) Then
+		        mChanged.Value(pKey) = mData.Value(pKey)
+		      End If
+		    Next
+		    
+		    mData.Clear
+		    
 		    RaiseEvent Unloaded
 		    
 		  End If
@@ -995,8 +1004,8 @@ Inherits QueryBuilder
 		Function Update(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
-		  If Not Loaded() then
-		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
+		  If Not Me.Loaded then
+		    Raise new ORMException("Cannot update " + Me.TableName + " model because it is not loaded.")
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
@@ -1004,14 +1013,14 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn) Then
 		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
 		      End If
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      DB.Update(TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, pCommit)
+		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase)
 		    End If
 		    
 		    // Merge mData with mChanged
