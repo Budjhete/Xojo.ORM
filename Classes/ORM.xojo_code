@@ -206,23 +206,23 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    Dim pChanged As New Dictionary
+		    // Create inserts the merge of mData and mChanged
+		    
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      If mChanged.HasKey(pColumn) Then
-		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
 		    
-		    If pChanged.Count = 0 Then
-		      // Insert NULL as primary key will increment it
-		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
-		    Else
-		      DB.Insert(Me.TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
-		    End If
+		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, pCommit)
 		    
-		    // Update mData from mChanged
+		    // Merge mChanged into mData
 		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
@@ -966,15 +966,6 @@ Inherits QueryBuilder
 		        mData.Remove(pPrimaryKey)
 		      End If
 		    Next
-		    
-		    // Merge data from mData to mChanged
-		    For Each pKey As String  In mData.Keys
-		      If Not mChanged.HasKey(pKey) Then
-		        mChanged.Value(pKey) = mData.Value(pKey)
-		      End If
-		    Next
-		    
-		    mData.Clear
 		    
 		    RaiseEvent Unloaded
 		    
