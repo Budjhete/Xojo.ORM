@@ -416,10 +416,12 @@ Inherits QueryBuilder
 		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Limit(1).Execute(pDatabase)
 		    
 		    // Fetch record set
-		    For i As Integer = 1 To pRecordSet.FieldCount
-		      Dim pColumn As String = pRecordSet.IdxField(i).Name
-		      mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		    Next
+		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
+		      For i As Integer = 1 To pRecordSet.FieldCount
+		        Dim pColumn As String = pRecordSet.IdxField(i).Name
+		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		      Next
+		    End If
 		    
 		    RaiseEvent Found()
 		    
