@@ -122,6 +122,12 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function Value(pValue As Variant) As QueryExpression
+		  Return DB.Expression(QueryCompiler.Value(pValue))
+		End Function
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty
