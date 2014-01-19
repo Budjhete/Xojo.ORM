@@ -415,6 +415,9 @@ Inherits QueryBuilder
 		    // Add SELECT and LIMIT 1 to the query
 		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Limit(1).Execute(pDatabase)
 		    
+		    // Clear any existing data
+		    mData.Clear
+		    
 		    // Fetch record set
 		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
 		      For i As Integer = 1 To pRecordSet.FieldCount
@@ -423,7 +426,7 @@ Inherits QueryBuilder
 		      Next
 		    End If
 		    
-		    RaiseEvent Found()
+		    RaiseEvent Found
 		    
 		  End If
 		  
