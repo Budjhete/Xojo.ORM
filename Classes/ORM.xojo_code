@@ -158,13 +158,13 @@ Inherits QueryBuilder
 		Function Clear() As ORM
 		  // Clear changes, not data
 		  
-		  If Not RaiseEvent Clearing() Then
+		  If Not RaiseEvent Clearing Then
 		    
-		    mChanged.Clear()
-		    mAdded.Clear()
-		    mRemoved.Clear()
+		    mChanged.Clear
+		    mAdded.Clear
+		    mRemoved.Clear
 		    
-		    RaiseEvent Cleared()
+		    RaiseEvent Cleared
 		    
 		  End If
 		  
@@ -173,21 +173,24 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor()
+		Sub Constructor(pCriterias As Dictionary)
 		  Super.Constructor
 		  
 		  mData = New Dictionary
 		  mChanged = New Dictionary
 		  mAdded = New Dictionary
 		  mRemoved = New Dictionary
+		  
+		  Call Me.Where(pCriterias)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pCriterias As Dictionary)
-		  Me.Constructor
+		Sub Constructor(pPks As Dictionary, pDatabase As Database)
+		  Me.Constructor(pPks)
 		  
-		  Call Me.Where(pCriterias)
+		  Call Me.Find(pDatabase)
+		  
 		End Sub
 	#tag EndMethod
 
@@ -198,12 +201,33 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
+		Sub Constructor(ParamArray pCriterias() As Pair)
+		  Dim pDictionary As New Dictionary
+		  
+		  For Each pCriteria As Pair In pCriterias
+		    pDictionary.Value(pCriteria.Left) = pCriteria.Right
+		  Next
+		  
+		  Me.Constructor(pDictionary)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
 		Sub Constructor(pRecordSet As RecordSet)
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value
 		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pPk As Variant, pDatabase As Database)
+		  Me.Constructor(Me.PrimaryKey: pPk)
+		  
+		  Call Me.Find(pDatabase)
+		  
 		End Sub
 	#tag EndMethod
 
@@ -256,9 +280,7 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    Dim pRaw As Dictionary = Me.Data
-		    Dim pData As New Dictionary
-		    
+		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
 		    
 		    // pData contains at least all primary keys
@@ -776,14 +798,6 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function On(pColumn As Variant, pOperator As String, pValue As Variant) As ORM
 		  Call Super.On(pColumn, pOperator, pValue)
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Operator_Convert(pRecordSet As RecordSet) As ORM
-		  Me.Constructor(pRecordSet)
 		  
 		  Return Me
 		End Function

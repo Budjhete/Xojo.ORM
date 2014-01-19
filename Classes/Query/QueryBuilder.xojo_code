@@ -86,16 +86,6 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Copy() As QueryBuilder
-		  // Returns an exact copy of this QueryBuilder
-		  
-		  Dim pQueryBuilder As New QueryBuilder
-		  
-		  Return pQueryBuilder.Append(Me.mQuery)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
 		  If Not RaiseEvent Executing Then
 		    
