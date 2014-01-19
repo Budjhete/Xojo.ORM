@@ -485,6 +485,9 @@ Inherits QueryBuilder
 		    Limit(1). _
 		    Execute(pDatabase)
 		    
+		    // Clear any existing data
+		    mData.Clear
+		    
 		    // Fetch record set
 		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
 		      For i As Integer = 1 To pRecordSet.FieldCount
@@ -496,7 +499,7 @@ Inherits QueryBuilder
 		      
 		    End If
 		    
-		    RaiseEvent Found()
+		    RaiseEvent Found
 		    
 		  End If
 		  

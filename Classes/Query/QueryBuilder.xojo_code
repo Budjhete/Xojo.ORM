@@ -15,6 +15,13 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Append(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  // Append another QueryBuilder
+		  Return Me.Append(pQueryBuilder.mQuery)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Append(pQueryExpressions() As QueryExpression) As QueryBuilder
 		  For Each pQueryExpression As QueryExpression In pQueryExpressions
 		    Call Append(pQueryExpression)

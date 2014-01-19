@@ -1,6 +1,12 @@
 #tag Module
 Protected Module DB
 	#tag Method, Flags = &h0
+		Function Alias(pColumn As Variant, pAlias As String) As QueryExpression
+		  Return DB.Expression(QueryCompiler.Column(pColumn) + " AS " + QueryCompiler.Column(pAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Count() As QueryExpression
 		  Return DB.Count("*")
 		End Function
@@ -14,7 +20,7 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Count(pColumn As Variant, pAlias As String) As QueryExpression
-		  Return DB.Expression("COUNT( " + QueryCompiler.Column(pColumn) + " ) AS " + QueryCompiler.Alias(pAlias))
+		  Return DB.Alias(DB.Count(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
@@ -28,7 +34,7 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Distinct(pColumn As Variant) As QueryExpression
-		  Return Expression("DISTINCT ( " + QueryCompiler.Column(pColumn) + " )")
+		  Return DB.Expression("DISTINCT ( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
@@ -50,10 +56,10 @@ Protected Module DB
 		Function Find(ParamArray pColumns As Variant) As QueryBuilder
 		  If pColumns.UBound = -1 Then
 		    // Find * when no columns are specified
-		    Return Find(DB.Expression("*"))
+		    Return DB.Find(DB.Expression("*"))
 		  End If
 		  
-		  Return Find(pColumns)
+		  Return DB.Find(pColumns)
 		  
 		End Function
 	#tag EndMethod
@@ -113,6 +119,12 @@ Protected Module DB
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(new UpdateQueryExpression(pTableName))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Value(pValue As Variant) As QueryExpression
+		  Return DB.Expression(QueryCompiler.Value(pValue))
 		End Function
 	#tag EndMethod
 
