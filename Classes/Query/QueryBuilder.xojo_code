@@ -81,7 +81,15 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Copy() As QueryBuilder
-		  Return New QueryBuilder(Me.Query)
+		  // Returns a copy of this QueryBuilder
+		  
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  For Each pQueryExpression As QueryExpression In mQuery
+		    pQueryBuilder.mQuery.Append(pQueryExpression)
+		  Next
+		  
+		  Return pQueryBuilder
 		End Function
 	#tag EndMethod
 

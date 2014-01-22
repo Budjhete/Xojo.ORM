@@ -233,30 +233,32 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Copy() As ORM
+		  // Returns a copy of this ORM
+		  
 		  Dim pConstructors() As Introspection.ConstructorInfo = Introspection.GetType(Me).GetConstructors
 		  
 		  Dim pParameters() As Variant
 		  pParameters.Append(Me.Query)
 		  
-		  Dim pCopy As ORM = pConstructors(0).Invoke(pParameters)
+		  Dim pORM As ORM = pConstructors(0).Invoke(pParameters)
 		  
 		  For Each pColumn As String In mData.Keys
-		    pCopy.mData.Value(pColumn) = Me.mData.Value(pColumn)
+		    pORM.mData.Value(pColumn) = Me.mData.Value(pColumn)
 		  Next
 		  
 		  For Each pColumn As String In mChanged.Keys
-		    pCopy.mChanged.Value(pColumn) = Me.mChanged.Value(pColumn)
+		    pORM.mChanged.Value(pColumn) = Me.mChanged.Value(pColumn)
 		  Next
 		  
 		  For Each pKey As Variant In mAdded.Keys
-		    pCopy.mAdded.Value(pKey) = Me.mAdded.Value(pKey)
+		    pORM.mAdded.Value(pKey) = Me.mAdded.Value(pKey)
 		  Next
 		  
 		  For Each pKey As Variant In mRemoved.Keys
-		    pCopy.mRemoved.Value(pKey) = Me.mRemoved.Value(pKey)
+		    pORM.mRemoved.Value(pKey) = Me.mRemoved.Value(pKey)
 		  Next
 		  
-		  Return pCopy
+		  Return pORM
 		End Function
 	#tag EndMethod
 
