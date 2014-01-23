@@ -3,7 +3,6 @@ Protected Class UnionQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  // Part of the QueryExpression interface.
 		  If mAll Then
 		    Return "UNION ALL " + mQueryBuilder.Compile()
 		  Else

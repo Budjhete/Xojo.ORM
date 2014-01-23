@@ -203,6 +203,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Intersect(pQueryBuilder As QueryBuilder) As QueryBuilder
+		  Return Append(New IntersectQueryExpression(pQueryBuilder))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Join(pTableName As String) As QueryBuilder
 		  Return Join(pTableName, pTableName)
 		End Function
