@@ -422,6 +422,13 @@ Inherits QueryBuilder
 		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
 		      For i As Integer = 1 To pRecordSet.FieldCount
 		        Dim pColumn As String = pRecordSet.IdxField(i).Name
+		        
+		        // Pour les cas où on initialise des champs de l'ORM avant de le
+		        // charger à partir de la BDD
+		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = pRecordSet.Field(pColumn).Value Then
+		          mChanged.Remove(pColumn)
+		        End If
+		        
 		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		      Next
 		    End If
