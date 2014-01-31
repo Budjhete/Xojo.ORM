@@ -230,8 +230,9 @@ Inherits QueryBuilder
 		    // Clear changes, they are saved in mData
 		    Call mChanged.Clear
 		    
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
-		      Dim pRecordSet As RecordSet = DB.Find(Me.PrimaryKey).From(Me.TableName).OrderBy(Me.PrimaryKey, "DESC").Execute(pDatabase)
+		    // Refetch the primary key if it was not specified in mChanged
+		    If Not mData.HasKey(PrimaryKey) And Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      Dim pRecordSet As RecordSet = DB.Find(Me.PrimaryKey).From(Me.TableName).OrderBy(Me.PrimaryKey, "DESC").Limit(1).Execute(pDatabase)
 		      // Update primary key from the last row inserted in this table
 		      mData.Value(PrimaryKey) = pRecordSet.Field(PrimaryKey).Value
 		    End If
