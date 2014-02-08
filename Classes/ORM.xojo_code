@@ -291,7 +291,7 @@ Inherits QueryBuilder
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		      End If
 		      
-		      // Best guess for MySQL
+		      // Best guess for MySQL when available
 		      If pDatabase IsA MySQLCommunityServer Then
 		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
 		      End If
