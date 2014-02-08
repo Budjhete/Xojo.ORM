@@ -15,6 +15,8 @@ Inherits QueryBuilder
 
 	#tag Event
 		Sub Open()
+		  mChanged.Clear
+		  
 		  RaiseEvent Open
 		End Sub
 	#tag EndEvent
@@ -156,13 +158,13 @@ Inherits QueryBuilder
 		Function Clear() As ORM
 		  // Clear changes, not data
 		  
-		  If Not RaiseEvent Clearing() Then
+		  If Not RaiseEvent Clearing Then
 		    
-		    mChanged.Clear()
-		    mAdded.Clear()
-		    mRemoved.Clear()
+		    mChanged.Clear
+		    mAdded.Clear
+		    mRemoved.Clear
 		    
-		    RaiseEvent Cleared()
+		    RaiseEvent Cleared
 		    
 		  End If
 		  
@@ -171,27 +173,42 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor()
+		Sub Constructor(pCriterias As Dictionary)
 		  Super.Constructor
 		  
 		  mData = New Dictionary
 		  mChanged = New Dictionary
 		  mAdded = New Dictionary
 		  mRemoved = New Dictionary
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1000
-		Sub Constructor(pCriterias As Dictionary)
-		  Me.Constructor
 		  
 		  Call Me.Where(pCriterias)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
+		Sub Constructor(pPks As Dictionary, pDatabase As Database)
+		  Me.Constructor(pPks)
+		  
+		  Call Me.Find(pDatabase)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
 		Sub Constructor(pORM As ORM)
 		  Me.Constructor(pORM.Pks)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(ParamArray pCriterias() As Pair)
+		  Dim pDictionary As New Dictionary
+		  
+		  For Each pCriteria As Pair In pCriterias
+		    pDictionary.Value(pCriteria.Left) = pCriteria.Right
+		  Next
+		  
+		  Me.Constructor(pDictionary)
 		End Sub
 	#tag EndMethod
 
@@ -205,32 +222,42 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1000
+		Sub Constructor(pPk As Variant, pDatabase As Database)
+		  Me.Constructor(Me.PrimaryKey: pPk)
+		  
+		  Call Me.Find(pDatabase)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Copy() As ORM
-		  Dim pConstructors() As Introspection.ConstructorInfo = Introspection.GetType(Me).GetConstructors
+		  // Returns a copy of this ORM
+		  Dim pORM As New ORM
 		  
-		  Dim pParameters() As Variant
-		  pParameters.Append(Me.Query)
-		  
-		  Dim pCopy As ORM = pConstructors(0).Invoke(pParameters)
+		  // Copy the QueryBuilder
+		  For Each pQueryExpression As QueryExpression In Me.mQuery
+		    pORM.mQuery.Append(pQueryExpression)
+		  Next
 		  
 		  For Each pColumn As String In mData.Keys
-		    pCopy.mData.Value(pColumn) = Me.mData.Value(pColumn)
+		    pORM.mData.Value(pColumn) = Me.mData.Value(pColumn)
 		  Next
 		  
 		  For Each pColumn As String In mChanged.Keys
-		    pCopy.mChanged.Value(pColumn) = Me.mChanged.Value(pColumn)
+		    pORM.mChanged.Value(pColumn) = Me.mChanged.Value(pColumn)
 		  Next
 		  
 		  For Each pKey As Variant In mAdded.Keys
-		    pCopy.mAdded.Value(pKey) = Me.mAdded.Value(pKey)
+		    pORM.mAdded.Value(pKey) = Me.mAdded.Value(pKey)
 		  Next
 		  
 		  For Each pKey As Variant In mRemoved.Keys
-		    pCopy.mRemoved.Value(pKey) = Me.mRemoved.Value(pKey)
+		    pORM.mRemoved.Value(pKey) = Me.mRemoved.Value(pKey)
 		  Next
 		  
-		  Return pCopy
+		  Return pORM
 		End Function
 	#tag EndMethod
 
@@ -254,25 +281,24 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    Dim pChanged As New Dictionary
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      If mChanged.HasKey(pColumn) Then
-		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
 		    
-		    If pChanged.Count = 0 Then
-		      // Insert NULL as primary key will increment it
-		      DB.Insert(Me.TableName, Me.PrimaryKey).Values(DB.Expression("NULL")).Execute(pDatabase, pCommit)
-		    Else
-		      DB.Insert(Me.TableName, pChanged.Keys).Values(pChanged.Values).Execute(pDatabase, pCommit)
-		    End If
+		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, pCommit)
 		    
-		    // Update mData from mChanged
-		    For Each pKey As Variant In mChanged.Keys
-		      Me.mData.Value(pKey) = Me.mChanged.Value(pKey)
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
 		    // Clear changes, they are saved in mData
@@ -482,18 +508,21 @@ Inherits QueryBuilder
 		    Limit(1). _
 		    Execute(pDatabase)
 		    
-		    If pRecordSet <> Nil Then
-		      
-		      // Fetch record set
-		      For pIndex As Integer = 1 To pRecordSet.FieldCount
-		        mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value
+		    // Clear any existing data
+		    mData.Clear
+		    
+		    // Fetch record set
+		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
+		      For i As Integer = 1 To pRecordSet.FieldCount
+		        Dim pColumn As String = pRecordSet.IdxField(i).Name
+		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		      Next
 		      
 		      pRecordSet.Close
 		      
 		    End If
 		    
-		    RaiseEvent Found()
+		    RaiseEvent Found
 		    
 		  End If
 		  
@@ -776,11 +805,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Operator_Convert(pRecordSet As RecordSet) As ORM
-		  Me.Constructor(pRecordSet)
+		Sub Operator_Convert(pORM As ORM)
+		  Me.Constructor
 		  
-		  Return Me
-		End Function
+		  Me.mQuery = pORM.mQuery
+		  
+		  Me.mChanged = pORM.mChanged
+		  Me.mData = pORM.mData
+		  Me.mAdded = pORM.mAdded
+		  Me.mRemoved = pORM.mRemoved
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1005,7 +1039,11 @@ Inherits QueryBuilder
 		Function TableColumns(pDatabase As Database) As String()
 		  Dim pColumns() As String
 		  
-		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(TableName)
+		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(Me.TableName)
+		  
+		  If pRecordSet Is Nil Then
+		    Raise New ORMException(Me.TableName + " is not an existing table.")
+		  End If
 		  
 		  While Not pRecordSet.EOF
 		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
@@ -1026,7 +1064,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Unload() As ORM
-		  // Empties data, not changes
+		  // Empties only the primary keys
 		  
 		  If Not RaiseEvent Unloading Then
 		    
@@ -1046,7 +1084,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function UnloadAll() As ORM
-		  // Empties data, not changes
+		  // Empties all data, but not changes
 		  
 		  If Not RaiseEvent UnloadingAll Then
 		    
@@ -1064,8 +1102,8 @@ Inherits QueryBuilder
 		Function Update(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
-		  If Not Loaded() then
-		    Raise new ORMException("Cannot update " + TableName() + " model because it is not loaded.")
+		  If Not Me.Loaded then
+		    Raise new ORMException("Cannot update " + Me.TableName + " model because it is not loaded.")
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
@@ -1073,14 +1111,14 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn) Then
 		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
 		      End If
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      DB.Update(TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, pCommit)
+		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase)
 		    End If
 		    
 		    // Merge mData with mChanged
@@ -1303,20 +1341,20 @@ Inherits QueryBuilder
 	#tag EndNote
 
 
-	#tag Property, Flags = &h21
-		Private mAdded As Dictionary
+	#tag Property, Flags = &h1
+		Protected mAdded As Dictionary
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private mChanged As Dictionary
+	#tag Property, Flags = &h1
+		Protected mChanged As Dictionary
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private mData As Dictionary
+	#tag Property, Flags = &h1
+		Protected mData As Dictionary
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private mRemoved As Dictionary
+	#tag Property, Flags = &h1
+		Protected mRemoved As Dictionary
 	#tag EndProperty
 
 

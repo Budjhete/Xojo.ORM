@@ -39,7 +39,7 @@ Begin Window ORMTestWindow
       PanelIndex      =   0
       password        =   ""
       Scope           =   0
-      TabIndex        =   "0"
+      TabIndex        =   0
       TabPanelIndex   =   0
       TabStop         =   True
       Top             =   40
@@ -392,8 +392,8 @@ End
 	#tag EndEvent
 	#tag Event
 		Sub Found()
-		  MsgBox "Found"
 		  tNom.Text = mUserTest.Data("nom")
+		  
 		End Sub
 	#tag EndEvent
 	#tag Event
@@ -406,6 +406,11 @@ End
 		  MsgBox "Finding"
 		  
 		End Function
+	#tag EndEvent
+	#tag Event
+		Sub Open()
+		  
+		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events bFind
