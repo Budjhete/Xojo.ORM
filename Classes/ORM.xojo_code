@@ -262,6 +262,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Copy(pORM As ORM) As ORM
+		  // Returns a copy of this ORM
+		  Call pORM.Deflate(Self)
+		  
+		  Return pORM
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function CountAll(pDatabase As Database) As Integer
 		  Dim pColumns() As Variant
 		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
