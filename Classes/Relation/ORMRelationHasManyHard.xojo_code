@@ -6,8 +6,9 @@ Inherits ORMRelationHasMany
 		  // Remove the entry instead of nullifying the primary key
 		  DB.Delete(mORM.TableName). _
 		  Where(mORM.Pks). _
-		  AndWhere(mForeignColumn, "=", pORM.Pk). _
 		  Execute(pDatabase)
+		  
+		  // AndWhere(mForeignColumn, "=", pORM.Pk). _
 		End Sub
 	#tag EndMethod
 
