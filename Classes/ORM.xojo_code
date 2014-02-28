@@ -344,6 +344,7 @@ Inherits QueryBuilder
 		    
 		    // Clear pending relationships
 		    mAdded.Clear
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    mRemoved.Clear
 		    
 		    RaiseEvent Created
@@ -1148,6 +1149,7 @@ Inherits QueryBuilder
 		    Next
 		    // Clear pending relationships
 		    mAdded.Clear()
+		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    mRemoved.Clear()
 		    
 		    RaiseEvent Updated()
@@ -1155,7 +1157,6 @@ Inherits QueryBuilder
 		  End If
 		  
 		  Return Me
-		  
 		End Function
 	#tag EndMethod
 
