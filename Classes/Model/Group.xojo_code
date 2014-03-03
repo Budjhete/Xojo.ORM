@@ -1,5 +1,5 @@
 #tag Class
-Protected Class GroupTest
+Protected Class Group
 Inherits ORM
 	#tag Method, Flags = &h1000
 		Sub Constructor(pPk As Integer)
@@ -24,7 +24,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return New UserTest(Data("user"))
+			  Return BelongsTo("user", New User)
 			End Get
 		#tag EndGetter
 		#tag Setter
@@ -32,7 +32,7 @@ Inherits ORM
 			  Data("user") = value.Pk
 			End Set
 		#tag EndSetter
-		user As UserTest
+		user As User
 	#tag EndComputedProperty
 
 

@@ -1,5 +1,5 @@
 #tag Class
-Protected Class ProjectTest
+Protected Class Project
 Inherits ORM
 	#tag Method, Flags = &h1000
 		Sub Constructor(pPk As Integer)
@@ -9,8 +9,8 @@ Inherits ORM
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Has(pUserTest As UserTest, pDatabase As Database) As Boolean
-		  Return Super.Has("UsersProjects", "project", "user", pUserTest, pDatabase)
+		Function Has(pUser As User, pDatabase As Database) As Boolean
+		  Return Super.Has("UsersProjects", "project", "user", pUser, pDatabase)
 		End Function
 	#tag EndMethod
 

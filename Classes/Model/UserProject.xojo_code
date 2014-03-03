@@ -1,46 +1,15 @@
 #tag Class
-Protected Class UserTest
+Protected Class UserProject
 Inherits ORM
 	#tag Method, Flags = &h0
-		Function Add(pProjectTest As ProjectTest) As ORM
-		  Return Add("UsersProjects", "user", "project", pProjectTest)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1000
-		Sub Constructor(pPk As Integer)
-		  Super.Constructor(New Dictionary(Me.PrimaryKey: pPk))
-		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Database() As Database
-		  Return ORMTestDatabase
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Groups() As GroupTest
-		  Return GroupTest(HasMany(New GroupTest, "user"))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Has(pProject As ProjectTest, pDatabase As Database) As Boolean
-		  Return Has("UsersProjects", "user", "project", pProject, pDatabase)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Projects() As ProjectTest
-		  Return ProjectTest(HasManyThrough(New ProjectTest, "Projects_Users", "user", "project"))
+		Function PrimaryKeys() As String()
+		  Return Array("user", "project")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function TableName() As String
-		  Return "Users"
+		  Return "UsersProjects"
 		End Function
 	#tag EndMethod
 
@@ -48,44 +17,30 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return New GroupTest(Me.Data("group"))
+			  Return BelongsTo("project", New Project)
+			  
 			End Get
 		#tag EndGetter
 		#tag Setter
 			Set
-			  Me.Data("group") = value.Pk
+			  Data("project") = value.Pk
 			End Set
 		#tag EndSetter
-		group As GroupTest
+		project As Project
 	#tag EndComputedProperty
 
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return Me.Data("password")
+			  Return BelongsTo("user", New User)
 			End Get
 		#tag EndGetter
 		#tag Setter
 			Set
-			  // You can encrypt your password here
-			  Me.Data("password") = value
+			  Data("user") = value.Pk
 			End Set
 		#tag EndSetter
-		password As String
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return Data("username")
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  Call Data("username", value)
-			End Set
-		#tag EndSetter
-		username As String
+		user As User
 	#tag EndComputedProperty
 
 
@@ -135,12 +90,6 @@ Inherits ORM
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="password"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
@@ -158,12 +107,6 @@ Inherits ORM
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="username"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Window"
