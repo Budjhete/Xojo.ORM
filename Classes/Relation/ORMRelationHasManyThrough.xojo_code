@@ -2,10 +2,10 @@
 Protected Class ORMRelationHasManyThrough
 Implements ORMRelation
 	#tag Method, Flags = &h0
-		Sub Add(pORM As ORM, pDatabase As Database)
+		Sub Add(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
 		  Values(pORM.Pk, mORM.Pk)._
-		  Execute(pDatabase)
+		  Execute(pDatabase, pCommit)
 		End Sub
 	#tag EndMethod
 
@@ -27,7 +27,7 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pORM As ORM, pDatabase As Database)
+		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  DB.Delete(mPivotTableName)._
 		  Where(mForeignColumn, "=", pORM.Pk)._
 		  AndWhere(mFarColumn, "=", mORM.Pk)._

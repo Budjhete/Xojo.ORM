@@ -335,11 +335,11 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values
-		      Call pRelation.Remove(Me, pDatabase)
+		      Call pRelation.Remove(Me, pDatabase, pCommit)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me, pDatabase)
+		      Call pRelation.Add(Me, pDatabase, pCommit)
 		    Next
 		    
 		    // Clear pending relationships
@@ -1150,11 +1150,11 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values()
-		      Call pRelation.Remove(Me, pDatabase)
+		      Call pRelation.Remove(Me, pDatabase, pCommit)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mAdded.Values()
-		      Call pRelation.Add(Me, pDatabase)
+		      Call pRelation.Add(Me, pDatabase, pCommit)
 		    Next
 		    // Clear pending relationships
 		    mAdded.Clear()
