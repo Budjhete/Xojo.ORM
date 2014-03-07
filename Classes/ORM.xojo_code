@@ -623,13 +623,6 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1
 		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
-		  // Pk must not be compiled as a column
-		  
-		  System.DebugLog pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
-		  From(pPivotTableName). _
-		  Where(pForeignColumn, "=", Me.Pk) ._
-		  AndWhere(pFarColumn, "=", pORM.Pk)).Compile
-		  
 		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
 		  From(pPivotTableName). _
 		  Where(pForeignColumn, "=", Me.Pk) ._
@@ -1208,8 +1201,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  Call Super.Where(pColumn, pOperator, pValue)
+		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
+		  Call Super.Where(pLeft, pOperator, pRight)
 		  
 		  Return Me
 		End Function
