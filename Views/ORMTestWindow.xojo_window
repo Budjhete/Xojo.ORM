@@ -39,7 +39,7 @@ Begin Window ORMTestWindow
       PanelIndex      =   0
       password        =   ""
       Scope           =   0
-      TabIndex        =   0
+      TabIndex        =   "0"
       TabPanelIndex   =   0
       TabStop         =   True
       Top             =   40
