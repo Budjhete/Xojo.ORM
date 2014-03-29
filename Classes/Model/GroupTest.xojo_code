@@ -1,12 +1,6 @@
 #tag Class
-Protected Class User
+Protected Class GroupTest
 Inherits ORM
-	#tag Method, Flags = &h0
-		Function Add(pProject As Project) As ORM
-		  Return Add("UsersProjects", "user", "project", pProject)
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h1000
 		Sub Constructor(pPk As Integer)
 		  Super.Constructor(New Dictionary(Me.PrimaryKey: pPk))
@@ -21,26 +15,8 @@ Inherits ORM
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Groups() As Group
-		  Return HasMany(New Group, "user")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Has(pProject As Project, pDatabase As Database) As Boolean
-		  Return Has("UsersProjects", "user", "project", pProject, pDatabase)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Projects() As Project
-		  Return HasManyThrough(New Project, "UsersProjects", "user", "project")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function TableName() As String
-		  Return "Users"
+		  Return "Groups"
 		End Function
 	#tag EndMethod
 
@@ -48,44 +24,15 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return New Group(Me.Data("group"))
+			  Return BelongsTo("user", New UserTest)
 			End Get
 		#tag EndGetter
 		#tag Setter
 			Set
-			  Me.Data("group") = value.Pk
+			  Data("user") = value.Pk
 			End Set
 		#tag EndSetter
-		group As Group
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return Me.Data("password")
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  // You can encrypt your password here
-			  Me.Data("password") = value
-			End Set
-		#tag EndSetter
-		password As String
-	#tag EndComputedProperty
-
-	#tag ComputedProperty, Flags = &h0
-		#tag Getter
-			Get
-			  Return Data("username")
-			End Get
-		#tag EndGetter
-		#tag Setter
-			Set
-			  Call Data("username", value)
-			End Set
-		#tag EndSetter
-		username As String
+		user As UserTest
 	#tag EndComputedProperty
 
 
@@ -135,12 +82,6 @@ Inherits ORM
 			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="password"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
@@ -158,12 +99,6 @@ Inherits ORM
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="username"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Window"

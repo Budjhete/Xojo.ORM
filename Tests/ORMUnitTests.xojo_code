@@ -17,8 +17,8 @@ Inherits TestGroup
 		  CreateUsers()
 		  CreateProjects()
 		  
-		  Dim pUser As New User(1, ORMTestDatabase)
-		  Dim pProject As New Project(1, ORMTestDatabase)
+		  Dim pUser As New UserTest(1, ORMTestDatabase)
+		  Dim pProject As New ProjectTest(1, ORMTestDatabase)
 		  Assert.IsFalse pUser.Has(pProject, ORMTestDatabase)
 		  
 		  Call pUser.Add(pProject)
@@ -29,7 +29,7 @@ Inherits TestGroup
 		  
 		  // HasMany
 		  
-		  Dim pGroup As New Group
+		  Dim pGroup As New GroupTest
 		  Call pGroup.Create(ORMTestDatabase)
 		  Assert.IsFalse pUser.Has("user", pGroup, ORMTestDatabase)
 		  
@@ -66,11 +66,11 @@ Inherits TestGroup
 		  DB.Insert("Users", "id", "username", "password").Values(1, "foo", "bar").Execute(ORMTestDatabase)
 		  
 		  // Primary key and Database
-		  Dim pUser As New User(1, ORMTestDatabase)
+		  Dim pUser As New UserTest(1, ORMTestDatabase)
 		  Assert.IsTrue pUser.Loaded
 		  
 		  // Criteria dictionary
-		  pUser = New User("id": 1)
+		  pUser = New UserTest("id": 1)
 		  Assert.IsFalse pUser.Loaded
 		  Call pUser.Find(ORMTestDatabase)
 		  Assert.IsTrue pUser.Loaded
@@ -78,11 +78,11 @@ Inherits TestGroup
 		  // From a RecordSet
 		  Dim pRecordSet As RecordSet = DB.Find.From("Users").Where("id", "=", 1).Execute(ORMTestDatabase)
 		  Assert.AreEqual(pRecordSet.RecordCount, 1)
-		  pUser = New User(pRecordSet)
+		  pUser = New UserTest(pRecordSet)
 		  Assert.IsTrue pUser.Loaded
 		  
 		  // From another ORM (not a copy!)
-		  pUser = New User(pUser)
+		  pUser = New UserTest(pUser)
 		  Assert.IsFalse pUser.Loaded
 		  Call pUser.Find(ORMTestDatabase)
 		  Assert.IsTrue pUser.Loaded
@@ -94,12 +94,12 @@ Inherits TestGroup
 	#tag Method, Flags = &h0
 		Sub ConverFromRecordSetTest()
 		  CreateUsers
-		  Dim pUsers As New User
+		  Dim pUsers As New UserTest
 		  
 		  Dim pRecords As RecordSet = pUsers.FindAll(ORMTestDatabase)
 		  
 		  While Not pRecords.EOF
-		    Dim pUser As New User(pRecords)
+		    Dim pUser As New UserTest(pRecords)
 		    Assert.AreEqual(pRecords.Field("username").StringValue, pUser.Data("username").StringValue)
 		    pRecords.MoveNext
 		  Wend
@@ -108,12 +108,12 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub CopyTest()
-		  Dim pUser As ORM = new User()
+		  Dim pUser As ORM = new UserTest()
 		  
 		  pUser.Data("username") = "Paul-Willy"
 		  pUser.Data("password") = "password"
 		  
-		  Dim pCopy As User = pUser.Copy
+		  Dim pCopy As UserTest = pUser.Copy
 		  
 		  // @todo equalty comparisons
 		End Sub
@@ -141,7 +141,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub CreateTest()
-		  Dim pUser As New User()
+		  Dim pUser As New UserTest()
 		  
 		  Assert.IsFalse pUser.Loaded()
 		  Assert.IsFalse pUser.Changed()
@@ -167,7 +167,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DataTest()
-		  Dim pUser As New User
+		  Dim pUser As New UserTest
 		  
 		  Assert.IsFalse pUser.Changed
 		  
@@ -186,7 +186,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DeleteTest()
-		  Dim pUser As New User
+		  Dim pUser As New UserTest
 		  
 		  Call pUser.Data("username", "Paul-Willy Jean").Data("password", "Jean").Create(ORMTestDatabase)
 		  
@@ -202,7 +202,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub FindTest()
-		  Dim pUser As New User
+		  Dim pUser As New UserTest
 		  
 		  Call pUser.Data("username", "james").Data("password", "james22").Create(ORMTestDatabase)
 		  
@@ -224,7 +224,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub HasTest()
-		  Dim pUser As New User(1, ORMTestDatabase)
+		  Dim pUser As New UserTest(1, ORMTestDatabase)
 		  
 		  // Has for HasMany
 		  
@@ -243,7 +243,7 @@ Inherits TestGroup
 		Sub InflateTest()
 		  // @deprecated This feature is deprecated
 		  
-		  Dim OriginalORM As New User
+		  Dim OriginalORM As New UserTest
 		  
 		  Dim username As String = "Kandjo"
 		  Dim password As String = "ca"
@@ -251,7 +251,7 @@ Inherits TestGroup
 		  Call OriginalORM.Data("username", username)
 		  Call OriginalORM.Data("password", password)
 		  
-		  Dim NewORM As New User()
+		  Dim NewORM As New UserTest()
 		  Call OriginalORM.Inflate(NewORM)
 		  
 		  Assert.AreEqual(NewORM.TableName(), OriginalORM.TableName(), NewORM.TableName() + " " + OriginalORM.TableName())
@@ -271,10 +271,10 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub PrimaryKeysTest()
-		  Dim pUserProject As New UserProject
-		  Dim pUser As New User
-		  Dim pAnotherUser As New User
-		  Dim pProject As New Project
+		  Dim pUserProject As New UserProjectTest
+		  Dim pUser As New UserTest
+		  Dim pAnotherUser As New UserTest
+		  Dim pProject As New ProjectTest
 		  
 		  pUser.username = "John"
 		  pUser.password = "Michael"
@@ -321,13 +321,13 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub ReloadTest()
-		  Dim pUserTest As New User()
+		  Dim pUserTest As New UserTest()
 		  
 		  Call pUserTest.Data("username", "Paul-Willy Jean").Data("password", "pile4626").Save(ORMTestDatabase)
 		  
 		  Assert.IsTrue pUserTest.Loaded
 		  
-		  Dim pAnotherUserTest As New User()
+		  Dim pAnotherUserTest As New UserTest()
 		  Call pAnotherUserTest.Where("id", "=", pUserTest.Pk()).Find(ORMTestDatabase)
 		  Call pAnotherUserTest.Data("username", "Jean").Update(ORMTestDatabase)
 		  
@@ -349,11 +349,11 @@ Inherits TestGroup
 		  DB.Delete("UsersProjects").Execute(ORMTestDatabase)
 		  
 		  // Loads the UsertTest model from the database
-		  Dim pUserTest As New User(1)
+		  Dim pUserTest As New UserTest(1)
 		  Call pUserTest.Find(ORMTestDatabase)
 		  
 		  // Loads the ProjectTest model from the database
-		  Dim pProjectTest As New Project(1)
+		  Dim pProjectTest As New ProjectTest(1)
 		  Call pProjectTest.Find(ORMTestDatabase)
 		  
 		  // Remove all relationships
@@ -374,7 +374,7 @@ Inherits TestGroup
 		  
 		  // HasMany
 		  
-		  Dim pGroup As New Group
+		  Dim pGroup As New GroupTest
 		  Call pGroup.Create(ORMTestDatabase)
 		  
 		  Assert.IsTrue pGroup.Loaded
@@ -404,7 +404,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub SaveTest()
-		  Dim pUser As New User()
+		  Dim pUser As New UserTest()
 		  
 		  Call pUser.Data("username","Paul-Willy Jean").Data("password", "pile4626")
 		  Assert.AreEqual("Paul-Willy Jean", pUser.Data("username"))
@@ -422,7 +422,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub TableColumnsTest()
-		  Dim pUser As New User
+		  Dim pUser As New UserTest
 		  
 		  Dim pColumns() As String = Array("id", "username", "password")
 		  
@@ -436,7 +436,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub UpdateLoadedTest()
-		  Dim pModel As New User()
+		  Dim pModel As New UserTest()
 		  
 		  Call pModel.Data("username", "Jean Dupont")
 		  Call pModel.Data("password", pModel.Data("username"))
@@ -458,7 +458,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub UpdateUnloadedTest()
-		  Dim pModel As New User()
+		  Dim pModel As New UserTest()
 		  
 		  Call pModel.Data("username", "Jean Dupont")
 		  Call pModel.Data("password", pModel.Data("username"))

@@ -26,28 +26,17 @@ Begin Window ORMTestWindow
    Title           =   "Tests for ORM"
    Visible         =   True
    Width           =   488
-   Begin User mUserTest
-      Handle          =   0
+   Begin UserTest mUserTest
       Height          =   32
       Index           =   -2147483648
       InitialParent   =   ""
       Left            =   40
       LockedInPosition=   False
-      MouseX          =   0
-      MouseY          =   0
-      PanelIndex      =   0
-      password        =   ""
       Scope           =   0
-      TabIndex        =   "0"
       TabPanelIndex   =   0
       Top             =   40
-      username        =   ""
       Width           =   32
       Window          =   "0"
-      _mIndex         =   0
-      _mInitialParent =   ""
-      _mName          =   ""
-      _mPanelIndex    =   0
       _mWindow        =   "0"
    End
    Begin PushButton bFind
