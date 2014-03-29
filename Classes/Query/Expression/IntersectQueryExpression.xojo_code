@@ -1,29 +1,27 @@
 #tag Class
-Protected Class UpdateQueryExpression
+Protected Class IntersectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  Return "UPDATE " + QueryCompiler.TableName(mTableName)
-		  
-		  
+		  Return "INTERSECT " + mQueryBuilder.Compile()
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String)
-		  mTableName = pTableName
+		Sub Constructor(pQueryBuilder As QueryBuilder)
+		  mQueryBuilder = pQueryBuilder
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Nice() As Integer
-		  Return 1
+		  Return 7
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mTableName As String
+		Private mQueryBuilder As QueryBuilder
 	#tag EndProperty
 
 
