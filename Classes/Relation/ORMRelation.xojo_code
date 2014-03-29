@@ -1,7 +1,7 @@
 #tag Interface
 Protected Interface ORMRelation
 	#tag Method, Flags = &h0
-		Sub Add(pORM As ORM, pDatabase As Database)
+		Sub Add(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  
 		End Sub
 	#tag EndMethod
@@ -13,7 +13,7 @@ Protected Interface ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pORM As ORM, pDatabase As Database)
+		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  
 		End Sub
 	#tag EndMethod

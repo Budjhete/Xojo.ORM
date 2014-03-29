@@ -1,0 +1,3 @@
+[submodule "Modules/XojoUnit"]
+	path = Modules/XojoUnit
+	url = git@git.hete.ca:xojo-unit

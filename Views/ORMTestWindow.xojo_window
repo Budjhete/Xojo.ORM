@@ -26,10 +26,9 @@ Begin Window ORMTestWindow
    Title           =   "Tests for ORM"
    Visible         =   True
    Width           =   488
-   Begin UserTest mUserTest
-      Enabled         =   True
+   Begin User mUserTest
       Handle          =   0
-      Height          =   "32"
+      Height          =   32
       Index           =   -2147483648
       InitialParent   =   ""
       Left            =   40
@@ -41,11 +40,9 @@ Begin Window ORMTestWindow
       Scope           =   0
       TabIndex        =   "0"
       TabPanelIndex   =   0
-      TabStop         =   True
       Top             =   40
       username        =   ""
-      Visible         =   True
-      Width           =   "32"
+      Width           =   32
       Window          =   "0"
       _mIndex         =   0
       _mInitialParent =   ""
@@ -283,7 +280,6 @@ Begin Window ORMTestWindow
       Selectable      =   False
       TabIndex        =   6
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "Nom"
       TextAlign       =   2
       TextColor       =   &c00000000
@@ -318,7 +314,6 @@ Begin Window ORMTestWindow
       Selectable      =   False
       TabIndex        =   7
       TabPanelIndex   =   0
-      TabStop         =   True
       Text            =   "Primary key"
       TextAlign       =   2
       TextColor       =   &c00000000

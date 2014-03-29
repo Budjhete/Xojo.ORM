@@ -36,7 +36,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  Return QueryCompiler.Column(mLeft) + " " + QueryCompiler.Operator(mOperator) + " " + QueryCompiler.Value(mRight)
+		  Return QueryCompiler.Column(mLeft) + " " + QueryCompiler.Operator(mLeft, mOperator, mRight) + " " + QueryCompiler.Value(mRight)
 		End Function
 	#tag EndMethod
 

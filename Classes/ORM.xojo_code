@@ -335,11 +335,11 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values
-		      Call pRelation.Remove(Me, pDatabase)
+		      Call pRelation.Remove(Me, pDatabase, pCommit)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me, pDatabase)
+		      Call pRelation.Add(Me, pDatabase, pCommit)
 		    Next
 		    
 		    // Clear pending relationships
@@ -623,8 +623,10 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1
 		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
-		  // Pk must not be compiled as a column
-		  Return pORM.Join(pPivotTableName).On(pForeignColumn, "=", DB.Expression(QueryCompiler.Value(Me.Pk)))
+		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
+		  From(pPivotTableName). _
+		  Where(pForeignColumn, "=", Me.Pk) ._
+		  AndWhere(pFarColumn, "=", pORM.Pk))
 		End Function
 	#tag EndMethod
 
@@ -1141,11 +1143,11 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values()
-		      Call pRelation.Remove(Me, pDatabase)
+		      Call pRelation.Remove(Me, pDatabase, pCommit)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mAdded.Values()
-		      Call pRelation.Add(Me, pDatabase)
+		      Call pRelation.Add(Me, pDatabase, pCommit)
 		    Next
 		    // Clear pending relationships
 		    mAdded.Clear()
@@ -1199,8 +1201,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pColumn As String, pOperator As String, pValue As Variant) As ORM
-		  Call Super.Where(pColumn, pOperator, pValue)
+		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
+		  Call Super.Where(pLeft, pOperator, pRight)
 		  
 		  Return Me
 		End Function

@@ -3,11 +3,43 @@ Protected Class App
 Inherits Application
 	#tag Event
 		Sub Open()
-		  MsgBox DB.Find("id", "noClient").From("Clients").Join("Groupes").On("Clients.id", "=", 1).Compile()
+		  Dim pQueryBuilderMenuItem As MenuItem = New MenuItem("Live QueryBuilder...")
+		  pQueryBuilderMenuItem.Name = "OpenQueryBuilderTestWindow"
 		  
-		  MsgBox DB.Update("Clients").Set(new Dictionary()).Compile()
+		  Dim pORMMenuItem As MenuItem = New MenuItem("Live ORM...")
+		  pORMMenuItem.Name = "OpenORMTestWindow"
+		  
+		  XojoUnitMenuBar.Child("FileMenu").Insert(1, pQueryBuilderMenuItem)
+		  XojoUnitMenuBar.Child("FileMenu").Insert(2, pORMMenuItem)
+		  
 		End Sub
 	#tag EndEvent
+
+
+	#tag MenuHandler
+		Function OpenORMTestWindow() As Boolean Handles OpenORMTestWindow.Action
+			ORMTestWindow.Show
+			
+			Return True
+			
+		End Function
+	#tag EndMenuHandler
+
+	#tag MenuHandler
+		Function OpenQueryBuilderTestWindow() As Boolean Handles OpenQueryBuilderTestWindow.Action
+			QueryBuilderTestWindow.Show
+			
+			Return True
+			
+		End Function
+	#tag EndMenuHandler
+
+
+	#tag Method, Flags = &h0
+		Sub Untitled()
+		  
+		End Sub
+	#tag EndMethod
 
 
 	#tag Constant, Name = kEditClear, Type = String, Dynamic = False, Default = \"&Delete", Scope = Public

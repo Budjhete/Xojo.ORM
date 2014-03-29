@@ -2,11 +2,11 @@
 Protected Class ORMRelationHasMany
 Implements ORMRelation
 	#tag Method, Flags = &h0
-		Sub Add(pORM As ORM, pDatabase As Database)
+		Sub Add(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  DB.Update(mORM.TableName). _
 		  Set(mForeignColumn : pORM.Pk) ._
 		  Where(mORM.Pks). _
-		  Execute(pDatabase)
+		  Execute(pDatabase, pCommit)
 		  
 		End Sub
 	#tag EndMethod
@@ -26,12 +26,12 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Remove(pORM As ORM, pDatabase As Database)
+		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  DB.Update(mORM.TableName). _
 		  Set(mForeignColumn : Nil) ._
 		  Where(mORM.Pks). _
 		  AndWhere(mForeignColumn, "=", pORM.Pk). _
-		  Execute(pDatabase)
+		  Execute(pDatabase, pCommit)
 		  
 		  
 		End Sub

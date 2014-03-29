@@ -53,8 +53,8 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Operator(pOperator As String) As String
-		  Return pOperator.Uppercase()
+		Function Operator(pLeft As Variant, pOperator As String, pRight As Variant) As String
+		  Return pOperator.Uppercase
 		End Function
 	#tag EndMethod
 
