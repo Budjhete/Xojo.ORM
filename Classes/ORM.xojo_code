@@ -144,6 +144,21 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Changed() As Boolean
+		  For Each pKey As String In mChanged.Keys
+		    System.DebugLog "ORM change : " + pKey
+		  Next
+		  For Each pKey As String In mAdded.Keys
+		    System.DebugLog "ORM added : " + pKey
+		  Next
+		  Try  // FIXME #8033
+		    'For Each pKey As String In mRemoved.Keys
+		    'System.DebugLog "ORM removed : " + pKey
+		    'Next
+		  Catch e As TypeMismatchException
+		    System.DebugLog "ORM removed error: " + e.Message
+		  End Try
+		  
+		  
 		  Return mChanged.Keys().Ubound > -1 Or mAdded.Keys().Ubound > -1 Or mRemoved.Keys.Ubound > -1
 		End Function
 	#tag EndMethod
