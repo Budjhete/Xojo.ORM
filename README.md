@@ -93,7 +93,7 @@ And project memberships
 
 We need models to map those data conveniently. Let's create classes that subclass ORM.
 
-```rb
+```vb
     ModelUser As ORM
 
     ModelGroup As ORM
@@ -116,16 +116,20 @@ By default, the ORM pluralizes the class name without the "Model" prefix, but if
 
 By default, the ORM defines PrimaryKey as "id", but if your model has a custom primary key name, you must override ORM.PrimaryKey
 
+```vb
 In ModelUser.PrimaryKey
     Return "id"
+```
 
 Also, for convenience, you can define computed properties for your table columns like so
 
+```vb
 In ModelUser.user
     Get As String
         Return Me.Data("user")
     Set(value As String)
         Me.Data("user") = value
+```
 
 It is very useful to define computed properties with built-in types like String, Date or Integer. Be cautious with NULL values, as native types cannot take that value nor return it.
 
@@ -154,7 +158,7 @@ HasOne is only a special case of HasMany where you call Find instead of FindAll.
 #### BelongsTo
 BelongsTo are implemented through computed property like the following:
 
-```
+```vb
 ModelUser.group
     Get As ORM
         Return Me.BelongsTo("group", New ModelGroupe)
@@ -165,15 +169,17 @@ ModelUser.group
 #### HasMany And HasOne
 HasMany are implemented in a method using the HasMany helper.
 
+```vb
     ModelGroup.users As ModelUser
         Return ModelUser(Me.HasMany(New ModelUser, "group")) // The second parameter is the column in Users that relates to the group it belongs
+```
 
 HasOne is implemented using the ORM.HasOne helper instead, but it is only an alias for HasMany. Just make sure you call ORM.Find instead of ORM.FindAll.
 
 #### HasManyThrough
 HasManyThrough are a little more complex as you have to specify the pivot table
 
-```
+```vb
     ModelUser.projects As ModelProject
         Return ModelProject("UsersProjects", "user", "project", New ModelProject)
 ```
@@ -182,7 +188,7 @@ You have now defined all the relationships you need to avoid complicated joins!
 
 To deal with relationships, you can use ORM.Add, ORM.Remove and ORM.Has. These three methods are not very practical as you have to specify everything every time, but you can make it much simpler by overriding it with a custom signature like:
 
-```
+```vb
     ModelGroup.Add(ParamArray pUsers As ModelUser)
         Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 
@@ -201,7 +207,7 @@ This section convers basic model utilization.
 ### Creating new entries
 To create a new entry in your database for a given model, the ORM.Create function is given.
 
-```
+```vb
     pUser = New ModelUser()
 
     pUser.name = "John" // Through a computed property
@@ -212,7 +218,7 @@ To create a new entry in your database for a given model, the ORM.Create functio
 
 ### Fetching a single model
 
-```
+```vb
     pUser = New ModelUser
     pUser.Where("name", "=", "John") // Using conditional expression
     Call pUser.Find(pDatabase)
@@ -226,7 +232,7 @@ To create a new entry in your database for a given model, the ORM.Create functio
 
 Whenever you want to know if what you have fetched exists, just call ORM.Loaded
 
-```
+```vb
     If pUser.Loaded Then
         // Do some work
     Else
@@ -238,7 +244,7 @@ This method will check if any defined primary key (ORM.PrimaryKeys) has a Nil va
 
 ### Fetching multiple models
 
-```
+```vb
     pUser = New ModelUser
     pUser.Where("group", "=", 1)
     pRecordSet = pUser.FindAll(pDatabase) // returns all users from group 1
@@ -246,7 +252,7 @@ This method will check if any defined primary key (ORM.PrimaryKeys) has a Nil va
 
 Then you can fetch the data by looping through the RecordSet
 
-```
+```vb
     While Not pRecordSet.EOF
         Dim pUser As New ModelUser(pRecordSet)
         // Do stuff with your user...
@@ -256,7 +262,7 @@ Then you can fetch the data by looping through the RecordSet
 ## Changing your models
 Changing models is done through ORM.Data
 
-```
+```vb
     pUser.Data("name") = "John"
 
     Call pUser.Data("name", "John") // can be used like a closure
@@ -264,20 +270,20 @@ Changing models is done through ORM.Data
 
 Using a dictionary of values
 
-```
+```vb
     pDictionary As New Dictionary("name": "John")
     pUser.Data(pDictionary) // Using any dictionary
 ```
 
 Using a ParamArray of Pair
 
-```
+```vb
     pUser.Data("name" : "John") // Using a ParamArray of Pair
 ```
 
 Or using predefined computed property
 
-```
+```vb
     pUser.name = "John" // Using a precomputed property
 ```
 
@@ -285,14 +291,14 @@ Or using predefined computed property
 With HasMany and HasOne
 
 ```
-    pUser.Add("group", pGroup)
+    pvbUser.Add("group", pGroup)
 
     pUser.Remove("group", pGroup)
 ```
 
 With HasManyThrough
 
-```
+```vb
     pUser.Add("UsersGroups", "user", "group", pGroup)
 
     pUser.Remove("UsersGroups", "user", "group", pGroup)
@@ -305,14 +311,14 @@ In ModelUser.Add(ParamArray pGroups As ModelGroup)
 
 Now you may write
 
-```
+```vb
     pUser.Add(pGroup)
 ```
 
 ## Updating your changes
 Sending your changes back in the database is done through ORM.Update.
 
-```
+```vb
     Call pUser.Update(pDatabase)
 ```
 
@@ -320,14 +326,14 @@ ORM.Update throws an ORMException if it happens not to be loaded.
 
 If your model might be unloaded, you will prefer the ORM.Save method which call ORM.Create if ORM.Loaded is False
 
-```
+```vb
     Call pUser.Save(pDatabase)
 ```
 
 ## Deleting existing entries
 Removing an entry from the database is straight forward!
 
-```
+```vb
     Call pUser.Delete(pDatabase)
 ```
 
@@ -365,19 +371,19 @@ bFind.Action
 
 Calling Find on the model will trigger Finding, you may check if the user will not wipe the model if its changed
 
-    ```
-    User.Finding As Boolean
-        If mUser.Changed Then
-             Dim pMessageDialog As New MessageDialog
-             pMessageDialog.Title = "Clear your changes?"
-             pMessageDialog.Description = "Do you want to clear your changes?"
-             pMessageDialog.ActionButton.Caption = "Clear"
-             pMessageDialog.AlternateAction.Caption = "Don't clear"
-             pMessageDialog.AlternateAction.Visible = True
-             // Logic is negative for events: return True not to trigger the action.
-             Return pMessageDialog.ShowModal = pMessageDialog.AlternateAction
-        End If
-    ```
+```vb
+User.Finding As Boolean
+    If mUser.Changed Then
+         Dim pMessageDialog As New MessageDialog
+         pMessageDialog.Title = "Clear your changes?"
+         pMessageDialog.Description = "Do you want to clear your changes?"
+         pMessageDialog.ActionButton.Caption = "Clear"
+         pMessageDialog.AlternateAction.Caption = "Don't clear"
+         pMessageDialog.AlternateAction.Visible = True
+         // Logic is negative for events: return True not to trigger the action.
+         Return pMessageDialog.ShowModal = pMessageDialog.AlternateAction
+    End If
+```
 
 Found is called, it's time to present the model
 User.Found
@@ -394,7 +400,7 @@ The main advantages of using a QueryBuilder for any requests are
 
 Find, Create, Update and Delete all have an equivalent in SQL: SELECT, INSERT, UPDATE, DELETE. You never have to specify any of these when you are using the ORM. But if you are using the QueryBuilder directly, there are helpers for that!
 
-```
+```vb
     DB.Find.From("Users") // SELECT * FROM `Users`
     DB.Insert("Users") // INSERT INTO `Users`
     DB.Update("Users") // UPDATE `Users`
@@ -403,38 +409,39 @@ Find, Create, Update and Delete all have an equivalent in SQL: SELECT, INSERT, U
 
 There are also other useful helpers in DB
 
-```
+```vb
     DB.Count() // To count a specified column like COUNT ( `id` )
     DB.Set() // To define a set of values like ( 'a', 'b', 'c' )
 ```
 
 Then, you start building pretty much what is required
-```
+
+```vb
     DB.Find.From("Users").Where("name", "LIKE", "John")
 ```
 An interesting feature is that most duplicate expressions will compile into a single one
 
-```
+```vb
     DB.Find.From("Users").OrderBy("name").OrderBy("id") 
 ```
 
 This will simply make a sort by name and id columns.
 
 If you need any complex custom expression, use DB.Expression. This piece of request will appear raw in the SQL result.
-```
+```vb
     DB.Expression("TOTAL ( `Users`.`id` )")
 ```
 
 ### Executing your request
 Once you're done, call QueryBuilder.Execute on a database.
 
-```
+```vb
     Dim pRecordSet As RecordSet = DB.Find.From("Users").Where("name", "LIKE", "John").Execute(pDatabase)
 ```
 
 If no result is found, Nil will be returned instead of an empty RecordSet. If it might be Nil, you must check it.
 
-```
+```vb
     If pRecordSet <> Nil Then
         // Process data
     Else
@@ -444,14 +451,14 @@ If no result is found, Nil will be returned instead of an empty RecordSet. If it
 
 If you do not capture the RecordSet, it won't be generated.
 
-```
+```vb
     DB.Create("Users").Values("name": "John").Execute(pDatabase)
 ```
 
 ### Debugging your request
 To debug your request, you can log the compiled value instead of executing it.
 
-```
+```vb
     System.DebugLog DB.Find.From("Users").Compile
 ```
 
