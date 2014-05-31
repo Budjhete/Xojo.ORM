@@ -93,7 +93,7 @@ And project memberships
 
 We need models to map those data conveniently. Let's create classes that subclass ORM.
 
-```
+```REALbasic
     ModelUser As ORM
 
     ModelGroup As ORM
