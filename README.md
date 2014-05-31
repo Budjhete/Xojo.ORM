@@ -1,35 +1,20 @@
 # ORM
+
 ORM is a object-relation-mapper for Xojo applications. It is fast, consise, lightweight and secure!
 
 ## What's so great about it?
-* It is database-independant
-You may fetch a model from a database and save it in another if that pleases you! Also, basic SQL is used, so it is compatible with pretty much any database supported by Xojo.
 
-* It is secure
-All values are processed and quoted against SQL injections.
-
-* It is elegant
-It implements closures for doing builder-like syntax, function parameters and name are consistent and exploit ParamArray and Pair
-
-* It is fast and memory efficient
-Do not fear an overheap, ORM is nearly stateless and does not load unecessary information.
-
-* It is based on native class such as RecordSet, Database
-
-* Is is independent from the database
-Many ORM handles Database object internally, but that's restrictive when you want to work on multiple database.
-
-* It is unit-tested
-It will not break in your hand! 
-
-* It is event-driven
-It can be efficiently implemented as a control.
-
-* ORM and QueryBuilder inherit from Control
-There are fully qualified to be used as such.
-
-* It has a documentation
-Yep, look below.
+* It is database-independant ;
+You may fetch a model from a database and save it in another if that pleases you! Also, basic SQL is used, so it is compatible with pretty much any database supported by Xojo ;
+* It is secure: all values are processed and quoted against SQL injections ;
+* It is elegant: it implements closures for doing builder-like syntax, function parameters and name are consistent and exploit ParamArray and Pair ;
+* It is fast and memory efficient: do not fear an overheap, ORM is nearly stateless and does not load unecessary ; information.
+* it is based on native class such as RecordSet, Database ;
+* it is database independant ;
+* it is unit-tested and shall not break! 
+* it is event-driven ;
+* ORM and QueryBuilder inherit from Control and are fully qualified as such ;
+* it is extensively documented.
 
 ## Quick tour of ORM internals
 ORM is coded surprisingly simply. It has 4 internal state: mData, mChanged, mAdd and mRemove.
@@ -43,8 +28,6 @@ All other information are deduced from these information.
 Using ORM is very simple. They are designed to make programming efficient. For the following examples, two models will be defined: ModelUser and ModelGroup, both inheriting from ORM. Reading this section in order should prepare you for creating and using your own models.
 
 User and Group models are available in the module for testing purposes and examples.
-
-More specific documentation is providen here <url>.
 
 ## Defining models
 Let's say we have the following table definition
@@ -162,8 +145,8 @@ BelongsTo are implemented through computed property like the following:
 
 ```vb
 ModelUser.group
-    Get As ORM
-        Return Me.BelongsTo("group", New ModelGroupe)
+    Get As ModelGroup
+        Return Me.BelongsTo("group", New ModelGroup)
     Set(value As ORM)
         Me.BelongsTo("group", value)
 ```
@@ -368,8 +351,11 @@ A complete example of event-drived interface with ORM is shown in the Views fold
 The most important thing is to respect the event cycle. In this case, we have a simple interface with a button bFind and a text field tName. When you press on bFind, the model is loaded and tName contains mUser.name.
 
 Let's say a user wishes to see the model 1 and presses a button to do so
+
+```vb
 bFind.Action
     mUser.Where("id", "=", 1).Find(pDatabase)
+```
 
 Calling Find on the model will trigger Finding, you may check if the user will not wipe the model if its changed
 
@@ -388,8 +374,11 @@ User.Finding As Boolean
 ```
 
 Found is called, it's time to present the model
+
+```vb
 User.Found
     tName.Text = Me.name
+```
 
 ## Make complex request with the QueryBuilder
 This section describes some advanced usage with the QueryBuilder. As you have probably already noticed, the ORM inherit from the QueryBuilder, so all that will be explained here is reusable in the fetching process.
