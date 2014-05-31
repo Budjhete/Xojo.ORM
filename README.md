@@ -93,7 +93,7 @@ And project memberships
 
 We need models to map those data conveniently. Let's create classes that subclass ORM.
 
-```REALbasic
+```rb
     ModelUser As ORM
 
     ModelGroup As ORM
@@ -109,7 +109,7 @@ The basic definition of a model implies the definition of ORM.TableName and ORM.
 
 By default, the ORM pluralizes the class name without the "Model" prefix, but if you need a custom table name, you must override ORM.TableName
 
-```
+```vb
     ModelUser.TableName As String
         Return "Users"
 ```
