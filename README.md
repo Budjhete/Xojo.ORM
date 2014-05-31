@@ -52,55 +52,55 @@ Let's say we have the following table definition
 Our users
 
 ```sql
-    CREATE TABLE `Users` (
-        `id` INTEGER PRIMARY KEY,
-        `group` INTEGER REFERENCES Groups(id),
-        `username` TEXT NOT NULL,
-        `password` TEXT, --- unset password is NULL
-        UNIQUE ( `username` )
-    );
+CREATE TABLE `Users` (
+    `id` INTEGER PRIMARY KEY,
+    `group` INTEGER REFERENCES Groups(id),
+    `username` TEXT NOT NULL,
+    `password` TEXT, --- unset password is NULL
+    UNIQUE ( `username` )
+);
 ```
 
 Our groups of users
 
 ```sql
-    CREATE TABLE `Groups` (
-        `id` INTEGER PRIMARY KEY,
-        `user` INTEGER REFERENCES Users(id), --- an administrator
-        `name` TEXT NOT NULL,
-        UNIQUE ( `name` )
-    );
+CREATE TABLE `Groups` (
+    `id` INTEGER PRIMARY KEY,
+    `user` INTEGER REFERENCES Users(id), --- an administrator
+    `name` TEXT NOT NULL,
+    UNIQUE ( `name` )
+);
 ```
 
 Some projects for our users
 
 ```sql
-    CREATE TABLE `Projects` (
-        `id` INTEGER PRIMARY KEY,
-        `name` TEXT NOT NULL,
-    );
+CREATE TABLE `Projects` (
+    `id` INTEGER PRIMARY KEY,
+    `name` TEXT NOT NULL,
+);
 ```
 And project memberships
 
 ```sql
-    CREATE TABLE `UsersProjects` (
-        `project` INTEGER REFERENCES Projects(id),
-        `user` INTEGER REFERENCES Users(id),
-        `role` TEXT, -- role occupied by the member
-        PRIMARY KEY ( `project`, `user` )
-    );
+CREATE TABLE `UsersProjects` (
+    `project` INTEGER REFERENCES Projects(id),
+    `user` INTEGER REFERENCES Users(id),
+    `role` TEXT, -- role occupied by the member
+    PRIMARY KEY ( `project`, `user` )
+);
 ```
 
 We need models to map those data conveniently. Let's create classes that subclass ORM.
 
 ```vb
-    ModelUser As ORM
+ModelUser As ORM
 
-    ModelGroup As ORM
+ModelGroup As ORM
 
-    ModelProject As ORM
+ModelProject As ORM
 
-    ModelUserProject As ORM
+ModelUserProject As ORM
 ```
 
 Prepending "Model" is a recommended convention, but you can call the models the way you wish.
@@ -110,8 +110,8 @@ The basic definition of a model implies the definition of ORM.TableName and ORM.
 By default, the ORM pluralizes the class name without the "Model" prefix, but if you need a custom table name, you must override ORM.TableName
 
 ```vb
-    ModelUser.TableName As String
-        Return "Users"
+ModelUser.TableName As String
+    Return "Users"
 ```
 
 By default, the ORM defines PrimaryKey as "id", but if your model has a custom primary key name, you must override ORM.PrimaryKey
@@ -138,8 +138,10 @@ When using ORM as a Control, computed properties might are set without any conse
 ### Handling multiple primary keys
 It often happens that models have multiple column as a primary key or simply does not have any. To implement those behaviours, just overload PrimaryKeys and return an array of primary keys.
 
-    In ModelUser.PrimaryKeys As String()
-        Return Array("username", "email")
+```vb
+In ModelUser.PrimaryKeys As String()
+    Return Array("username", "email")
+```
 
 At any moment, you can fetch your primary key values with ORM.Pks, which returns a dictionary of column to value.
 
@@ -170,8 +172,8 @@ ModelUser.group
 HasMany are implemented in a method using the HasMany helper.
 
 ```vb
-    ModelGroup.users As ModelUser
-        Return ModelUser(Me.HasMany(New ModelUser, "group")) // The second parameter is the column in Users that relates to the group it belongs
+ModelGroup.users As ModelUser
+    Return ModelUser(Me.HasMany(New ModelUser, "group")) // The second parameter is the column in Users that relates to the group it belongs
 ```
 
 HasOne is implemented using the ORM.HasOne helper instead, but it is only an alias for HasMany. Just make sure you call ORM.Find instead of ORM.FindAll.
@@ -180,8 +182,8 @@ HasOne is implemented using the ORM.HasOne helper instead, but it is only an ali
 HasManyThrough are a little more complex as you have to specify the pivot table
 
 ```vb
-    ModelUser.projects As ModelProject
-        Return ModelProject("UsersProjects", "user", "project", New ModelProject)
+ModelUser.projects As ModelProject
+    Return ModelProject("UsersProjects", "user", "project", New ModelProject)
 ```
 
 You have now defined all the relationships you need to avoid complicated joins!
@@ -189,14 +191,14 @@ You have now defined all the relationships you need to avoid complicated joins!
 To deal with relationships, you can use ORM.Add, ORM.Remove and ORM.Has. These three methods are not very practical as you have to specify everything every time, but you can make it much simpler by overriding it with a custom signature like:
 
 ```vb
-    ModelGroup.Add(ParamArray pUsers As ModelUser)
-        Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
+ModelGroup.Add(ParamArray pUsers As ModelUser)
+    Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 
-    ModelGroup.Remove(ParamArray pUsers As ModelUser)
-        Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
+ModelGroup.Remove(ParamArray pUsers As ModelUser)
+    Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 
-    ModelGroup.Has(ParamArray pUsers As ModelUser)
-        Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
+ModelGroup.Has(ParamArray pUsers As ModelUser)
+    Return ModelGroup(Super.Add("UsersGroups", "group", "user", pUsers))
 ```
 
 Now, you have friendly methods to deal with relationships :)
@@ -208,36 +210,36 @@ This section convers basic model utilization.
 To create a new entry in your database for a given model, the ORM.Create function is given.
 
 ```vb
-    pUser = New ModelUser()
+pUser = New ModelUser()
 
-    pUser.name = "John" // Through a computed property
-    pUser.Data("name") = "John" // Directly using Data
+pUser.name = "John" // Through a computed property
+pUser.Data("name") = "John" // Directly using Data
 
-    Call pUser.Create(pDatabase)
+Call pUser.Create(pDatabase)
 ```
 
 ### Fetching a single model
 
 ```vb
-    pUser = New ModelUser
-    pUser.Where("name", "=", "John") // Using conditional expression
-    Call pUser.Find(pDatabase)
+pUser = New ModelUser
+pUser.Where("name", "=", "John") // Using conditional expression
+Call pUser.Find(pDatabase)
 
-    pUser = New ModelUser(New Dictionary("id": 5)) // from a dictionary of criterias
+pUser = New ModelUser(New Dictionary("id": 5)) // from a dictionary of criterias
 
-    Dim pAdministrator As ModelUser = New ModelUser(pUser) // New ModelUser(pUser.Pks)
+Dim pAdministrator As ModelUser = New ModelUser(pUser) // New ModelUser(pUser.Pks)
 
-    pUser = New ModelUser(pRecordSet) // from a RecordSet
+pUser = New ModelUser(pRecordSet) // from a RecordSet
 ```
 
 Whenever you want to know if what you have fetched exists, just call ORM.Loaded
 
 ```vb
-    If pUser.Loaded Then
-        // Do some work
-    Else
-        // Do other work (like creating a new model!)
-    End If
+If pUser.Loaded Then
+    // Do some work
+Else
+    // Do other work (like creating a new model!)
+End If
 ```
 
 This method will check if any defined primary key (ORM.PrimaryKeys) has a Nil value and otherwise returns True.
@@ -245,63 +247,63 @@ This method will check if any defined primary key (ORM.PrimaryKeys) has a Nil va
 ### Fetching multiple models
 
 ```vb
-    pUser = New ModelUser
-    pUser.Where("group", "=", 1)
-    pRecordSet = pUser.FindAll(pDatabase) // returns all users from group 1
+pUser = New ModelUser
+pUser.Where("group", "=", 1)
+pRecordSet = pUser.FindAll(pDatabase) // returns all users from group 1
 ```
 
 Then you can fetch the data by looping through the RecordSet
 
 ```vb
-    While Not pRecordSet.EOF
-        Dim pUser As New ModelUser(pRecordSet)
-        // Do stuff with your user...
-    WEnd
+While Not pRecordSet.EOF
+    Dim pUser As New ModelUser(pRecordSet)
+    // Do stuff with your user...
+WEnd
 ```
 
 ## Changing your models
 Changing models is done through ORM.Data
 
 ```vb
-    pUser.Data("name") = "John"
+pUser.Data("name") = "John"
 
-    Call pUser.Data("name", "John") // can be used like a closure
+Call pUser.Data("name", "John") // can be used like a closure
 ```
 
 Using a dictionary of values
 
 ```vb
-    pDictionary As New Dictionary("name": "John")
-    pUser.Data(pDictionary) // Using any dictionary
+pDictionary As New Dictionary("name": "John")
+pUser.Data(pDictionary) // Using any dictionary
 ```
 
 Using a ParamArray of Pair
 
 ```vb
-    pUser.Data("name" : "John") // Using a ParamArray of Pair
+pUser.Data("name" : "John") // Using a ParamArray of Pair
 ```
 
 Or using predefined computed property
 
 ```vb
-    pUser.name = "John" // Using a precomputed property
+pUser.name = "John" // Using a precomputed property
 ```
 
 ### Adding and removing relationship
 With HasMany and HasOne
 
 ```
-    pvbUser.Add("group", pGroup)
+pvbUser.Add("group", pGroup)
 
-    pUser.Remove("group", pGroup)
+pUser.Remove("group", pGroup)
 ```
 
 With HasManyThrough
 
 ```vb
-    pUser.Add("UsersGroups", "user", "group", pGroup)
+pUser.Add("UsersGroups", "user", "group", pGroup)
 
-    pUser.Remove("UsersGroups", "user", "group", pGroup)
+pUser.Remove("UsersGroups", "user", "group", pGroup)
 ```
 
 It is explicit, but you can avoid specifying all these parameters by writing a signature for Add and Remove specifically for the ModelGroup.
@@ -312,14 +314,14 @@ In ModelUser.Add(ParamArray pGroups As ModelGroup)
 Now you may write
 
 ```vb
-    pUser.Add(pGroup)
+pUser.Add(pGroup)
 ```
 
 ## Updating your changes
 Sending your changes back in the database is done through ORM.Update.
 
 ```vb
-    Call pUser.Update(pDatabase)
+Call pUser.Update(pDatabase)
 ```
 
 ORM.Update throws an ORMException if it happens not to be loaded.
@@ -327,14 +329,14 @@ ORM.Update throws an ORMException if it happens not to be loaded.
 If your model might be unloaded, you will prefer the ORM.Save method which call ORM.Create if ORM.Loaded is False
 
 ```vb
-    Call pUser.Save(pDatabase)
+Call pUser.Save(pDatabase)
 ```
 
 ## Deleting existing entries
 Removing an entry from the database is straight forward!
 
 ```vb
-    Call pUser.Delete(pDatabase)
+Call pUser.Delete(pDatabase)
 ```
 
 ORM.Delete throws an ORMException if it happens not to be loaded.
@@ -401,65 +403,65 @@ The main advantages of using a QueryBuilder for any requests are
 Find, Create, Update and Delete all have an equivalent in SQL: SELECT, INSERT, UPDATE, DELETE. You never have to specify any of these when you are using the ORM. But if you are using the QueryBuilder directly, there are helpers for that!
 
 ```vb
-    DB.Find.From("Users") // SELECT * FROM `Users`
-    DB.Insert("Users") // INSERT INTO `Users`
-    DB.Update("Users") // UPDATE `Users`
-    DB.Delete("Users") // DELETE `Users`
+DB.Find.From("Users") // SELECT * FROM `Users`
+DB.Insert("Users") // INSERT INTO `Users`
+DB.Update("Users") // UPDATE `Users`
+DB.Delete("Users") // DELETE `Users`
 ```
 
 There are also other useful helpers in DB
 
 ```vb
-    DB.Count() // To count a specified column like COUNT ( `id` )
-    DB.Set() // To define a set of values like ( 'a', 'b', 'c' )
+DB.Count() // To count a specified column like COUNT ( `id` )
+DB.Set() // To define a set of values like ( 'a', 'b', 'c' )
 ```
 
 Then, you start building pretty much what is required
 
 ```vb
-    DB.Find.From("Users").Where("name", "LIKE", "John")
+DB.Find.From("Users").Where("name", "LIKE", "John")
 ```
 An interesting feature is that most duplicate expressions will compile into a single one
 
 ```vb
-    DB.Find.From("Users").OrderBy("name").OrderBy("id") 
+DB.Find.From("Users").OrderBy("name").OrderBy("id") 
 ```
 
 This will simply make a sort by name and id columns.
 
 If you need any complex custom expression, use DB.Expression. This piece of request will appear raw in the SQL result.
 ```vb
-    DB.Expression("TOTAL ( `Users`.`id` )")
+DB.Expression("TOTAL ( `Users`.`id` )")
 ```
 
 ### Executing your request
 Once you're done, call QueryBuilder.Execute on a database.
 
 ```vb
-    Dim pRecordSet As RecordSet = DB.Find.From("Users").Where("name", "LIKE", "John").Execute(pDatabase)
+Dim pRecordSet As RecordSet = DB.Find.From("Users").Where("name", "LIKE", "John").Execute(pDatabase)
 ```
 
 If no result is found, Nil will be returned instead of an empty RecordSet. If it might be Nil, you must check it.
 
 ```vb
-    If pRecordSet <> Nil Then
-        // Process data
-    Else
-        // No record founds :(
-    End If
+If pRecordSet <> Nil Then
+    // Process data
+Else
+    // No record founds :(
+End If
 ```
 
 If you do not capture the RecordSet, it won't be generated.
 
 ```vb
-    DB.Create("Users").Values("name": "John").Execute(pDatabase)
+DB.Create("Users").Values("name": "John").Execute(pDatabase)
 ```
 
 ### Debugging your request
 To debug your request, you can log the compiled value instead of executing it.
 
 ```vb
-    System.DebugLog DB.Find.From("Users").Compile
+System.DebugLog DB.Find.From("Users").Compile
 ```
 
 This is useful to identify your mistakes, or a bug in ORM.
