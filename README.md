@@ -17,7 +17,7 @@ You may fetch a model from a database and save it in another if that pleases you
 * it is extensively documented.
 
 ## Quick tour of ORM internals
-ORM is coded surprisingly simply. It has 4 internal state: mData, mChanged, mAdd and mRemove.
+ORM is coded surprisingly simply. It has 4 internal state: ```mData```, ```mChanged```, ```mAdd``` and ```mRemove```.
 * mData contains fetched data matching the content of the database.
 * mChanged contains the changes done by the user
 * mAdd contains the added related models
@@ -88,7 +88,7 @@ ModelUserProject As ORM
 
 Prepending "Model" is a recommended convention, but you can call the models the way you wish.
 
-The basic definition of a model implies the definition of ORM.TableName and ORM.PrimaryKey functions in your model. ORM.TableName will tell the ORM where your model is stored in the database and ORM.PrimaryKey will indicate which row it is related to.
+The basic definition of a model implies the definition of ```ORM.TableName``` and ```ORM.PrimaryKey``` functions in your model. ```ORM.TableName``` will tell the ORM where your model is stored in the database and ```ORM.PrimaryKey``` will indicate which row it is related to.
 
 By default, the ORM pluralizes the class name without the "Model" prefix, but if you need a custom table name, you must override ORM.TableName
 
@@ -97,7 +97,7 @@ ModelUser.TableName As String
     Return "Users"
 ```
 
-By default, the ORM defines PrimaryKey as "id", but if your model has a custom primary key name, you must override ORM.PrimaryKey
+By default, the ORM defines ```PrimaryKey``` as "id", but if your model has a custom primary key name, you must override ```ORM.PrimaryKey```
 
 ```vb
 In ModelUser.PrimaryKey
@@ -114,7 +114,7 @@ In ModelUser.user
         Me.Data("user") = value
 ```
 
-It is very useful to define computed properties with built-in types like String, Date or Integer. Be cautious with NULL values, as native types cannot take that value nor return it.
+It is very useful to define computed properties with built-in types like String, Date or Integer. Be cautious with ```Nil``` values, as native types cannot take that value nor return it.
 
 When using ORM as a Control, computed properties might are set without any consent. Yet, we are looking forward solution to this problem.
 
@@ -128,17 +128,19 @@ In ModelUser.PrimaryKeys As String()
 
 At any moment, you can fetch your primary key values with ORM.Pks, which returns a dictionary of column to value.
 
-    Dim pPks As Dictionary = pUser.Pks
+```vb
+Dim pPks As Dictionary = pUser.Pks
+```
 
 All right! At this point, your models are ready-to-use! But not so fast, as we can make things better.
 
 ### Defining relationships
 Relationships are very important for models, otherwise they will feel lonely. This ORM supports 3 kind of relationships:
-* BelongsTo
-* HasMany and HasOne
-* HasManyThrough
+* ```BelongsTo```
+* ```HasMany and HasOne```
+* ```HasManyThrough```
 
-HasOne is only a special case of HasMany where you call Find instead of FindAll.
+```HasOne``` is only a special case of ```HasMany``` where you call ```Find``` instead of ```FindAll```.
 
 #### BelongsTo
 BelongsTo are implemented through computed property like the following:
@@ -159,7 +161,7 @@ ModelGroup.users As ModelUser
     Return ModelUser(Me.HasMany(New ModelUser, "group")) // The second parameter is the column in Users that relates to the group it belongs
 ```
 
-HasOne is implemented using the ORM.HasOne helper instead, but it is only an alias for HasMany. Just make sure you call ORM.Find instead of ORM.FindAll.
+HasOne is implemented using the ```ORM.HasOne``` helper instead, but it is only an alias for HasMany. Just make sure you call ```ORM.Find``` instead of ```ORM.FindAll```.
 
 #### HasManyThrough
 HasManyThrough are a little more complex as you have to specify the pivot table
@@ -171,7 +173,7 @@ ModelUser.projects As ModelProject
 
 You have now defined all the relationships you need to avoid complicated joins!
 
-To deal with relationships, you can use ORM.Add, ORM.Remove and ORM.Has. These three methods are not very practical as you have to specify everything every time, but you can make it much simpler by overriding it with a custom signature like:
+To deal with relationships, you can use ```ORM.Add```, ```ORM.Remove``` and ```ORM.Has```. These three methods are not very practical as you have to specify everything every time, but you can make it much simpler by overriding it with a custom signature like:
 
 ```vb
 ModelGroup.Add(ParamArray pUsers As ModelUser)
@@ -190,7 +192,7 @@ Now, you have friendly methods to deal with relationships :)
 This section convers basic model utilization.
 
 ### Creating new entries
-To create a new entry in your database for a given model, the ORM.Create function is given.
+To create a new entry in your database for a given model, the ```ORM.Create``` function is given.
 
 ```vb
 pUser = New ModelUser()
@@ -215,7 +217,7 @@ Dim pAdministrator As ModelUser = New ModelUser(pUser) // New ModelUser(pUser.Pk
 pUser = New ModelUser(pRecordSet) // from a RecordSet
 ```
 
-Whenever you want to know if what you have fetched exists, just call ORM.Loaded
+Whenever you want to know if what you have fetched exists, just call ```ORM.Loaded```
 
 ```vb
 If pUser.Loaded Then
@@ -225,7 +227,7 @@ Else
 End If
 ```
 
-This method will check if any defined primary key (ORM.PrimaryKeys) has a Nil value and otherwise returns True.
+This method will check if any defined primary key (```ORM.PrimaryKeys```) has a ```Nil``` value and otherwise returns ```True```.
 
 ### Fetching multiple models
 
@@ -235,7 +237,7 @@ pUser.Where("group", "=", 1)
 pRecordSet = pUser.FindAll(pDatabase) // returns all users from group 1
 ```
 
-Then you can fetch the data by looping through the RecordSet
+Then you can fetch the data by looping through the ```RecordSet```
 
 ```vb
 While Not pRecordSet.EOF
@@ -245,7 +247,7 @@ WEnd
 ```
 
 ## Changing your models
-Changing models is done through ORM.Data
+Changing models is done through ```ORM.Data```
 
 ```vb
 pUser.Data("name") = "John"
@@ -273,9 +275,9 @@ pUser.name = "John" // Using a precomputed property
 ```
 
 ### Adding and removing relationship
-With HasMany and HasOne
+With ```HasMany``` and ```HasOne```
 
-```
+```vb
 pvbUser.Add("group", pGroup)
 
 pUser.Remove("group", pGroup)
@@ -289,10 +291,12 @@ pUser.Add("UsersGroups", "user", "group", pGroup)
 pUser.Remove("UsersGroups", "user", "group", pGroup)
 ```
 
-It is explicit, but you can avoid specifying all these parameters by writing a signature for Add and Remove specifically for the ModelGroup.
+It is explicit, but you can avoid specifying all these parameters by writing a signature for ```Add``` and ```Remove``` specifically for the ```ModelGroup```.
 
+```vb
 In ModelUser.Add(ParamArray pGroups As ModelGroup)
     Return Add("UsersGroups", "user", "group", pGroups)
+```
 
 Now you may write
 
@@ -301,15 +305,15 @@ pUser.Add(pGroup)
 ```
 
 ## Updating your changes
-Sending your changes back in the database is done through ORM.Update.
+Sending your changes back in the database is done through ```ORM.Update```.
 
 ```vb
 Call pUser.Update(pDatabase)
 ```
 
-ORM.Update throws an ORMException if it happens not to be loaded.
+ORM.Update throws an ```ORMException``` if it happens not to be loaded.
 
-If your model might be unloaded, you will prefer the ORM.Save method which call ORM.Create if ORM.Loaded is False
+If your model might be unloaded, you will prefer the ```ORM.Save``` method which call ```ORM.Create``` if ORM.Loaded is False
 
 ```vb
 Call pUser.Save(pDatabase)
@@ -322,22 +326,22 @@ Removing an entry from the database is straight forward!
 Call pUser.Delete(pDatabase)
 ```
 
-ORM.Delete throws an ORMException if it happens not to be loaded.
+```ORM.Delete``` throws an ```ORMException``` if it happens not to be loaded.
 
 ## Advanced usages
 This section convers most of advanced usages you can do with the ORM.
 
 ### Properly clearing data
 ORM offers 3 way to clear internal data and one to reset them:
-* ORM.Clear clears changes, not data
-* ORM.Unload clears the primary keys
-* ORM.UnloadAll clears data, not changes
-* ORM.Reset clears the QueryBuilder (inherited)
-* ORM.Reload which call Unload then call Find
+* ```ORM.Clear``` clears changes, not data
+* ```ORM.Unload``` clears the primary keys
+* ```ORM.UnloadAll``` clears data, not changes
+* ```ORM.Reset``` clears the QueryBuilder (inherited)
+* ```ORM.Reload``` which call Unload then call Find
 
-ORM.Clear is used mainly for clearing
+```ORM.Clear``` is used mainly for clearing
 
-ORM.Unload is useful for making in-place copies of your models.
+```ORM.Unload``` is useful for making in-place copies of your models.
 
 Use these methods with caution. Events will be thrown to give you scopes to cancel these operations. Event-driven model is covered below.
 
@@ -440,7 +444,7 @@ Else
 End If
 ```
 
-If you do not capture the RecordSet, it won't be generated.
+If you do not capture the ```RecordSet```, it won't be generated.
 
 ```vb
 DB.Create("Users").Values("name": "John").Execute(pDatabase)
