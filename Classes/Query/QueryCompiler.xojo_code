@@ -54,6 +54,9 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Operator(pLeft As Variant, pOperator As String, pRight As Variant) As String
+		  #Pragma Unused pLeft
+		  #Pragma Unused pRight
+		  
 		  Return pOperator.Uppercase
 		End Function
 	#tag EndMethod

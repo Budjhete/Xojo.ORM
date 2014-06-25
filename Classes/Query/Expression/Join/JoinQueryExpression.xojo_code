@@ -3,6 +3,8 @@ Protected Class JoinQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  #Pragma Unused pLastQueryExpression
+		  
 		  Return "JOIN " + QueryCompiler.TableName(mTableName, mTableAlias)
 		End Function
 	#tag EndMethod

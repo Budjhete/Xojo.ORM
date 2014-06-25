@@ -14,23 +14,18 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub AddTest()
-		  CreateUsers()
-		  CreateProjects()
-		  
-		  Dim pUser As New UserTest(1, ORMTestDatabase)
-		  Dim pProject As New ProjectTest(1, ORMTestDatabase)
-		  Assert.IsFalse pUser.Has(pProject, ORMTestDatabase)
-		  
-		  Call pUser.Add(pProject)
-		  Assert.IsFalse pUser.Has(pProject, ORMTestDatabase)
-		  
-		  Call pUser.Update(ORMTestDatabase)
-		  Assert.IsTrue pUser.Has(pProject, ORMTestDatabase)
-		  
-		  // HasMany
+		  Dim pUser As New UserTest
+		  pUser.username = "John Doe"
+		  Call pUser.Create(ORMTestDatabase)
 		  
 		  Dim pGroup As New GroupTest
 		  Call pGroup.Create(ORMTestDatabase)
+		  
+		  Dim pProject As New ProjectTest
+		  pProject.name = "ORM"
+		  Call pProject.Create(ORMTestDatabase)
+		  
+		  // HasMany
 		  Assert.IsFalse pUser.Has("user", pGroup, ORMTestDatabase)
 		  
 		  Call pUser.Add("user", pGroup).Update(ORMTestDatabase)
@@ -48,11 +43,6 @@ Inherits TestGroup
 		  Call pUser.Update(ORMTestDatabase)
 		  Assert.IsTrue pUser.Has(pProject, ORMTestDatabase)
 		  
-		  DB.Delete("Users").Execute(ORMTestDatabase)
-		  DB.Delete("Groups").Execute(ORMTestDatabase)
-		  DB.Delete("Projects").Execute(ORMTestDatabase)
-		  DB.Delete("UsersProjects").Execute(ORMTestDatabase)
-		  
 		  
 		  
 		  
@@ -63,7 +53,9 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub ConstructorTest()
-		  DB.Insert("Users", "id", "username", "password").Values(1, "foo", "bar").Execute(ORMTestDatabase)
+		  DB.Insert("Users", "id", "username", "password"). _
+		  Values(1, "foo", "bar"). _
+		  Execute(ORMTestDatabase)
 		  
 		  // Primary key and Database
 		  Dim pUser As New UserTest(1, ORMTestDatabase)
@@ -86,14 +78,11 @@ Inherits TestGroup
 		  Assert.IsFalse pUser.Loaded
 		  Call pUser.Find(ORMTestDatabase)
 		  Assert.IsTrue pUser.Loaded
-		  
-		  DB.Delete("Users").Where("id", "=", 1).Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub ConverFromRecordSetTest()
-		  CreateUsers
 		  Dim pUsers As New UserTest
 		  
 		  Dim pRecords As RecordSet = pUsers.FindAll(ORMTestDatabase)
@@ -108,34 +97,16 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub CopyTest()
-		  Dim pUser As ORM = new UserTest()
+		  Dim pUser As New UserTest
 		  
 		  pUser.Data("username") = "Paul-Willy"
 		  pUser.Data("password") = "password"
 		  
 		  Dim pCopy As UserTest = pUser.Copy
 		  
-		  // @todo equalty comparisons
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub CreateGroups()
-		  DB.Delete("Groups").Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "user").Values("Developpeurs", 1).Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "user").Values("Designers", 2).Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name", "user").Values("Junior", 1).Execute(ORMTestDatabase)
-		  DB.Insert("Groups", "name").Values("Senior").Execute(ORMTestDatabase)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub CreateProjects()
-		  DB.Delete("Projects").Execute(ORMTestDatabase)
-		  DB.Insert("Projects", "name").Values("Budjhete").Execute(ORMTestDatabase)
-		  DB.Insert("Projects", "name").Values("Kanjo").Execute(ORMTestDatabase)
-		  DB.Insert("Projects", "name").Values("Hete").Execute(ORMTestDatabase)
-		  DB.Insert("Projects", "name").Values("Vee").Execute(ORMTestDatabase)
+		  Assert.IsFalse(pUser Is pCopy)
+		  Assert.AreEqual(pUser.username, pCopy.username)
+		  Assert.AreEqual(pUser.password, pCopy.password)
 		End Sub
 	#tag EndMethod
 
@@ -154,14 +125,6 @@ Inherits TestGroup
 		  
 		  Assert.IsTrue pUser.Loaded()
 		  Assert.IsFalse pUser.Changed(), "L'ORM a change"
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Sub CreateUsers()
-		  DB.Delete("Users").Execute(ORMTestDatabase)
-		  DB.Insert("Users", "username", "password").Values("Budjhete", ".com").Execute(ORMTestDatabase)
-		  DB.Insert("Users", "username", "password").Values("Kanjo", ".com").Execute(ORMTestDatabase)
 		End Sub
 	#tag EndMethod
 
@@ -270,6 +233,18 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub JSONValueTest()
+		  Dim pUserTest As New UserTest
+		  
+		  pUserTest.username = "John Doe"
+		  
+		  Dim pJSONItem As JSONItem = pUserTest.JSONValue
+		  
+		  Assert.AreEqual(pUserTest.username, pJSONItem.Value("username"))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub PrimaryKeysTest()
 		  Dim pUserProject As New UserProjectTest
 		  Dim pUser As New UserTest
@@ -344,16 +319,21 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub RemoveTest()
-		  CreateUsers()
-		  CreateProjects()
-		  DB.Delete("UsersProjects").Execute(ORMTestDatabase)
+		  // Fixtures
+		  DB.Insert("Users", "username", "password").Values("Budjhete", ".com").Execute(ORMTestDatabase)
+		  DB.Insert("Users", "username", "password").Values("Kanjo", ".com").Execute(ORMTestDatabase)
+		  
+		  DB.Insert("Projects", "name").Values("Budjhete").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Kanjo").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Hete").Execute(ORMTestDatabase)
+		  DB.Insert("Projects", "name").Values("Vee").Execute(ORMTestDatabase)
 		  
 		  // Loads the UsertTest model from the database
-		  Dim pUserTest As New UserTest(1)
+		  Dim pUserTest As New UserTest
 		  Call pUserTest.Find(ORMTestDatabase)
 		  
 		  // Loads the ProjectTest model from the database
-		  Dim pProjectTest As New ProjectTest(1)
+		  Dim pProjectTest As New ProjectTest
 		  Call pProjectTest.Find(ORMTestDatabase)
 		  
 		  // Remove all relationships
@@ -480,6 +460,19 @@ Inherits TestGroup
 		  'Assert.IsFalse pModel.Loaded
 		  'Assert.IsTrue pModel.Changed
 		  'End Try
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub XMLValueTest()
+		  Dim pUserTest As New UserTest
+		  
+		  pUserTest.username = "John Doe"
+		  
+		  Dim pXmlDocument As New XmlDocument
+		  Dim pXmlNode As XmlNode = pUserTest.XMLValue(pXmlDocument)
+		  
+		  Assert.AreEqual(pUserTest.username, pXmlNode.GetAttribute("username"))
 		End Sub
 	#tag EndMethod
 

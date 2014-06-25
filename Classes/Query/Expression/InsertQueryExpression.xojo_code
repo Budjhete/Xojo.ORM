@@ -3,6 +3,8 @@ Protected Class InsertQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  #Pragma Unused pLastQueryExpression
+		  
 		  Dim pColumns As String
 		  
 		  // No columns makes a simple insertion

@@ -9,12 +9,6 @@ Inherits ORM
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Database() As Database
-		  Return ORMTestDatabase
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function TableName() As String
 		  Return "Groups"
 		End Function

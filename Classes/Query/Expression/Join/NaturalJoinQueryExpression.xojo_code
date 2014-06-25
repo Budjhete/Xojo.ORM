@@ -3,6 +3,8 @@ Protected Class NaturalJoinQueryExpression
 Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  #Pragma Unused pLastQueryExpression
+		  
 		  Return "NATURAL " + Super.Compile()
 		End Function
 	#tag EndMethod

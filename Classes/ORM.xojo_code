@@ -80,7 +80,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pORMs As ORM) As ORM
-		  Return Add(pPivotTableName, pForeignColumn, pFarColumn, pORMs)
+		  Return Me.Add(pPivotTableName, pForeignColumn, pFarColumn, pORMs)
 		End Function
 	#tag EndMethod
 
@@ -138,6 +138,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Bind(pTableName As String, pForeignColumn As String) As ORM
+		  // Join operation for BelongsTo related models.
+		  // @todo support for multiple primary keys
+		  
 		  Return Me.Join(pTableName).On(pTableName + "." + pForeignColumn, "=", Me.TableName + "." + Me.PrimaryKey)
 		End Function
 	#tag EndMethod
@@ -189,6 +192,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pCriterias As Dictionary)
+		  // Basic ORM constructor
+		  
 		  Super.Constructor
 		  
 		  mData = New Dictionary
@@ -202,6 +207,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pPks As Dictionary, pDatabase As Database)
+		  // Initialize an ORM with primary keys and the call Find
+		  // This can be used to fetch your model by its primary key on a single line
+		  
 		  Me.Constructor(pPks)
 		  
 		  Call Me.Find(pDatabase)
@@ -211,12 +219,17 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pORM As ORM)
+		  // Initialize the ORM with the primary key of another ORM
+		  
 		  Me.Constructor(pORM.Pks)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(ParamArray pCriterias() As Pair)
+		  // ORM constructor with a ParamArray of initial criteria
+		  // Also used for the empty constructor
+		  
 		  Dim pDictionary As New Dictionary
 		  
 		  For Each pCriteria As Pair In pCriterias
@@ -229,6 +242,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pRecordSet As RecordSet)
+		  // Initialize the ORM with values from a RecordSet
+		  
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
@@ -239,6 +254,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pPk As Variant, pDatabase As Database)
+		  // Initialize an ORM with a primary key and the call Find
+		  // This can be used to fetch your model by its primary key on a single line
+		  
 		  Me.Constructor(Me.PrimaryKey: pPk)
 		  
 		  Call Me.Find(pDatabase)
@@ -279,6 +297,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Copy(pORM As ORM) As ORM
 		  // Returns a copy of this ORM
+		  // @deprecated
 		  Call pORM.Deflate(Self)
 		  
 		  Return pORM
@@ -758,6 +777,31 @@ Inherits QueryBuilder
 		  Call Super.Join(pTableName, pTableAlias)
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function JSONValue() As JSONItem
+		  // Shallow export
+		  
+		  Dim pJSONItem As New JSONItem
+		  
+		  // Adds each column as an Attribute
+		  For Each pColumn As String In Me.Data.Keys
+		    pJSONItem.Value(pColumn) = Me.Data(pColumn)
+		  Next
+		  
+		  Return pJSONItem
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function JSONValue(pDatabase As Database) As JSONItem
+		  // Deep export
+		  
+		  // You must override this method to provide a custom export for your model
+		  
+		  Return Me.JSONValue
 		End Function
 	#tag EndMethod
 
@@ -1242,11 +1286,12 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function XMLValue(pXmlDocument As XmlDocument) As XmlNode
 		  // Shallow export
+		  
 		  Dim pXmlNode As XmlNode = pXmlDocument.CreateElement(Me.TableName)
 		  
 		  // Adds each column as an Attribute
-		  For Each pColumn As String In Data.Keys
-		    pXmlNode.SetAttribute(pColumn, Data(pColumn))
+		  For Each pColumn As String In Me.Data.Keys
+		    pXmlNode.SetAttribute(pColumn, Me.Data(pColumn))
 		  Next
 		  
 		  Return pXmlNode
@@ -1256,6 +1301,9 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function XMLValue(pXmlDocument As XmlDocument, pDatabase As Database) As XmlNode
 		  // Deep export
+		  
+		  // You must override this method to provide a custom export for your model
+		  
 		  Return Me.XMLValue(pXmlDocument)
 		End Function
 	#tag EndMethod

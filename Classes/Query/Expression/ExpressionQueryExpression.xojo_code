@@ -3,6 +3,8 @@ Protected Class ExpressionQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  #Pragma Unused pLastQueryExpression
+		  
 		  Return mExpression
 		End Function
 	#tag EndMethod

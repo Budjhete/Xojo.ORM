@@ -3,6 +3,8 @@ Protected Class IntersectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  #Pragma Unused pLastQueryExpression
+		  
 		  Return "INTERSECT " + mQueryBuilder.Compile()
 		End Function
 	#tag EndMethod

@@ -31,7 +31,7 @@ Implements ORMRelation
 		  DB.Delete(mPivotTableName)._
 		  Where(mForeignColumn, "=", pORM.Pk)._
 		  AndWhere(mFarColumn, "=", mORM.Pk)._
-		  Execute(pDatabase)
+		  Execute(pDatabase, pCommit)
 		End Sub
 	#tag EndMethod
 

@@ -15,12 +15,6 @@ Inherits ORM
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Database() As Database
-		  Return ORMTestDatabase
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Groups() As GroupTest
 		  Return HasMany(New GroupTest, "user")
 		End Function
@@ -48,7 +42,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return New GroupTest(Me.Data("group"))
+			  Return BelongsTo("group", New GroupTest)
 			End Get
 		#tag EndGetter
 		#tag Setter

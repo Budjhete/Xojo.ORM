@@ -9,6 +9,8 @@ Inherits RuntimeException
 
 	#tag Method, Flags = &h1000
 		Sub Constructor(pMessage As String, pStatement As String, pCode As Integer = 0)
+		  // Constructor for SQL error
+		  
 		  Message = pMessage
 		  Statement = pStatement
 		  Code = pCode
