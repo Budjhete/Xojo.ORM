@@ -8,6 +8,7 @@ Inherits TestController
 		  Dim group As TestGroup
 		  
 		  group = New XojoUnitTests(Self, "Assertion")
+		  group = New QueryCompilerUnitTests(Self, "QueryCompiler")
 		  group = New QueryBuilderUnitTests(Self, "QueryBuilder")
 		  group = New ORMUnitTests(Self, "ORM")
 		End Sub

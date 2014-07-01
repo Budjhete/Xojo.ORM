@@ -103,18 +103,19 @@ Protected Module QueryCompiler
 		    Return "( " + QueryCompiler.Values(pValue) + " )"
 		  End If
 		  
+		  // Test specific types
 		  Select Case pValue
 		    
-		  Case IsA QueryBuilder
+		  Case IsA QueryBuilder // Subquery
 		    Return "(" + QueryExpression(pValue).Compile + ")"
 		    
-		  Case IsA QueryExpression
+		  Case IsA QueryExpression // Unquoted expression
 		    Return QueryExpression(pValue).Compile
 		    
-		  Case IsA Date
-		    pValue = pValue.DateValue.SQLDateTime
+		  Case IsA Date // Date
+		    Return QueryCompiler.Value(pValue.DateValue.SQLDateTime)
 		    
-		  Case Nil
+		  Case Nil // NULL
 		    Return "NULL"
 		    
 		  End Select
