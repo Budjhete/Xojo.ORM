@@ -5,3 +5,5 @@
 *.xojo_uistate
 
 *.debug.app
+
+/Builds*
