@@ -52,6 +52,32 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub CompareTest()
+		  Dim pUser As New UserTest
+		  pUser.username = "John Doe"
+		  Call pUser.Create(ORMTestDatabase)
+		  
+		  Assert.AreSame(pUser, pUser)
+		  Assert.IsTrue pUser = pUser
+		  
+		  Dim pUser2 As New UserTest
+		  pUser.username = "John Doe2"
+		  Call pUser.Create(ORMTestDatabase)
+		  
+		  Assert.IsTrue pUser <> pUser2
+		  Assert.IsFalse pUser = pUser2
+		  
+		  Dim pUser3 As New UserTest(pUser.Pk, ORMTestDatabase)
+		  Assert.AreDifferent(pUser, pUser)
+		  Assert.IsTrue pUser = pUser3
+		  Assert.IsFalse pUser <> pUser3
+		  
+		  Assert.AreDifferent(pUser, Nil)
+		  // @todo test other comparison operators
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub ConstructorTest()
 		  DB.Insert("Users", "id", "username", "password"). _
 		  Values(1, "foo", "bar"). _

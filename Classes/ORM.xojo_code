@@ -883,6 +883,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Operator_Compare(pORM As ORM) As Integer
+		  // @todo implement comparison for multiple primary keys
+		  
+		  If pORM Is Nil Then
+		    Return 1
+		  End If
+		  
+		  If Me.TableName = pORM.TableName And Me.Pk = pORM.Pk Then
+		    Return 0
+		  End If
+		  
+		  Return 1
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Operator_Convert(pORM As ORM)
 		  Me.Constructor
 		  
