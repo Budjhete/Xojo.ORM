@@ -98,19 +98,20 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Sum(pColumn As Variant, pAlias As String) As QueryExpression
-		  Return DB.Expression("SUM( " + QueryCompiler.Column(pColumn) + " ) AS " + QueryCompiler.Alias(pAlias))
+		  // Create a SUM expression with an alias
+		  Return DB.Alias(DB.Sum(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Total(pColumn As Variant) As QueryExpression
-		  Return DB.Expression("TOTAL( " + QueryCompiler.Column(pColumn) + " )")
+		  Return DB.Expression("COALESCE( " + DB.Sum(pColumn).Compile + ", 0 )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Total(pColumn As Variant, pAlias As String) As QueryExpression
-		  Return DB.Expression("TOTAL( " + QueryCompiler.Column(pColumn) + " ) AS " + QueryCompiler.Alias(pAlias))
+		  Return DB.Alias(DB.Total(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
