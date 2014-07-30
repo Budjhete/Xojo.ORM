@@ -28,7 +28,7 @@ Protected Module DB
 		  // 4. host
 		  // 5. port
 		  // 6. path
-		  pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::(\w+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w \.:\\]+)?"
+		  pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::(\w+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w \.:\\-]+)?"
 		  
 		  Dim pMatch As RegExMatch = pRegEx.Search(pURL)
 		  
@@ -41,7 +41,16 @@ Protected Module DB
 		      
 		      pDatabase = New SQLiteDatabase
 		      
-		      SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(6))
+		      // Attempt each path type to match the database path
+		      For Each pPathType As Integer In Array(FolderItem.PathTypeNative, FolderItem.PathTypeAbsolute, FolderItem.PathTypeShell)
+		        
+		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(6))
+		        
+		        If SQLiteDatabase(pDatabase).DatabaseFile <> Nil Then
+		          Exit
+		        End If
+		        
+		      Next
 		      
 		      If pDatabase.Connect Then
 		        
