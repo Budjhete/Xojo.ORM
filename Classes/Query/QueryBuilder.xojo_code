@@ -99,6 +99,8 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
+		    System.DebugLog pStatement
+		    
 		    pDatabase.SQLExecute(pStatement)
 		    
 		    If pDatabase.Error Then
@@ -122,6 +124,8 @@ Implements QueryExpression
 		  If Not RaiseEvent Executing Then
 		    
 		    Dim pStatement As String = Compile
+		    
+		    System.DebugLog pStatement
 		    
 		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
 		    
