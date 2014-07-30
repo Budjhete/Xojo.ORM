@@ -7,6 +7,118 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Connect(pURL As String) As Database
+		  // Perform a connection to a database and initialize the character set
+		  //
+		  // Providen url is in the format protocol://username:password@host:port/database
+		  //
+		  // For SQLite, the database field is used as a path to the database.
+		  //
+		  // Nil is returned if the connection cannot be performed.
+		  
+		  Dim pDatabase As Database
+		  
+		  Dim pRegEx As New RegEx
+		  
+		  // <1>://<2>:<3>@<4>:<5>/<6>
+		  //
+		  // 1. protocol
+		  // 2. username
+		  // 3. password
+		  // 4. host
+		  // 5. port
+		  // 6. path
+		  pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::(\w+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w \.:\\]+)?"
+		  
+		  Dim pMatch As RegExMatch = pRegEx.Search(pURL)
+		  
+		  If pMatch <> Nil Then
+		    
+		    // Configuration de la base de données
+		    Select Case pMatch.SubExpressionString(1)
+		      
+		    Case "sqlite" // <protocol>:///<database>
+		      
+		      pDatabase = New SQLiteDatabase
+		      
+		      SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(6))
+		      
+		      If pDatabase.Connect Then
+		        
+		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		        
+		        pDatabase.SQLExecute("PRAGMA encoding = 'utf-8'")
+		        pDatabase.SQLExecute("PRAGMA foreign_keys = ON")
+		        
+		        Return pDatabase
+		        
+		      End If
+		      
+		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      
+		    Case "mysql" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
+		      
+		      pDatabase = New MySQLCommunityServer
+		      
+		      pDatabase.UserName = pMatch.SubExpressionString(2)
+		      pDatabase.Password = pMatch.SubExpressionString(3)
+		      pDatabase.Host = pMatch.SubExpressionString(4)
+		      
+		      If pMatch.SubExpressionString(5) <> "" Then
+		        MySQLCommunityServer(pDatabase).Port = Val(pMatch.SubExpressionString(5))
+		      Else
+		        MySQLCommunityServer(pDatabase).Port = 3306
+		      End If
+		      
+		      pDatabase.DatabaseName = pMatch.SubExpressionString(6)
+		      
+		      If pDatabase.Connect Then
+		        
+		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		        
+		        pDatabase.SQLExecute("SET NAMES 'utf8'")
+		        
+		        Return pDatabase
+		        
+		      End If
+		      
+		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      
+		    Case "postgresql"
+		      
+		      pDatabase = New PostgreSQLDatabase
+		      
+		      pDatabase.UserName = pMatch.SubExpressionString(2)
+		      pDatabase.Password = pMatch.SubExpressionString(3)
+		      pDatabase.Host = pMatch.SubExpressionString(4)
+		      
+		      If pMatch.SubExpressionString(5) <> "" Then
+		        PostgreSQLDatabase(pDatabase).Port = Val(pMatch.SubExpressionString(5))
+		      Else
+		        PostgreSQLDatabase(pDatabase).Port = 5432
+		      End If
+		      
+		      pDatabase.DatabaseName = pMatch.SubExpressionString(6)
+		      
+		      If pDatabase.Connect Then
+		        
+		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		        
+		        pDatabase.SQLExecute("SET NAMES 'utf8'")
+		        
+		        Return pDatabase
+		        
+		      End If
+		      
+		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      
+		    End Select
+		    
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Count() As QueryExpression
 		  Return DB.Count("*")
 		End Function
