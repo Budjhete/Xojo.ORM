@@ -247,7 +247,16 @@ Inherits QueryBuilder
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value
+		    
+		    Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
+		    
+		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		    
+		    // Set encoding to UTF8 for string
+		    If mData.Value(pColumn).Type = Variant.TypeString Then
+		      mData.Value(pColumn) = DefineEncoding(mData.Value(pColumn), Encodings.UTF8)
+		    End If
+		    
 		  Next
 		End Sub
 	#tag EndMethod
@@ -558,20 +567,19 @@ Inherits QueryBuilder
 		    // Fetch record set
 		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
 		      
-		      For i As Integer = 1 To pRecordSet.FieldCount
+		      For pIndex As Integer = 1 To pRecordSet.FieldCount
 		        
-		        Dim pColumn As String = pRecordSet.IdxField(i).Name
+		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
-		        // Pour les cas où on initialise des champs de l'ORM avant de le
-		        // charger à partir de la BDD
+		        // @todo check if mChanged.Clear is not more appropriate
 		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = pRecordSet.Field(pColumn).Value Then
 		          mChanged.Remove(pColumn)
 		        End If
 		        
 		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
 		        
-		        // Override encoding to UTF8 if using a MySQLCommunityServer
-		        If pDatabase IsA MySQLCommunityServer And mData.Value(pColumn).Type = Variant.TypeString Then
+		        // Set encoding to UTF8 for string
+		        If mData.Value(pColumn).Type = Variant.TypeString Then
 		          mData.Value(pColumn) = DefineEncoding(mData.Value(pColumn), Encodings.UTF8)
 		        End If
 		        
