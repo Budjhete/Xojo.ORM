@@ -541,7 +541,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pDatabase As Database) As ORM
+		Function Find(pDatabase As Database, pExpiration As Date = Nil) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
@@ -559,7 +559,7 @@ Inherits QueryBuilder
 		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)). _
 		    From(Me.TableName). _
 		    Limit(1). _
-		    Execute(pDatabase)
+		    Execute(pDatabase, pExpiration)
 		    
 		    // Clear any existing data
 		    mData.Clear
@@ -599,14 +599,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function FindAll(pDatabase As Database) As RecordSet
+		Function FindAll(pDatabase As Database, pExpiration As Date = Nil) As RecordSet
 		  Dim pColumns() As Variant
 		  
 		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    pColumns.Append(TableName + "." + pColumn)
 		  Next
 		  
-		  Return Append(new SelectQueryExpression(pColumns)).From(Me.TableName).Execute(pDatabase)
+		  Return Append(new SelectQueryExpression(pColumns)). _
+		  From(Me.TableName). _
+		  Execute(pDatabase, pExpiration)
 		End Function
 	#tag EndMethod
 

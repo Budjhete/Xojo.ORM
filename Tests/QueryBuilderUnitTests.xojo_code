@@ -2,6 +2,24 @@
 Protected Class QueryBuilderUnitTests
 Inherits TestGroup
 	#tag Method, Flags = &h0
+		Sub CachedTest()
+		  // Cache for 5 seconds
+		  Dim pExpiration As Date = New Date
+		  pExpiration.Year = pExpiration.Year + 1
+		  
+		  Dim pRecordSet As RecordSet = DB.Find("id"). _
+		  From("Users"). _
+		  Execute(ORMTestDatabase, pExpiration)
+		  
+		  Dim pCachedRecordSet As RecordSet = DB.Find("id"). _
+		  From("Users"). _
+		  Execute(ORMTestDatabase, pExpiration)
+		  
+		  Assert.AreSame(pRecordSet, pCachedRecordSet)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub FindTest()
 		  Dim pStatement As String
 		  Dim pRecordSet As RecordSet

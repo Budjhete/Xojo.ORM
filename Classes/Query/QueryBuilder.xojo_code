@@ -95,6 +95,9 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
+		  // Execute the QueryBuilder using SQLExecute, 
+		  // which will not get any result from the database
+		  
 		  If Not RaiseEvent Executing Then
 		    
 		    Dim pStatement As String = Compile
@@ -120,21 +123,45 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Execute(pDatabase As Database, pCommit As Boolean = True) As RecordSet
+		Function Execute(pDatabase As Database, pExpiration As Date = Nil) As RecordSet
+		  // Execute the QueryBuilder and return a RecordSet
+		  // You may specify an expiration for caching the response
+		  
 		  If Not RaiseEvent Executing Then
 		    
 		    Dim pStatement As String = Compile
 		    
 		    System.DebugLog pStatement
 		    
-		    Dim pRecordSet As RecordSet = pDatabase.SQLSelect(pStatement)
+		    Dim pRecordSet As RecordSet
 		    
-		    If pDatabase.Error Then
-		      Raise New ORMException(pDatabase.ErrorMessage, pStatement)
+		    // Initialize the cache
+		    If mCache Is Nil Then
+		      mCache = New Dictionary
 		    End If
 		    
-		    If pCommit Then
-		      pDatabase.Commit
+		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
+		    Dim pNow As New Date
+		    
+		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
+		      
+		      // Get the result from the cache
+		      pRecordSet = pCache.Value("recordset")
+		      
+		    Else
+		      
+		      pRecordSet = pDatabase.SQLSelect(pStatement)
+		      
+		      // Check for error
+		      If pDatabase.Error Then
+		        Raise New ORMException(pDatabase.ErrorMessage, pStatement)
+		      End If
+		      
+		    End If
+		    
+		    // Cache the result
+		    If pExpiration <> Nil Then
+		      mCache.Value(pStatement) = New Dictionary("expiration": pExpiration, "recordset": pRecordSet)
 		    End If
 		    
 		    Call Reset
@@ -442,6 +469,10 @@ Implements QueryExpression
 		Event Executing() As Boolean
 	#tag EndHook
 
+
+	#tag Property, Flags = &h1
+		Protected Shared mCache As Dictionary
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected mQuery() As QueryExpression
