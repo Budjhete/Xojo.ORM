@@ -42,7 +42,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return BelongsTo("group", New GroupTest)
+			  Return BelongsTo(New GroupTest, "group")
 			End Get
 		#tag EndGetter
 		#tag Setter

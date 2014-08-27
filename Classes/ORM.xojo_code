@@ -125,13 +125,10 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function BelongsTo(pPks As Dictionary, pORM As ORM) As ORM
-		  Return pORM.Where(pPks)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function BelongsTo(pForeignKey As String, pORM As ORM) As ORM
+		Function BelongsTo(pORM As ORM, pForeignKey As String) As ORM
+		  // Return the related model in belongs to relationship
+		  // @todo support multiple primary keys
+		  
 		  Return pORM.Where(pORM.PrimaryKey, "=", Me.Data(pForeignKey))
 		End Function
 	#tag EndMethod
@@ -675,8 +672,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
-		  Return pORM.Where(pForeignColumn, "=", Me.Pk)
+		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns As String) As ORM
+		  Return Me.HasMany(pORM, pForeignColumns)
 		End Function
 	#tag EndMethod
 
@@ -728,7 +725,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Inflate(pORM As ORM) As ORM
+		Attributes( Deprecated )  Function Inflate(pORM As ORM) As ORM
 		  // @deprecated
 		  
 		  // Inflate this ORM on another ORM

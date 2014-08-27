@@ -95,7 +95,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
-		  // Execute the QueryBuilder using SQLExecute, 
+		  // Execute the QueryBuilder using SQLExecute,
 		  // which will not get any result from the database
 		  
 		  If Not RaiseEvent Executing Then

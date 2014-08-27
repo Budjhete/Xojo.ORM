@@ -18,7 +18,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return BelongsTo("user", New UserTest)
+			  Return BelongsTo(New UserTest, "user")
 			End Get
 		#tag EndGetter
 		#tag Setter
