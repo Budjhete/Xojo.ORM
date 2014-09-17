@@ -1,5 +1,6 @@
-# ORM
-
+ORM
+===
+ORM is a object-relation-mapper for Xojo applications.
 
 What's so great about it?
 -------------------------
