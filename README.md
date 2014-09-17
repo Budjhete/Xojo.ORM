@@ -15,4 +15,5 @@ stateless and does not load unecessary information ;
 * it is event-driven ;
 * `ORM` and `QueryBuilder` inherit from `Control` and are fully qualified as 
 such ;
-* it is extensively documented [right here on GitHub](Home).
+* it is extensively documented 
+[right here on GitHub](https://github.com/Budjhete/XojoORM/wiki).
