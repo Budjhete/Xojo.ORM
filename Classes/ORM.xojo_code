@@ -1260,20 +1260,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Using(pColumns() As Variant) As ORM
-		  Call Super.Using(pColumns)
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Using(ParamArray pColumns As Variant) As ORM
-		  Return Using(pColumns)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  

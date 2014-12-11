@@ -247,17 +247,6 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub UsingTest()
-		  Dim pStatement As String
-		  Dim pRecordSet As RecordSet
-		  
-		  pStatement = DB.Find.From("Users").Join("Groups").Using("id").Compile()
-		  pRecordSet = DB.Find.From("Users").Join("Groups").Using("id").Execute(ORMTestDatabase)
-		  Assert.AreEqual("SELECT * FROM `Users` AS `Users` JOIN `Groups` AS `Groups` USING ( `id` )", pStatement)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Sub ValuesTest()
 		  Dim pRecordSet As RecordSet
 		  Dim pStatement As String

@@ -1,5 +1,5 @@
 Type=Desktop
-RBProjectVersion=2014.02
+RBProjectVersion=2014.03
 MinIDEVersion=20070100
 Class=App;App.xojo_code;&h4BBC7686;&h0;false
 Folder=Classes;Classes;&h5F6073E2;&h0;false
@@ -25,7 +25,6 @@ Class=OrderByQueryExpression;Classes/Query/Expression/OrderByQueryExpression.xoj
 Class=SelectQueryExpression;Classes/Query/Expression/SelectQueryExpression.xojo_code;&h22D8A48E;&h7A981D1F;false
 Class=SetQueryExpression;Classes/Query/Expression/SetQueryExpression.xojo_code;&h1D9569ED;&h7A981D1F;false
 Class=UpdateQueryExpression;Classes/Query/Expression/UpdateQueryExpression.xojo_code;&h62E9CABD;&h7A981D1F;false
-Class=UsingQueryExpression;Classes/Query/Expression/UsingQueryExpression.xojo_code;&h1215B554;&h7A981D1F;false
 Class=ValuesQueryExpression;Classes/Query/Expression/ValuesQueryExpression.xojo_code;&h68D66BB;&h7A981D1F;false
 Class=QueryBuilder;Classes/Query/QueryBuilder.xojo_code;&h4C6F89E7;&h769C1714;false
 Module=QueryCompiler;Classes/Query/QueryCompiler.xojo_code;&h33C5BE77;&h769C1714;false

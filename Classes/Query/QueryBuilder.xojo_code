@@ -399,18 +399,6 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Using(pColumns() As Variant) As QueryBuilder
-		  Return Append(new UsingQueryExpression(pColumns))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Using(ParamArray pColumns As Variant) As QueryBuilder
-		  Return Using(pColumns)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Values(pValues() As Variant) As QueryBuilder
 		  mQuery.Append(new ValuesQueryExpression(pValues))
 		  
