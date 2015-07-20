@@ -150,6 +150,8 @@ Implements QueryExpression
 		      
 		    Else
 		      
+		      pDatabase.SQLExecute("SET NAMES 'utf8'")
+		      
 		      pRecordSet = pDatabase.SQLSelect(pStatement)
 		      
 		      // Check for error
