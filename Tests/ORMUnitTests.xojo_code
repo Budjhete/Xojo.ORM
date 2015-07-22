@@ -115,7 +115,7 @@ Inherits TestGroup
 		  
 		  While Not pRecords.EOF
 		    Dim pUser As New UserTest(pRecords)
-		    Assert.AreEqual(pRecords.Field("username").StringValue, pUser.Data("username").StringValue)
+		    Assert.AreEqual(pRecords.Field("username").StringValue, pUser.Data("username").StringValue.DefineEncoding(Encodings.UTF8))
 		    pRecords.MoveNext
 		  Wend
 		End Sub
