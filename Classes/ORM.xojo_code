@@ -355,22 +355,21 @@ Inherits QueryBuilder
 		    // Clear changes, they are saved in mData
 		    Call Me.mChanged.Clear
 		    
+		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
 		      
-		      // Biggest primary key
-		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		      From(Me.TableName). _
-		      OrderBy(Me.PrimaryKey, "DESC"). _
-		      Execute(pDatabase).Field(Me.PrimaryKey).Value
-		      
-		      // Best guess for SQLite
 		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
-		      End If
-		      
-		      // Best guess for MySQL when available
-		      If pDatabase IsA MySQLCommunityServer Then
+		        // Best guess for MySQL when available
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
 		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Field(Me.PrimaryKey).Value
 		      End If
 		      
 		    End If
