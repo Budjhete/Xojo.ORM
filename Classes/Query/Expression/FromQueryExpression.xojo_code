@@ -14,7 +14,7 @@ Implements QueryExpression
 		  If mTable.Type = 8 Then // String
 		    Return pStatement + QueryCompiler.TableName(mTable, mTableAlias)
 		  ElseIf mTable IsA QueryBuilder Then
-		    Return pStatement + QueryCompiler.Column(mTable) + " " + mTableAlias
+		    Return pStatement + QueryCompiler.Column(mTable) + " AS " + QueryCompiler.Alias(mTableAlias)
 		  End If
 		End Function
 	#tag EndMethod
