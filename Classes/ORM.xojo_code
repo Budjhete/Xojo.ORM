@@ -247,10 +247,8 @@ Inherits QueryBuilder
 		    
 		    Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		    
-		    mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		    
 		    // Set encoding to UTF8 for string
-		    If mData.Value(pColumn).Type = Variant.TypeString Then
+		    If pRecordSet.Field(pColumn).Value.Type = Variant.TypeString Then
 		      mData.Value(pColumn) = pRecordSet.Field(pColumn).StringValue.DefineEncoding(Encodings.UTF8)
 		    Else
 		      mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
@@ -575,9 +573,7 @@ Inherits QueryBuilder
 		        End If
 		        
 		        // Set encoding to UTF8 for string
-		        mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		        
-		        If mData.Value(pColumn).Type = Variant.TypeString Then
+		        If pRecordSet.Field(pColumn).Value.Type = Variant.TypeString Then
 		          mData.Value(pColumn) = pRecordSet.Field(pColumn).StringValue.DefineEncoding(Encodings.UTF8)
 		        Else
 		          mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
