@@ -16,7 +16,7 @@ Inherits ORM
 
 	#tag Method, Flags = &h0
 		Function Groups() As GroupTest
-		  Return HasMany(New GroupTest, "user")
+		  Return GroupTest(HasMany(New GroupTest, "user"))
 		End Function
 	#tag EndMethod
 
@@ -28,7 +28,7 @@ Inherits ORM
 
 	#tag Method, Flags = &h0
 		Function Projects() As ProjectTest
-		  Return HasManyThrough(New ProjectTest, "UsersProjects", "user", "project")
+		  Return ProjectTest(HasManyThrough(New ProjectTest, "UsersProjects", "user", "project"))
 		End Function
 	#tag EndMethod
 
@@ -42,7 +42,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return BelongsTo(New GroupTest, "group")
+			  Return GroupTest(BelongsTo(New GroupTest, "group"))
 			End Get
 		#tag EndGetter
 		#tag Setter

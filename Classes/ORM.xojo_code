@@ -913,19 +913,6 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Operator_Convert(pORM As ORM)
-		  Me.Constructor
-		  
-		  Me.mQuery = pORM.mQuery
-		  
-		  Me.mChanged = pORM.mChanged
-		  Me.mData = pORM.mData
-		  Me.mAdded = pORM.mAdded
-		  Me.mRemoved = pORM.mRemoved
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() As Variant, pDirections() As String) As ORM
 		  Call Super.OrderBy(pColumns, pDirections)
 		  

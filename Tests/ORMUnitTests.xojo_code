@@ -128,7 +128,7 @@ Inherits TestGroup
 		  pUser.Data("username") = "Paul-Willy"
 		  pUser.Data("password") = "password"
 		  
-		  Dim pCopy As UserTest = pUser.Copy
+		  Dim pCopy As UserTest = UserTest(pUser.Copy)
 		  
 		  Assert.IsFalse(pUser Is pCopy)
 		  Assert.AreEqual(pUser.username, pCopy.username)

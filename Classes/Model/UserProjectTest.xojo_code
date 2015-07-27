@@ -17,7 +17,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return BelongsTo(New ProjectTest, "project")
+			  Return ProjectTest(BelongsTo(New ProjectTest, "project"))
 			  
 			End Get
 		#tag EndGetter
@@ -32,7 +32,7 @@ Inherits ORM
 	#tag ComputedProperty, Flags = &h0
 		#tag Getter
 			Get
-			  Return BelongsTo(New UserTest, "user")
+			  Return UserTest(BelongsTo(New UserTest, "user"))
 			End Get
 		#tag EndGetter
 		#tag Setter
