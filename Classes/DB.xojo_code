@@ -7,6 +7,18 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Begin(Extends pDatabase As Database)
+		  // Begin a transaction
+		  
+		  If pDatabase IsA MySQLCommunityServer Then
+		    pDatabase.SQLExecute("START TRANSACTION")
+		  Else 
+		    pDatabase.SQLExecute("BEGIN TRANSACTION")
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Connect(pURL As String) As Database
 		  // Perform a connection to a database and initialize the character set
 		  //

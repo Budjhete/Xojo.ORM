@@ -321,7 +321,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Create(pDatabase As Database, pCommit As Boolean = True) As ORM
+		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  If Loaded Then
@@ -329,6 +329,8 @@ Inherits QueryBuilder
 		  End
 		  
 		  If Not RaiseEvent Creating Then
+		    
+		    pDatabase.Begin
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
@@ -343,7 +345,7 @@ Inherits QueryBuilder
 		      End If
 		    Next
 		    
-		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, pCommit)
+		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
 		    // Merge mChanged into mData
 		    For Each pKey As Variant In mChanged.Keys()
@@ -374,17 +376,19 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values
-		      Call pRelation.Remove(Me, pDatabase, pCommit)
+		      Call pRelation.Remove(Me, pDatabase, False)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me, pDatabase, pCommit)
+		      Call pRelation.Add(Me, pDatabase, False)
 		    Next
 		    
 		    // Clear pending relationships
 		    mAdded.Clear
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    mRemoved.Clear
+		    
+		    pDatabase.Commit
 		    
 		    RaiseEvent Created
 		    
@@ -1194,7 +1198,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Update(pDatabase As Database, pCommit As Boolean = True) As ORM
+		Function Update(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  If Not Me.Loaded then
@@ -1202,6 +1206,8 @@ Inherits QueryBuilder
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
+		    
+		    pDatabase.Begin
 		    
 		    Dim pChanged As New Dictionary
 		    
@@ -1213,7 +1219,7 @@ Inherits QueryBuilder
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase)
+		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
 		    
 		    // Merge mData with mChanged
@@ -1226,16 +1232,19 @@ Inherits QueryBuilder
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values()
-		      Call pRelation.Remove(Me, pDatabase, pCommit)
+		      Call pRelation.Remove(Me, pDatabase, False)
 		    Next
 		    
 		    For Each pRelation As ORMRelation In mAdded.Values()
-		      Call pRelation.Add(Me, pDatabase, pCommit)
+		      Call pRelation.Add(Me, pDatabase, False)
 		    Next
+		    
 		    // Clear pending relationships
 		    mAdded.Clear()
 		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    mRemoved.Clear()
+		    
+		    pDatabase.Commit
 		    
 		    RaiseEvent Updated()
 		    
