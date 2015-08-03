@@ -440,12 +440,6 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Data(pColumn As String, pValue As Variant) As ORM
-		  // Enforce Currency comparison to avoid a String comparaison, which
-		  // would not work with trailing zeroes.
-		  If pValue.Type = Variant.TypeCurrency And Initial(pColumn).CurrencyValue = pValue Then
-		    Return Me
-		  End If
-		  
 		  If Not RaiseEvent Changing(pColumn) Then
 		    
 		    // If it is different than the original data, it has changed
