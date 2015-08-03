@@ -244,16 +244,7 @@ Inherits QueryBuilder
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    
-		    Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
-		    
-		    // Set encoding to UTF8 for string
-		    If pRecordSet.Field(pColumn).Value.Type = Variant.TypeString Then
-		      mData.Value(pColumn) = pRecordSet.Field(pColumn).StringValue.DefineEncoding(Encodings.UTF8)
-		    Else
-		      mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
-		    End If
-		    
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex)
 		  Next
 		End Sub
 	#tag EndMethod
@@ -571,16 +562,11 @@ Inherits QueryBuilder
 		        
 		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
-		        // @todo check if mChanged.Clear is not more appropriate
-		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = pRecordSet.Field(pColumn).Value Then
-		          mChanged.Remove(pColumn)
-		        End If
+		        mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
 		        
-		        // Set encoding to UTF8 for string
-		        If pRecordSet.Field(pColumn).Value.Type = Variant.TypeString Then
-		          mData.Value(pColumn) = pRecordSet.Field(pColumn).StringValue.DefineEncoding(Encodings.UTF8)
-		        Else
-		          mData.Value(pColumn) = pRecordSet.Field(pColumn).Value
+		        // @todo check if mChanged.Clear is not more appropriate
+		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
+		          mChanged.Remove(pColumn)
 		        End If
 		        
 		      Next

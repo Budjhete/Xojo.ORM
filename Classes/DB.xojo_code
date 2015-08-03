@@ -178,6 +178,42 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Extract(pRecordSet As RecordSet, pIndex As Integer) As Variant
+		  // Properly extract a DatabaseField from a RecordSet
+		  
+		  // Internaly, the ORM uses Variant to store its data in a Dictionary,
+		  // so it has to extract data properly at some time. It is the purpose
+		  // of this function.
+		  
+		  Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex)
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)
+		  
+		  // Perform type detection for unknown data type
+		  If pRecordSet.ColumnType(pIndex) = -1 Then
+		    If IsNumeric(pDatabaseField.NativeValue) Then
+		      Return pDatabaseField.CurrencyValue
+		    End If
+		  End If
+		  
+		  If pRecordSet.ColumnType(pIndex) = 11 Then
+		    Return pDatabaseField.CurrencyValue
+		  End If
+		  
+		  If pRecordSet.ColumnType(pIndex) = 13 Then
+		    Return pDatabaseField.CurrencyValue
+		  End If 
+		  
+		  // Set encoding to UTF8 for string
+		  If pDatabaseField.Value.Type = Variant.TypeString Then
+		    Return pDatabaseField.StringValue.DefineEncoding(Encodings.UTF8)
+		  End If
+		  
+		  return pDatabaseField.Value
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Find(pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
