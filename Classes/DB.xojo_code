@@ -40,7 +40,7 @@ Protected Module DB
 		  // 4. host
 		  // 5. port
 		  // 6. path
-		  pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::(\w+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w\W \.:\\-]+)?"
+		  pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::([\w+\[[:punct:]]+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w\W \.:\\-]+)?"
 		  
 		  Dim pMatch As RegExMatch = pRegEx.Search(pURL)
 		  
