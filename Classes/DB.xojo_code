@@ -12,7 +12,7 @@ Protected Module DB
 		  
 		  If pDatabase IsA MySQLCommunityServer Then
 		    pDatabase.SQLExecute("START TRANSACTION")
-		  Else 
+		  Else
 		    pDatabase.SQLExecute("BEGIN TRANSACTION")
 		  End If
 		End Sub
@@ -188,20 +188,36 @@ Protected Module DB
 		  Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex)
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)
 		  
+		  // juste pour tester
+		  'if pDatabaseField.Name = "montant" then
+		  'MsgBox pColumnType.StringValue
+		  'End If
+		  '
+		  'if  then
+		  'MsgBox pDatabaseField.NativeValue
+		  'MsgBox pColumnType.StringValue
+		  'end if
+		  
+		  
 		  // Perform type detection for unknown data type
-		  If pRecordSet.ColumnType(pIndex) = -1 Then
+		  If pColumnType = -1 or pDatabaseField.Name = "balance" or pDatabaseField.Name = "montant" Then // patch de marde
 		    If IsNumeric(pDatabaseField.NativeValue) Then
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
 		      Return pDatabaseField.CurrencyValue
 		    End If
 		  End If
 		  
-		  If pRecordSet.ColumnType(pIndex) = 11 Then
+		  'If pColumnType = 5 Then
+		  'Return pDatabaseField.CurrencyValue
+		  'End If
+		  
+		  If pColumnType = 11 Then
 		    Return pDatabaseField.CurrencyValue
 		  End If
 		  
-		  If pRecordSet.ColumnType(pIndex) = 13 Then
+		  If pColumnType = 13 Then
 		    Return pDatabaseField.CurrencyValue
-		  End If 
+		  End If
 		  
 		  // Set encoding to UTF8 for string
 		  If pDatabaseField.Value.Type = Variant.TypeString Then
