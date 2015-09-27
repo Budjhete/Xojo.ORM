@@ -200,7 +200,7 @@ Protected Module DB
 		  
 		  
 		  // Perform type detection for unknown data type
-		  If pColumnType = -1 or pDatabaseField.Name = "balance" or pDatabaseField.Name = "montant" Then // patch de marde
+		  If pColumnType = -1 or pDatabaseField.Name = "balance" or pDatabaseField.Name = "montant" or pDatabaseField.Name = "interet" Then // patch de marde
 		    If IsNumeric(pDatabaseField.NativeValue) Then
 		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
 		      Return pDatabaseField.CurrencyValue
