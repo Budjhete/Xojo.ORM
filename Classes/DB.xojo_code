@@ -200,7 +200,7 @@ Protected Module DB
 		  
 		  
 		  // Perform type detection for unknown data type
-		  If pColumnType = -1 or pDatabaseField.Name = "balance" or pDatabaseField.Name = "montant" or pDatabaseField.Name = "interet" Then // patch de marde
+		  If (pColumnType = -1 or pDatabaseField.Name = "balance" or pDatabaseField.Name = "montant" or pDatabaseField.Name = "interet") and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde
 		    If IsNumeric(pDatabaseField.NativeValue) Then
 		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
 		      Return pDatabaseField.CurrencyValue
@@ -211,11 +211,11 @@ Protected Module DB
 		  'Return pDatabaseField.CurrencyValue
 		  'End If
 		  
-		  If pColumnType = 11 Then
+		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
 		    Return pDatabaseField.CurrencyValue
 		  End If
 		  
-		  If pColumnType = 13 Then
+		  If pColumnType = 13 and Company.Current.Database isa MySQLCommunityServer Then
 		    Return pDatabaseField.CurrencyValue
 		  End If
 		  
