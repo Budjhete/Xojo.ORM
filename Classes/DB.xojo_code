@@ -189,7 +189,7 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)
 		  
 		  // juste pour tester
-		  'if pDatabaseField.Name = "montant" then
+		  'if pDatabaseField.Name = "interet" then
 		  'MsgBox pColumnType.StringValue
 		  'End If
 		  '
@@ -207,9 +207,10 @@ Protected Module DB
 		    End If
 		  End If
 		  
-		  'If pColumnType = 5 Then
-		  'Return pDatabaseField.CurrencyValue
-		  'End If
+		  // Correction caca pour SQLite
+		  If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and  pDatabaseField.Name = "interet" Then
+		    Return pDatabaseField.CurrencyValue
+		  End If
 		  
 		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
 		    Return pDatabaseField.CurrencyValue
