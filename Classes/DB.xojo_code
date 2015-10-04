@@ -208,9 +208,9 @@ Protected Module DB
 		  End If
 		  
 		  // Correction caca pour SQLite
-		  If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and  pDatabaseField.Name = "interet" Then
-		    Return pDatabaseField.CurrencyValue
-		  End If
+		  'If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and  pDatabaseField.Name = "interet" Then
+		  'Return pDatabaseField.CurrencyValue
+		  'End If
 		  
 		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
 		    Return pDatabaseField.CurrencyValue
