@@ -185,7 +185,9 @@ Protected Module DB
 		  // so it has to extract data properly at some time. It is the purpose
 		  // of this function.
 		  
-		  Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex)
+		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)
 		  
 		  // juste pour tester
@@ -200,10 +202,10 @@ Protected Module DB
 		  
 		  
 		  // Perform type detection for unknown data type
-		  If (pColumnType = -1 or pDatabaseField.Name = "balance" or pDatabaseField.Name = "montant" or pDatabaseField.Name = "interet") and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde
-		    If IsNumeric(pDatabaseField.NativeValue) Then
+		  If (pColumnType = -1 or pDatabaseFieldName = "balance" or pDatabaseFieldName = "montant" or pDatabaseFieldName = "interet") and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde
+		    If IsNumeric(pDatabaseFieldValue) Then
 		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
-		      Return pDatabaseField.CurrencyValue
+		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
 		  
@@ -213,19 +215,19 @@ Protected Module DB
 		  'End If
 		  
 		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
-		    Return pDatabaseField.CurrencyValue
+		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
 		  If pColumnType = 13 and Company.Current.Database isa MySQLCommunityServer Then
-		    Return pDatabaseField.CurrencyValue
+		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
 		  // Set encoding to UTF8 for string
-		  If pDatabaseField.Value.Type = Variant.TypeString Then
-		    Return pDatabaseField.StringValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		  End If
 		  
-		  return pDatabaseField.Value
+		  return pDatabaseFieldValue
 		  
 		End Function
 	#tag EndMethod
