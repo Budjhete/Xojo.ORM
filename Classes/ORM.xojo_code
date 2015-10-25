@@ -187,6 +187,25 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function ClearAll() As ORM
+		  // Clear everything
+		  
+		  If Not RaiseEvent Clearing Then
+		    
+		    mChanged.Clear
+		    mAdded.Clear
+		    mRemoved.Clear
+		    mData.Clear
+		    
+		    RaiseEvent Cleared
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000
 		Sub Constructor(pCriterias As Dictionary)
 		  // Basic ORM constructor
@@ -246,6 +265,8 @@ Inherits QueryBuilder
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex)
 		  Next
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -978,6 +999,12 @@ Inherits QueryBuilder
 		  
 		  Return pPrimaryKeys(pIndex)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub RaiseEventFound()
+		  RaiseEvent Found
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
