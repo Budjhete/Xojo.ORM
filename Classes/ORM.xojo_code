@@ -1253,9 +1253,14 @@ Inherits QueryBuilder
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdded.Clear()
-		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear()
+		    //mAdded.Clear()
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    
+		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
+		    //mRemoved.Clear()
+		    mRemoved = nil
+		    mRemoved = new Dictionary
 		    
 		    pDatabase.Commit
 		    
