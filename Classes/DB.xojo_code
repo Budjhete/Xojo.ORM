@@ -267,6 +267,20 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Replace(pTableName As String, pColumns() As Variant) As QueryBuilder
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Return pQueryBuilder.Append(new ReplaceQueryExpression(pTableName, pColumns))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Replace(pTableName As String, ParamArray pColumns As Variant) As QueryBuilder
+		  Return Replace(pTableName, pColumns)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Set(pValues() As Variant) As QueryExpression
 		  Return new ExpressionQueryExpression("(" + QueryCompiler.Values(pValues) + ")")
 		End Function

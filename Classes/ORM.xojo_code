@@ -1100,6 +1100,84 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Replace(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  If Loaded Then
+		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    pDatabase.Begin
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear changes, they are saved in mData
+		    Call Me.mChanged.Clear
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      
+		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		        // Best guess for MySQL when available
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      End If
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mRemoved.Values
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    // Clear pending relationships
+		    mAdded.Clear
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    mRemoved.Clear
+		    
+		    pDatabase.Commit
+		    
+		    RaiseEvent Created
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset() As ORM
 		  Call Super.Reset()
 		  
@@ -1113,7 +1191,9 @@ Inherits QueryBuilder
 		    
 		    If Loaded() Then
 		      Call Update(pDatabase)
-		    Else
+		    Elseif mReplaced then
+		      Call Replace(pDatabase)
+		    else
 		      Call Create(pDatabase)
 		    End
 		    
@@ -1467,6 +1547,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h1
 		Protected mRemoved As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		mReplaced As Boolean = False
 	#tag EndProperty
 
 
