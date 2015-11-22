@@ -1291,6 +1291,39 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function UnloadFull() As ORM
+		  // Empties only the primary keys
+		  
+		  If Not RaiseEvent UnloadingAll Then
+		    
+		    For Each pPrimaryKey As String In PrimaryKeys
+		      If mData.HasKey(pPrimaryKey) Then
+		        mData.Remove(pPrimaryKey)
+		      End If
+		      If mChanged.HasKey(pPrimaryKey) then
+		        mChanged.Remove(pPrimaryKey)
+		      End If
+		      If mRemoved.HasKey(pPrimaryKey) then
+		        mRemoved.Remove(pPrimaryKey)
+		      End If
+		      If mAdded.HasKey(pPrimaryKey) then
+		        mAdded.Remove(pPrimaryKey)
+		      End If
+		    Next
+		    mData.Clear
+		    mChanged.Clear
+		    mRemoved.Clear
+		    mAdded.clear
+		    
+		    RaiseEvent UnloadedAll
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Update(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
@@ -1586,6 +1619,12 @@ Inherits QueryBuilder
 			Group="Behavior"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="mReplaced"
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
