@@ -175,9 +175,17 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Clearing Then
 		    
-		    mChanged.Clear
-		    mAdded.Clear
-		    mRemoved.Clear
+		    mChanged = nil
+		    mChanged = new Dictionary
+		    'mChanged.Clear
+		    
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    'mAdded.Clear
+		    
+		    mRemoved = nil
+		    mRemoved = new Dictionary
+		    'mRemoved.Clear
 		    
 		    RaiseEvent Cleared
 		    
@@ -193,10 +201,21 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Clearing Then
 		    
-		    mChanged.Clear
-		    mAdded.Clear
-		    mRemoved.Clear
-		    mData.Clear
+		    mData = nil
+		    mData = new Dictionary
+		    'mData.Clear
+		    
+		    mChanged = nil
+		    mChanged = new Dictionary
+		    'mChanged.Clear
+		    
+		    mRemoved = nil
+		    mRemoved = new Dictionary
+		    'mRemoved.Clear
+		    
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    'mAdded.clear
 		    
 		    RaiseEvent Cleared
 		    
@@ -1280,7 +1299,9 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent UnloadingAll Then
 		    
-		    mData.Clear
+		    mData = nil
+		    mData = new Dictionary
+		    'mData.Clear
 		    
 		    RaiseEvent UnloadedAll
 		    
@@ -1310,10 +1331,22 @@ Inherits QueryBuilder
 		        mAdded.Remove(pPrimaryKey)
 		      End If
 		    Next
-		    mData.Clear
-		    mChanged.Clear
-		    mRemoved.Clear
-		    mAdded.clear
+		    
+		    mData = nil
+		    mData = new Dictionary
+		    'mData.Clear
+		    
+		    mChanged = nil
+		    mChanged = new Dictionary
+		    'mChanged.Clear
+		    
+		    mRemoved = nil
+		    mRemoved = new Dictionary
+		    'mRemoved.Clear
+		    
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    'mAdded.clear
 		    
 		    RaiseEvent UnloadedAll
 		    
