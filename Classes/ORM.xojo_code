@@ -1599,6 +1599,10 @@ Inherits QueryBuilder
 	#tag EndNote
 
 
+	#tag Property, Flags = &h0
+		FinishLoaded As Boolean = False
+	#tag EndProperty
+
 	#tag Property, Flags = &h1
 		Protected mAdded As Dictionary
 	#tag EndProperty
@@ -1621,6 +1625,12 @@ Inherits QueryBuilder
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="FinishLoaded"
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Handle"
 			Group="Behavior"
