@@ -175,9 +175,47 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Clearing Then
 		    
-		    mChanged.Clear
-		    mAdded.Clear
-		    mRemoved.Clear
+		    mChanged = nil
+		    mChanged = new Dictionary
+		    'mChanged.Clear
+		    
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    'mAdded.Clear
+		    
+		    mRemoved = nil
+		    mRemoved = new Dictionary
+		    'mRemoved.Clear
+		    
+		    RaiseEvent Cleared
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function ClearAll() As ORM
+		  // Clear everything
+		  
+		  If Not RaiseEvent Clearing Then
+		    
+		    mData = nil
+		    mData = new Dictionary
+		    'mData.Clear
+		    
+		    mChanged = nil
+		    mChanged = new Dictionary
+		    'mChanged.Clear
+		    
+		    mRemoved = nil
+		    mRemoved = new Dictionary
+		    'mRemoved.Clear
+		    
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    'mAdded.clear
 		    
 		    RaiseEvent Cleared
 		    
@@ -246,6 +284,22 @@ Inherits QueryBuilder
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex)
 		  Next
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pRecordSet As RecordSet, pColumnsType() as DB.DataType)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.FieldCount
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnsType(pIndex -1))
+		  Next
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -532,7 +586,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pDatabase As Database, pExpiration As Date = Nil) As ORM
+		Function Find(pDatabase As Database, pExpiration As Date = Nil, pColumnsType() as DB.DataType = Nil) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
@@ -562,7 +616,11 @@ Inherits QueryBuilder
 		        
 		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
-		        mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
+		        if pColumnsType <> nil then
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnsType(pIndex-1))
+		        else
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
+		        end if
 		        
 		        // @todo check if mChanged.Clear is not more appropriate
 		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
@@ -981,6 +1039,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub RaiseEventFound()
+		  RaiseEvent Found
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reload(pDatabase As Database) As ORM
 		  // Save primary key, the model will be unloaded
 		  
@@ -1073,6 +1137,84 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Replace(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  If Loaded Then
+		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    pDatabase.Begin
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear changes, they are saved in mData
+		    Call Me.mChanged.Clear
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      
+		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		        // Best guess for MySQL when available
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      End If
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mRemoved.Values
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    // Clear pending relationships
+		    mAdded.Clear
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    mRemoved.Clear
+		    
+		    pDatabase.Commit
+		    
+		    RaiseEvent Created
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Reset() As ORM
 		  Call Super.Reset()
 		  
@@ -1086,7 +1228,9 @@ Inherits QueryBuilder
 		    
 		    If Loaded() Then
 		      Call Update(pDatabase)
-		    Else
+		    Elseif mReplaced then
+		      Call Replace(pDatabase)
+		    else
 		      Call Create(pDatabase)
 		    End
 		    
@@ -1173,7 +1317,54 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent UnloadingAll Then
 		    
-		    mData.Clear
+		    mData = nil
+		    mData = new Dictionary
+		    'mData.Clear
+		    
+		    RaiseEvent UnloadedAll
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function UnloadFull() As ORM
+		  // Empties only the primary keys
+		  
+		  If Not RaiseEvent UnloadingAll Then
+		    
+		    For Each pPrimaryKey As String In PrimaryKeys
+		      If mData.HasKey(pPrimaryKey) Then
+		        mData.Remove(pPrimaryKey)
+		      End If
+		      If mChanged.HasKey(pPrimaryKey) then
+		        mChanged.Remove(pPrimaryKey)
+		      End If
+		      If mRemoved.HasKey(pPrimaryKey) then
+		        mRemoved.Remove(pPrimaryKey)
+		      End If
+		      If mAdded.HasKey(pPrimaryKey) then
+		        mAdded.Remove(pPrimaryKey)
+		      End If
+		    Next
+		    
+		    mData = nil
+		    mData = new Dictionary
+		    'mData.Clear
+		    
+		    mChanged = nil
+		    mChanged = new Dictionary
+		    'mChanged.Clear
+		    
+		    mRemoved = nil
+		    mRemoved = new Dictionary
+		    'mRemoved.Clear
+		    
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    'mAdded.clear
 		    
 		    RaiseEvent UnloadedAll
 		    
@@ -1226,9 +1417,14 @@ Inherits QueryBuilder
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdded.Clear()
-		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear()
+		    //mAdded.Clear()
+		    mAdded = nil
+		    mAdded = new Dictionary
+		    
+		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
+		    //mRemoved.Clear()
+		    mRemoved = nil
+		    mRemoved = new Dictionary
 		    
 		    pDatabase.Commit
 		    
@@ -1421,6 +1617,10 @@ Inherits QueryBuilder
 	#tag EndNote
 
 
+	#tag Property, Flags = &h0
+		FinishLoaded As Boolean = False
+	#tag EndProperty
+
 	#tag Property, Flags = &h1
 		Protected mAdded As Dictionary
 	#tag EndProperty
@@ -1437,8 +1637,18 @@ Inherits QueryBuilder
 		Protected mRemoved As Dictionary
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		mReplaced As Boolean = False
+	#tag EndProperty
+
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="FinishLoaded"
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Handle"
 			Group="Behavior"
@@ -1470,6 +1680,12 @@ Inherits QueryBuilder
 			Group="Behavior"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="mReplaced"
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"

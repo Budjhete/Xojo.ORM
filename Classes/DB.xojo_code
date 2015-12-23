@@ -12,7 +12,7 @@ Protected Module DB
 		  
 		  If pDatabase IsA MySQLCommunityServer Then
 		    pDatabase.SQLExecute("START TRANSACTION")
-		  Else 
+		  Else
 		    pDatabase.SQLExecute("BEGIN TRANSACTION")
 		  End If
 		End Sub
@@ -185,30 +185,118 @@ Protected Module DB
 		  // so it has to extract data properly at some time. It is the purpose
 		  // of this function.
 		  
-		  Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex)
+		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)
 		  
+		  // juste pour tester
+		  'if pDatabaseFieldName = "defaut" then
+		  'MsgBox pColumnType.StringValue
+		  'End If
+		  '
+		  'if  then
+		  'MsgBox pDatabaseField.NativeValue
+		  'MsgBox pColumnType.StringValue
+		  'end if
+		  
+		  
 		  // Perform type detection for unknown data type
-		  If pRecordSet.ColumnType(pIndex) = -1 Then
-		    If IsNumeric(pDatabaseField.NativeValue) Then
-		      Return pDatabaseField.CurrencyValue
+		  If pColumnType = -1 and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde
+		    If IsNumeric(pDatabaseFieldValue) Then
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
+		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
 		  
-		  If pRecordSet.ColumnType(pIndex) = 11 Then
-		    Return pDatabaseField.CurrencyValue
+		  // Correction caca pour SQLite
+		  'If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and  pDatabaseField.Name = "interet" Then
+		  'Return pDatabaseField.CurrencyValue
+		  'End If
+		  
+		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
+		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
-		  If pRecordSet.ColumnType(pIndex) = 13 Then
-		    Return pDatabaseField.CurrencyValue
-		  End If 
+		  If pColumnType = 13 and Company.Current.Database isa MySQLCommunityServer Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
 		  
 		  // Set encoding to UTF8 for string
-		  If pDatabaseField.Value.Type = Variant.TypeString Then
-		    Return pDatabaseField.StringValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		  End If
 		  
-		  return pDatabaseField.Value
+		  return pDatabaseFieldValue
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Extract(pRecordSet As RecordSet, pIndex As Integer, pColumnType as DB.DataType) As Variant
+		  // Properly extract a DatabaseField from a RecordSet
+		  
+		  // Internaly, the ORM uses Variant to store its data in a Dictionary,
+		  // so it has to extract data properly at some time. It is the purpose
+		  // of this function.
+		  
+		  // use colomns exception for extracting data for MySQLplugin that can not manage column type !
+		  
+		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value
+		  Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex)
+		  
+		  // juste pour tester
+		  'if pDatabaseFieldName = "sousTotal" then
+		  'MsgBox pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
+		  'End If
+		  '
+		  'if  then
+		  'MsgBox pDatabaseField.NativeValue
+		  'MsgBox pColumnType.StringValue
+		  'end if
+		  if pDatabaseFieldValue <> nil And pDatabaseFieldValue <> "" then
+		    
+		    Select Case pColumnType
+		    Case DB.DataType.BlobType
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Case DB.DataType.BooleanType
+		      Return pDatabaseFieldValue.BooleanValue
+		    Case DB.DataType.CharType
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Case DB.DataType.CurrencyType
+		      Return pDatabaseFieldValue.CurrencyValue
+		    Case DB.DataType.DateType
+		      Return pDatabaseFieldValue.DateValue
+		    Case DB.DataType.DecimalType
+		      Return pDatabaseFieldValue.CurrencyValue
+		    Case DB.DataType.DoubleType
+		      Return pDatabaseFieldValue.DoubleValue
+		    Case DB.DataType.IntegerType
+		      Return pDatabaseFieldValue.Int32Value
+		    Case DB.DataType.TextType
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Case DB.DataType.TimeStampType
+		      Return pDatabaseFieldValue.DateValue
+		    Case DB.DataType.TimeType
+		      Return pDatabaseFieldValue.DateValue
+		    Case DB.DataType.VarCharType
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Else
+		      If pDatabaseFieldValue.Type = Variant.TypeString Then
+		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		      else
+		        return pDatabaseFieldValue
+		      End If
+		    End Select
+		    
+		  else
+		    return pDatabaseFieldValue
+		    
+		  end if
+		  
+		  return pDatabaseFieldValue
 		  
 		End Function
 	#tag EndMethod
@@ -244,6 +332,20 @@ Protected Module DB
 	#tag Method, Flags = &h0
 		Function Insert(pTableName As String, ParamArray pColumns As Variant) As QueryBuilder
 		  Return Insert(pTableName, pColumns)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Replace(pTableName As String, pColumns() As Variant) As QueryBuilder
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Return pQueryBuilder.Append(new ReplaceQueryExpression(pTableName, pColumns))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Replace(pTableName As String, ParamArray pColumns As Variant) As QueryBuilder
+		  Return Replace(pTableName, pColumns)
 		End Function
 	#tag EndMethod
 
@@ -297,6 +399,22 @@ Protected Module DB
 		  Return DB.Expression(QueryCompiler.Value(pValue))
 		End Function
 	#tag EndMethod
+
+
+	#tag Enum, Name = DataType, Type = Integer, Flags = &h0
+		IntegerType
+		  TextType
+		  VarCharType
+		  CharType
+		  DoubleType
+		  DateType
+		  TimeType
+		  TimeStampType
+		  CurrencyType
+		  BooleanType
+		  DecimalType
+		BlobType
+	#tag EndEnum
 
 
 	#tag ViewBehavior
