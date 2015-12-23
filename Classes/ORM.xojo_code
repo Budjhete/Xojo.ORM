@@ -290,6 +290,20 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
+		Sub Constructor(pRecordSet As RecordSet, pColumnsType() as DB.DataType)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.FieldCount
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnsType(pIndex -1))
+		  Next
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
 		Sub Constructor(pPk As Variant, pDatabase As Database)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -572,7 +586,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pDatabase As Database, pExpiration As Date = Nil) As ORM
+		Function Find(pDatabase As Database, pExpiration As Date = Nil, pColumnsType() as DB.DataType = Nil) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
@@ -602,7 +616,11 @@ Inherits QueryBuilder
 		        
 		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
-		        mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
+		        if pColumnsType <> nil then
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnsType(pIndex-1))
+		        else
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
+		        end if
 		        
 		        // @todo check if mChanged.Clear is not more appropriate
 		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
