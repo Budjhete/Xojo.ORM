@@ -77,6 +77,34 @@ Protected Module DB
 		      
 		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
 		      
+		    Case "mysqlMBS" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
+		      //SQLDatabaseMBS MySQL : databasename = "<protocol>:<host>:<port>@<database>"
+		      pDatabase = new SQLDatabaseMBS
+		      
+		      dim port as string
+		      If pMatch.SubExpressionString(5) <> "" Then
+		        port = pMatch.SubExpressionString(5)
+		      Else
+		        port = "3306"
+		      End If
+		      
+		      pDatabase.DatabaseName = pMatch.SubExpressionString(1) + ":" + pMatch.SubExpressionString(4) + ":" + port + "@" + pMatch.SubExpressionString(6)
+		      
+		      pDatabase.UserName = pMatch.SubExpressionString(2)
+		      pDatabase.Password = pMatch.SubExpressionString(3)
+		      
+		      If pDatabase.Connect Then
+		        
+		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		        
+		        pDatabase.SQLExecute("SET NAMES 'utf8'")
+		        
+		        Return pDatabase
+		        
+		      End If
+		      
+		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      
 		    Case "mysql" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
 		      
 		      pDatabase = New MySQLCommunityServer
@@ -107,31 +135,31 @@ Protected Module DB
 		      
 		    Case "postgresql"
 		      
-		      pDatabase = New PostgreSQLDatabase
-		      
-		      pDatabase.UserName = pMatch.SubExpressionString(2)
-		      pDatabase.Password = pMatch.SubExpressionString(3)
-		      pDatabase.Host = pMatch.SubExpressionString(4)
-		      
-		      If pMatch.SubExpressionString(5) <> "" Then
-		        PostgreSQLDatabase(pDatabase).Port = Val(pMatch.SubExpressionString(5))
-		      Else
-		        PostgreSQLDatabase(pDatabase).Port = 5432
-		      End If
-		      
-		      pDatabase.DatabaseName = pMatch.SubExpressionString(6)
-		      
-		      If pDatabase.Connect Then
-		        
-		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
-		        
-		        pDatabase.SQLExecute("SET NAMES 'utf8'")
-		        
-		        Return pDatabase
-		        
-		      End If
-		      
-		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      'pDatabase = New PostgreSQLDatabase
+		      '
+		      'pDatabase.UserName = pMatch.SubExpressionString(2)
+		      'pDatabase.Password = pMatch.SubExpressionString(3)
+		      'pDatabase.Host = pMatch.SubExpressionString(4)
+		      '
+		      'If pMatch.SubExpressionString(5) <> "" Then
+		      'PostgreSQLDatabase(pDatabase).Port = Val(pMatch.SubExpressionString(5))
+		      'Else
+		      'PostgreSQLDatabase(pDatabase).Port = 5432
+		      'End If
+		      '
+		      'pDatabase.DatabaseName = pMatch.SubExpressionString(6)
+		      '
+		      'If pDatabase.Connect Then
+		      '
+		      'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		      '
+		      'pDatabase.SQLExecute("SET NAMES 'utf8'")
+		      '
+		      'Return pDatabase
+		      '
+		      'End If
+		      '
+		      'System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
 		      
 		    End Select
 		    
@@ -185,10 +213,11 @@ Protected Module DB
 		  // so it has to extract data properly at some time. It is the purpose
 		  // of this function.
 		  
-		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
-		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name
-		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value
-		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)
+		  
+		  
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "defaut" then
@@ -233,7 +262,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Extract(pRecordSet As RecordSet, pIndex As Integer, pColumnType as DB.DataType) As Variant
+		Function Extract(pRecordSet As RecordSet, pIndex As Integer, pColumnType as Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Variant to store its data in a Dictionary,
@@ -243,9 +272,9 @@ Protected Module DB
 		  // use colomns exception for extracting data for MySQLplugin that can not manage column type !
 		  
 		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
-		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name
-		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value
-		  Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex)
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
+		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "sousTotal" then
@@ -256,33 +285,23 @@ Protected Module DB
 		  'MsgBox pDatabaseField.NativeValue
 		  'MsgBox pColumnType.StringValue
 		  'end if
-		  if pDatabaseFieldValue <> nil And pDatabaseFieldValue <> "" then
+		  if pDatabaseFieldValue <> nil then
 		    
 		    Select Case pColumnType
-		    Case DB.DataType.BlobType
+		    Case 4, 5, 15, 16, 18
 		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		    Case DB.DataType.BooleanType
+		    Case 2, 12
 		      Return pDatabaseFieldValue.BooleanValue
-		    Case DB.DataType.CharType
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		    Case DB.DataType.CurrencyType
+		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
-		    Case DB.DataType.DateType
+		    Case 8, 10
 		      Return pDatabaseFieldValue.DateValue
-		    Case DB.DataType.DecimalType
-		      Return pDatabaseFieldValue.CurrencyValue
-		    Case DB.DataType.DoubleType
+		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
-		    Case DB.DataType.IntegerType
-		      Return pDatabaseFieldValue.Int32Value
-		    Case DB.DataType.TextType
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		    Case DB.DataType.TimeStampType
-		      Return pDatabaseFieldValue.DateValue
-		    Case DB.DataType.TimeType
-		      Return pDatabaseFieldValue.DateValue
-		    Case DB.DataType.VarCharType
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Case 3, 19
+		      Return pDatabaseFieldValue.IntegerValue
+		    Case 14
+		      Return pDatabaseFieldValue.CStringValue
 		    Else
 		      If pDatabaseFieldValue.Type = Variant.TypeString Then
 		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)

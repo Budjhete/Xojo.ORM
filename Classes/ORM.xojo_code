@@ -290,16 +290,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pRecordSet As RecordSet, pColumnsType() as DB.DataType)
+		Sub Constructor(pRecordSet As RecordSet, pColumnType as Dictionary)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnsType(pIndex -1))
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name) )
 		  Next
-		  
-		  
 		End Sub
 	#tag EndMethod
 
@@ -606,6 +604,14 @@ Inherits QueryBuilder
 		    Limit(1). _
 		    Execute(pDatabase, pExpiration)
 		    
+		    dim pRecordSetType as RecordSet = pDatabase.FieldSchema(Me.TableName)
+		    
+		    dim pColumnType as new Dictionary
+		    
+		    while not pRecordSetType.EOF
+		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
+		      pRecordSetType.MoveNext
+		    wend
 		    // Clear any existing data
 		    mData.Clear
 		    
@@ -616,8 +622,8 @@ Inherits QueryBuilder
 		        
 		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
-		        if pColumnsType <> nil then
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnsType(pIndex-1))
+		        if pColumnType <> nil then
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn))
 		        else
 		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
 		        end if
