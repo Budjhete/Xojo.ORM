@@ -277,7 +277,7 @@ Protected Module DB
 		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "sousTotal" then
+		  'if pDatabaseFieldName = "logo" then
 		  'MsgBox pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
@@ -301,7 +301,7 @@ Protected Module DB
 		    Case 3, 19
 		      Return pDatabaseFieldValue.IntegerValue
 		    Case 14
-		      Return pDatabaseFieldValue.CStringValue
+		      Return pDatabaseFieldValue.StringValue
 		    Else
 		      If pDatabaseFieldValue.Type = Variant.TypeString Then
 		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
