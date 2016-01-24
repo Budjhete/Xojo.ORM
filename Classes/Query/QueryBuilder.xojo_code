@@ -320,16 +320,16 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumns() As Variant, pDirections() As String) As QueryBuilder
-		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections))
+		Function OrderBy(pColumns() As Variant, pDirections() As String, pComparators() as String) As QueryBuilder
+		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections, pComparators))
 		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumn As Variant, pDirection As String = "ASC") As QueryBuilder
-		  mQuery.Append(new OrderByQueryExpression(Array(pColumn), Array(pDirection)))
+		Function OrderBy(pColumn As Variant, pDirection As String = "ASC", pComparator as String = "") As QueryBuilder
+		  mQuery.Append( new OrderByQueryExpression(Array(pColumn), Array(pDirection), Array(pComparator)) )
 		  
 		  Return Me
 		End Function

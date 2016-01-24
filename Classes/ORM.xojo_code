@@ -967,16 +967,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumns() As Variant, pDirections() As String) As ORM
-		  Call Super.OrderBy(pColumns, pDirections)
+		Function OrderBy(pColumns() As Variant,  pDirections() As String, pComparators() as String) As ORM
+		  Call Super.OrderBy(pColumns, pDirections, pComparators)
 		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumn As Variant, pDirection As String = "ASC") As ORM
-		  Call Super.OrderBy(pColumn, pDirection)
+		Function OrderBy(pColumn As Variant, pDirection As String = "ASC", pComparator as String = "") As ORM
+		  Call Super.OrderBy(pColumn, pDirection, pComparator)
 		  
 		  Return Me
 		End Function

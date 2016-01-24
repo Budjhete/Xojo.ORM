@@ -7,7 +7,11 @@ Implements QueryExpression
 		  
 		  // Compile each column and add its direction
 		  For i As Integer = 0 To mColumns.UBound
-		    pCompiledColumns.Append QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
+		    if mComparator(i) = "" then
+		      pCompiledColumns.Append QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
+		    else
+		      pCompiledColumns.Append "( " + QueryCompiler.Column(mColumns(i)) + mComparator(i) + " ) " + mDirections(i)
+		    end if
 		  Next
 		  
 		  If pLastQueryExpression IsA OrderByQueryExpression Then
@@ -22,9 +26,10 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumns() As Variant, pDirections() As String)
+		Sub Constructor(pColumns() As Variant, pDirections() As String, pComparators() as String = nil)
 		  mColumns = pColumns
 		  mDirections = pDirections
+		  mComparator = pComparators
 		End Sub
 	#tag EndMethod
 
@@ -37,6 +42,10 @@ Implements QueryExpression
 
 	#tag Property, Flags = &h21
 		Private mColumns() As Variant
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mComparator() As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
