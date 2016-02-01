@@ -56,9 +56,9 @@ Protected Module DB
 		      // Attempt each path type to match the database path
 		      For Each pPathType As Integer In Array(FolderItem.PathTypeNative, FolderItem.PathTypeAbsolute, FolderItem.PathTypeShell)
 		        
-		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(6))
+		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(6), pPathType)
 		        
-		        If SQLiteDatabase(pDatabase).DatabaseFile <> Nil Then
+		        If SQLiteDatabase(pDatabase).DatabaseFile <> Nil and SQLiteDatabase(pDatabase).DatabaseFile.Exists Then
 		          Exit
 		        End If
 		        

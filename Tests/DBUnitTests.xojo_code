@@ -10,10 +10,6 @@ Inherits TestGroup
 		  pDatabaseRef.DatabaseFile = GetTemporaryFolderItem
 		  Assert.IsTrue pDatabaseRef.CreateDatabaseFile
 		  
-		  // SQLite avec un AbsolutePath
-		  pDatabase = DB.Connect("sqlite://" + pDatabaseRef.DatabaseFile.AbsolutePath)
-		  Assert.IsNotNil(pDatabase, "sqlite://" + pDatabaseRef.DatabaseFile.AbsolutePath)
-		  Assert.IsTrue pDatabase IsA SQLiteDatabase
 		  
 		  // SQLite avec un NativePath
 		  pDatabase = DB.Connect("sqlite://" + pDatabaseRef.DatabaseFile.NativePath)
