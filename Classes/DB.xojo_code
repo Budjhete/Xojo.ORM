@@ -277,10 +277,10 @@ Protected Module DB
 		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "logo" then
+		  'if pDatabaseFieldName = "compte" then
 		  'MsgBox pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
-		  '
+		  
 		  'if  then
 		  'MsgBox pDatabaseField.NativeValue
 		  'MsgBox pColumnType.StringValue
@@ -290,7 +290,7 @@ Protected Module DB
 		    Select Case pColumnType
 		    Case 4, 5, 15, 16, 18
 		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		    Case 2, 12
+		    Case 12
 		      Return pDatabaseFieldValue.BooleanValue
 		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
@@ -298,7 +298,7 @@ Protected Module DB
 		      Return pDatabaseFieldValue.DateValue
 		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
-		    Case 3, 19
+		    Case 2, 3, 19
 		      Return pDatabaseFieldValue.IntegerValue
 		    Case 14
 		      Return pDatabaseFieldValue.StringValue
