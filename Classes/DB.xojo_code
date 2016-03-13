@@ -215,7 +215,7 @@ Protected Module DB
 		  
 		  
 		  
-		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  'Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
@@ -272,7 +272,7 @@ Protected Module DB
 		  // use colomns exception for extracting data for MySQLplugin that can not manage column type !
 		  
 		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
-		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  'Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
