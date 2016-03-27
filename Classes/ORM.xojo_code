@@ -1443,6 +1443,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub UpdateCache(pDatabase as Database)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
