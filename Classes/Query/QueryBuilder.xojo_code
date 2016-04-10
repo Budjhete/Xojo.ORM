@@ -320,6 +320,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function On(pColumn As Variant, pOperator As String, pValue As Variant, pType as DataType) As QueryBuilder
+		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() As Variant, pDirections() As String, pComparators() as String) As QueryBuilder
 		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections, pComparators))
 		  

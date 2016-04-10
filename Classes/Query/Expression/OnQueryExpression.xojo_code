@@ -16,7 +16,15 @@ Implements QueryExpression
 		  mLeftColumn = pLeftColumn
 		  mOperator = pOperator
 		  mRightColumn = pRightColumn
-		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant, pDataType as DataType)
+		  mLeftColumn = pLeftColumn
+		  mOperator = pOperator
+		  mRightColumn = pRightColumn
+		  mDatatype = pDataType
 		End Sub
 	#tag EndMethod
 
@@ -30,10 +38,21 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + QueryCompiler.Column(mRightColumn)
+		  if mDatatype = DataType.IntegerType then
+		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
+		  elseif mDatatype = DataType.TextType or mDatatype = DataType.CharType or mDatatype = DataType.VarCharType  then
+		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
+		    
+		  else
+		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + QueryCompiler.Column(mRightColumn)
+		  end if
 		End Function
 	#tag EndMethod
 
+
+	#tag Property, Flags = &h0
+		mDatatype As DataType
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mLeftColumn As Variant
