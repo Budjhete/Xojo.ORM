@@ -7,6 +7,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Alias(pColumn As Variant, pAlias As String, pType as DataType) As QueryExpression
+		  Return DB.Expression(pColumn + " AS " + QueryCompiler.Column(pAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Begin(Extends pDatabase As Database)
 		  // Begin a transaction
 		  
