@@ -50,8 +50,8 @@ Implements QueryExpression
 	#tag EndMethod
 
 
-	#tag Property, Flags = &h0
-		mDatatype As DataType
+	#tag Property, Flags = &h21
+		Private mDatatype As DataType
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -81,6 +81,11 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="mDatatype"
+			Group="Behavior"
+			Type="DataType"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
