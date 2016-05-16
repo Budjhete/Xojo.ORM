@@ -366,27 +366,43 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  
+		  System.DebugLog "ORM.create isloaded ?"
 		  If Loaded Then
 		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
 		  End
 		  
+		  System.DebugLog "ORM.create is Creating ?"
+		  
 		  If Not RaiseEvent Creating Then
+		    System.DebugLog "ORM.create not creating"
 		    
 		    pDatabase.Begin
+		    System.DebugLog "ORM.create database.begin"
+		    
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
+		    System.DebugLog "ORM.create pRaw = data"
+		    
 		    
 		    // pData contains at least all primary keys
 		    Dim pData As Dictionary = Me.Pks
 		    
+		    System.DebugLog "ORM.create pData = Pks"
+		    
+		    System.DebugLog "ORM.create take colums defined in model"
+		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
+		      
 		      If pRaw.HasKey(pColumn) Then
+		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn).StringValue
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
+		    
+		    System.DebugLog "ORM.create DB.Insert"
 		    
 		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
@@ -395,8 +411,13 @@ Inherits QueryBuilder
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
+		    System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
 		    // Clear changes, they are saved in mData
-		    Call Me.mChanged.Clear
+		    //Call Me.mChanged.Clear
+		    me.mChanged = nil
+		    me.mChanged = new Dictionary
+		    
+		    System.DebugLog "ORM.Create.mChanged cleared"
 		    
 		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
@@ -426,15 +447,30 @@ Inherits QueryBuilder
 		      Call pRelation.Add(Me, pDatabase, False)
 		    Next
 		    
+		    System.DebugLog "ORM.Create.mAdded about to clear"
+		    
 		    // Clear pending relationships
-		    mAdded.Clear
+		    //mAdded.Clear
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    System.DebugLog "ORM.Create.mAdded cleared"
+		    
+		    
+		    System.DebugLog "ORM.Create.mRemoved about to clear"
+		    
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear
+		    //mRemoved.Clear
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    System.DebugLog "ORM.Create.mRemoved cleared"
+		    
 		    
 		    pDatabase.Commit
 		    
 		    RaiseEvent Created
-		    
+		    System.DebugLog "ORM.Create Done"
 		  End If
 		  
 		  Return Me
@@ -1230,20 +1266,25 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Save(pDatabase As Database) As ORM
+		  System.DebugLog "ORM.save begin"
 		  If Not RaiseEvent Saving Then
+		    System.DebugLog "ORM.save ifnotsaving"
 		    
 		    If Loaded() Then
+		      System.DebugLog "ORM.save is loaded"
 		      Call Update(pDatabase)
 		    Elseif mReplaced then
+		      System.DebugLog "ORM.save is replaced"
 		      Call Replace(pDatabase)
 		    else
+		      System.DebugLog "ORM.Save creating"
 		      Call Create(pDatabase)
 		    End
 		    
 		    RaiseEvent Saved
 		    
 		  End If
-		  
+		  System.DebugLog "ORM.save end"
 		  Return Me
 		End Function
 	#tag EndMethod
