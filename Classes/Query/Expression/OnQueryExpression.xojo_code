@@ -38,7 +38,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  if mDatatype = DataType.IntegerType then
+		  if mDatatype = DataType.IntegerType and IsNumeric(mRightColumn) then
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
 		  elseif mDatatype = DataType.TextType or mDatatype = DataType.CharType or mDatatype = DataType.VarCharType  then
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
@@ -81,11 +81,6 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mDatatype"
-			Group="Behavior"
-			Type="DataType"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
