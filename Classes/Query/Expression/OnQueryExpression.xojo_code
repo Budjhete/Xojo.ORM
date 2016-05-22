@@ -38,7 +38,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  if mDatatype = DataType.IntegerType and IsNumeric(mRightColumn) then
+		  if mDatatype = DataType.IntegerType or IsNumeric(mRightColumn) then
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
 		  elseif mDatatype = DataType.TextType or mDatatype = DataType.CharType or mDatatype = DataType.VarCharType  then
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
