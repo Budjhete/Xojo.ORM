@@ -194,13 +194,17 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumns() As Variant) As QueryBuilder
-		  Return Append(new GroupByQueryExpression(pColumns))
+		  mQuery.Append(new GroupByQueryExpression(pColumns))
+		  return me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumn As Variant) As QueryBuilder
-		  Return GroupBy(Array(pColumn))
+		  mQuery.Append( new GroupByQueryExpression(Array(pColumn)) )
+		  
+		  return me
+		  //Return GroupBy(Array(pColumn))
 		End Function
 	#tag EndMethod
 
