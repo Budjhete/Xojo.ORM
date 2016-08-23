@@ -85,31 +85,34 @@ Protected Module DB
 		      
 		    Case "mysqlMBS" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
 		      //SQLDatabaseMBS MySQL : databasename = "<protocol>:<host>:<port>@<database>"
-		      pDatabase = new SQLDatabaseMBS
 		      
-		      dim port as string
-		      If pMatch.SubExpressionString(5) <> "" Then
-		        port = pMatch.SubExpressionString(5)
-		      Else
-		        port = "3306"
-		      End If
+		      // UNCOMMENT THIS SECTION BELOW IF YOU INSTALLED MONKEYBREAD SQL PLUGIN
 		      
-		      pDatabase.DatabaseName = pMatch.SubExpressionString(1) + ":" + pMatch.SubExpressionString(4) + ":" + port + "@" + pMatch.SubExpressionString(6)
-		      
-		      pDatabase.UserName = pMatch.SubExpressionString(2)
-		      pDatabase.Password = pMatch.SubExpressionString(3)
-		      
-		      If pDatabase.Connect Then
-		        
-		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
-		        
-		        pDatabase.SQLExecute("SET NAMES 'utf8'")
-		        
-		        Return pDatabase
-		        
-		      End If
-		      
-		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      'pDatabase = new SQLDatabaseMBS
+		      '
+		      'dim port as string
+		      'If pMatch.SubExpressionString(5) <> "" Then
+		      'port = pMatch.SubExpressionString(5)
+		      'Else
+		      'port = "3306"
+		      'End If
+		      '
+		      'pDatabase.DatabaseName = pMatch.SubExpressionString(1) + ":" + pMatch.SubExpressionString(4) + ":" + port + "@" + pMatch.SubExpressionString(6)
+		      '
+		      'pDatabase.UserName = pMatch.SubExpressionString(2)
+		      'pDatabase.Password = pMatch.SubExpressionString(3)
+		      '
+		      'If pDatabase.Connect Then
+		      '
+		      'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		      '
+		      'pDatabase.SQLExecute("SET NAMES 'utf8'")
+		      '
+		      'Return pDatabase
+		      '
+		      'End If
+		      '
+		      'System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
 		      
 		    Case "mysql" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
 		      
