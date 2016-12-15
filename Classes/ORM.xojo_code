@@ -781,6 +781,26 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function HasOneThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
+		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
+		  From(pPivotTableName). _
+		  Where(pForeignColumn, "=", Me.Pk)_
+		  )
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function HasOneThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pForeignValue as variant) As ORM
+		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
+		  From(pPivotTableName). _
+		  Where(pForeignColumn, "=", pForeignValue)_
+		  )
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Having(pCriterias As Dictionary) As ORM
 		  Call Super.Having(pCriterias)
