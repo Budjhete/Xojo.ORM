@@ -761,7 +761,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns As String) As ORM
+		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns() As String) As ORM
 		  Return Me.HasMany(pORM, pForeignColumns)
 		End Function
 	#tag EndMethod
@@ -776,8 +776,24 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function HasOne(pORM As ORM, pForeignColumns() As String) As ORM
+		  Return HasMany(pORM, pForeignColumns())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function HasOne(pORM As ORM, pForeignColumn As String) As ORM
 		  Return HasMany(pORM, pForeignColumn)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Function HasOne(pORM As ORM, pForeignColumn As String, pKeyIndex as integer) As ORM
+		  // pForeignColumns must be specified in the same order as PrimaryKeys
+		  
+		  Call pORM.Where(pForeignColumn, "=", Me.Pks.Value(Me.PrimaryKeys(pKeyIndex)))
+		  
+		  Return pORM
 		End Function
 	#tag EndMethod
 
