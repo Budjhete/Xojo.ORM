@@ -1023,6 +1023,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function OnClose() As ORM
+		  Call Super.OnClose()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function OnOpen() As ORM
+		  Call Super.OnOpen()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Operator_Compare(pORM As ORM) As Integer
 		  // @todo implement comparison for multiple primary keys
 		  
@@ -1057,6 +1073,14 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function OrHaving(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.OrHaving(pColumn, pOperator, pValue)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function OrOn(pColumn As String, pOperator As String, pValue As Variant) As ORM
+		  Call Super.OrOn(pColumn, pOperator, pValue)
 		  
 		  Return Me
 		End Function

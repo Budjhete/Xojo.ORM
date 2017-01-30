@@ -7,7 +7,16 @@ Implements QueryExpression
 		    Return "AND " + Predicate()
 		  End If
 		  
+		  If pLastQueryExpression IsA OnCloseQueryExpression Then
+		    Return "AND " + Predicate()
+		  End If
+		  
+		  If pLastQueryExpression IsA OnOpenQueryExpression Then
+		    Return Predicate()
+		  End If
+		  
 		  Return "ON " + Predicate()
+		  
 		End Function
 	#tag EndMethod
 

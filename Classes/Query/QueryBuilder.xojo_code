@@ -330,6 +330,18 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function OnClose() As QueryBuilder
+		  Return Append(new OnCloseQueryExpression())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function OnOpen() As QueryBuilder
+		  Return Append(new OnOpenQueryExpression())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() As Variant, pDirections() As String, pComparators() as String) As QueryBuilder
 		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections, pComparators))
 		  
@@ -348,6 +360,14 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Append(new OrHavingQueryExpression(pLeft, pOperator, pRight))
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function OrOn(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  mQuery.Append(new OrOnQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
 		End Function
