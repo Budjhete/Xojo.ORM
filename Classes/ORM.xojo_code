@@ -826,7 +826,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Having(pColumn As String, pOperator As String, pValue As Variant) As ORM
+		Function Having(pColumn As Variant, pOperator As String, pValue As Variant) As ORM
 		  Call Super.Having(pColumn, pOperator, pValue)
 		  
 		  Return Me

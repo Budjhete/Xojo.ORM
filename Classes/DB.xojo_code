@@ -441,7 +441,8 @@ Protected Module DB
 		  CurrencyType
 		  BooleanType
 		  DecimalType
-		BlobType
+		  BlobType
+		Expression
 	#tag EndEnum
 
 

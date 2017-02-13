@@ -325,7 +325,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function On(pColumn As Variant, pOperator As String, pValue As Variant, pType as DataType) As QueryBuilder
-		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue))
+		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue, pType))
 		End Function
 	#tag EndMethod
 
