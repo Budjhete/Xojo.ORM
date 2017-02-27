@@ -30,7 +30,11 @@ Protected Module QueryCompiler
 		    Case "*"
 		      // Do not escape the column
 		    Else
-		      pParts(i) = "`" + pParts(i)+ "`"
+		      if IsNumeric(pParts(i)) then
+		        pParts(i) = pParts(i)
+		      else
+		        pParts(i) = "`" + pParts(i)+ "`"
+		      End
 		    End Select
 		    
 		  Next
