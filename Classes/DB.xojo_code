@@ -25,6 +25,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Coalesce(pColumn As Variant, pSubtitu as Integer = 0) As QueryExpression
+		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.StringValue+" )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Connect(pURL As String) As Database
 		  // Perform a connection to a database and initialize the character set
 		  //
