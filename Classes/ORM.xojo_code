@@ -1326,25 +1326,19 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Save(pDatabase As Database) As ORM
-		  System.DebugLog "ORM.save begin"
 		  If Not RaiseEvent Saving Then
-		    System.DebugLog "ORM.save ifnotsaving"
 		    
 		    If Loaded() Then
-		      System.DebugLog "ORM.save is loaded"
 		      Call Update(pDatabase)
 		    Elseif mReplaced then
-		      System.DebugLog "ORM.save is replaced"
 		      Call Replace(pDatabase)
 		    else
-		      System.DebugLog "ORM.Save creating"
 		      Call Create(pDatabase)
 		    End
 		    
 		    RaiseEvent Saved
 		    
 		  End If
-		  System.DebugLog "ORM.save end"
 		  Return Me
 		End Function
 	#tag EndMethod
