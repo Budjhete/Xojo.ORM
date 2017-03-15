@@ -1538,7 +1538,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub UpdateCache(pDatabase as Database)
+		Sub UpdateCache(pDatabase as Database, pDebut as date, pFin as Date)
 		  
 		End Sub
 	#tag EndMethod
