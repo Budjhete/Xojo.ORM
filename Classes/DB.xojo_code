@@ -230,13 +230,13 @@ Protected Module DB
 		  
 		  
 		  
-		  'Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "defaut" then
-		  'MsgBox pColumnType.StringValue
+		  'if pDatabaseFieldName = "montant" then
+		  'System.DebugLog pDatabaseFieldValue
 		  'End If
 		  '
 		  'if  then
@@ -254,8 +254,11 @@ Protected Module DB
 		  End If
 		  
 		  // Correction caca pour SQLite
-		  'If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and  pDatabaseField.Name = "interet" Then
-		  'Return pDatabaseField.CurrencyValue
+		  'If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and pDatabaseFieldName = "montant" Then
+		  'if NOT (pDatabaseFieldValue.DoubleValue > 0.0001 OR pDatabaseFieldValue.DoubleValue <-0.0001 OR pDatabaseFieldValue.DoubleValue = 0.0000) then
+		  'dim cc as currency = 0.0000
+		  'Return cc
+		  'End If
 		  'End If
 		  
 		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
