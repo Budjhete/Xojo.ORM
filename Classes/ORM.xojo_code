@@ -935,6 +935,7 @@ Inherits QueryBuilder
 		  
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Me.Data.Keys
+		    System.DebugLog pColumn + " : " + pJSONItem.ToString
 		    pJSONItem.Value(pColumn) = Me.Data(pColumn)
 		  Next
 		  
