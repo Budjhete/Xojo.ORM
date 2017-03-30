@@ -26,7 +26,7 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Coalesce(pColumn As Variant, pSubtitu as Integer = 0) As QueryExpression
-		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.StringValue+" )")
+		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+Str(pSubtitu)+" )")
 		End Function
 	#tag EndMethod
 
@@ -243,10 +243,11 @@ Protected Module DB
 		  'MsgBox pDatabaseField.NativeValue
 		  'MsgBox pColumnType.StringValue
 		  'end if
-		  
-		  
+		  // *******************************
+		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
+		  // *******************************
 		  // Perform type detection for unknown data type
-		  If pColumnType = -1 and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde
+		  If pColumnType = -1 and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
 		    If IsNumeric(pDatabaseFieldValue) Then
 		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
 		      Return pDatabaseFieldValue.CurrencyValue
@@ -436,6 +437,13 @@ Protected Module DB
 		  Return DB.Expression(QueryCompiler.Value(pValue))
 		End Function
 	#tag EndMethod
+
+
+	#tag Note, Name = Current.Company
+		
+		// NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
+		
+	#tag EndNote
 
 
 	#tag Enum, Name = DataType, Type = Integer, Flags = &h0

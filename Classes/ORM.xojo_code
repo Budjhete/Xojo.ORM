@@ -935,8 +935,15 @@ Inherits QueryBuilder
 		  
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Me.Data.Keys
-		    System.DebugLog pColumn + " : " + pJSONItem.ToString
-		    pJSONItem.Value(pColumn) = Me.Data(pColumn)
+		    System.DebugLog pColumn
+		    dim v as Variant = Me.Data(pColumn)
+		    System.DebugLog "type : " + str(v.Type)
+		    if v.Type = 6 then
+		      pJSONItem.Value(pColumn) = v.DoubleValue
+		    else
+		      pJSONItem.Value(pColumn) = v
+		    end if
+		    System.DebugLog pJSONItem.ToString
 		  Next
 		  
 		  Return pJSONItem
