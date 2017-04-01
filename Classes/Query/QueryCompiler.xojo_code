@@ -127,7 +127,11 @@ Protected Module QueryCompiler
 		  // Tests for primitives
 		  Select Case pValue.Type
 		    
-		  Case Variant.TypeInteger, Variant.TypeLong, Variant.TypeDouble, Variant.TypeCurrency
+		  Case Variant.TypeInteger, Variant.TypeInt64, Variant.TypeDouble, Variant.TypeCurrency
+		    if pValue.Type = Variant.TypeDouble then
+		      Dim locale As New Xojo.Core.Locale("en-US")
+		      Return pValue.DoubleValue.ToText(locale, "0.000000000000") // return e-12
+		    end if
 		    Return pValue.StringValue
 		    
 		  Case Variant.TypeBoolean

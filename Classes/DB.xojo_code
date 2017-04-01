@@ -447,8 +447,9 @@ Protected Module DB
 
 
 	#tag Enum, Name = DataType, Type = Integer, Flags = &h0
-		IntegerType
+		Expression
 		  TextType
+		  IntegerType
 		  VarCharType
 		  CharType
 		  DoubleType
@@ -458,8 +459,7 @@ Protected Module DB
 		  CurrencyType
 		  BooleanType
 		  DecimalType
-		  BlobType
-		Expression
+		BlobType
 	#tag EndEnum
 
 

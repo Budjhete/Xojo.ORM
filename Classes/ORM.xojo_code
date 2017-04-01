@@ -366,7 +366,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  System.DebugLog "ORM.create isloaded ?"
+		  'System.DebugLog "ORM.create isloaded ?"
 		  If Loaded Then
 		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
 		  End
@@ -374,7 +374,7 @@ Inherits QueryBuilder
 		  System.DebugLog "ORM.create is Creating ?"
 		  
 		  If Not RaiseEvent Creating Then
-		    System.DebugLog "ORM.create not creating"
+		    'System.DebugLog "ORM.create not creating"
 		    
 		    pDatabase.Begin
 		    System.DebugLog "ORM.create database.begin"
@@ -388,7 +388,7 @@ Inherits QueryBuilder
 		    // pData contains at least all primary keys
 		    Dim pData As Dictionary = Me.Pks
 		    
-		    System.DebugLog "ORM.create pData = Pks"
+		    'System.DebugLog "ORM.create pData = Pks"
 		    
 		    System.DebugLog "ORM.create take colums defined in model"
 		    
@@ -411,7 +411,7 @@ Inherits QueryBuilder
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
-		    System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
+		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
 		    // Clear changes, they are saved in mData
 		    //Call Me.mChanged.Clear
 		    me.mChanged = nil
@@ -447,7 +447,7 @@ Inherits QueryBuilder
 		      Call pRelation.Add(Me, pDatabase, False)
 		    Next
 		    
-		    System.DebugLog "ORM.Create.mAdded about to clear"
+		    'System.DebugLog "ORM.Create.mAdded about to clear"
 		    
 		    // Clear pending relationships
 		    //mAdded.Clear
@@ -457,7 +457,7 @@ Inherits QueryBuilder
 		    System.DebugLog "ORM.Create.mAdded cleared"
 		    
 		    
-		    System.DebugLog "ORM.Create.mRemoved about to clear"
+		    'System.DebugLog "ORM.Create.mRemoved about to clear"
 		    
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    //mRemoved.Clear

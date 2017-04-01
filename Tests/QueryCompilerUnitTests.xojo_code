@@ -22,10 +22,10 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub DoubleTest()
-		  Assert.AreEqual("1.0", QueryCompiler.Value(1.0))
+		  Assert.AreEqual("1.000000000000", QueryCompiler.Value(1.0))
 		  
 		  // Very small number
-		  Assert.AreEqual("0.00000000001", QueryCompiler.Value(0.00000000001))
+		  Assert.AreEqual("0.000000000001", QueryCompiler.Value(0.000000000001))
 		End Sub
 	#tag EndMethod
 
