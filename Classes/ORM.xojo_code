@@ -1031,6 +1031,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function On(pColumn As Variant, pOperator As String, pValue As Variant, pType as DataType) As ORM
+		  Call Super.On(pColumn, pOperator, pValue, pType)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function OnClose() As ORM
 		  Call Super.OnClose()
 		  
@@ -1547,7 +1555,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub UpdateCache(pDatabase as Database, pDebut as date, pFin as Date)
-		  
+		  Raise New ORMException("UpdateCache not implemented in this model")
 		End Sub
 	#tag EndMethod
 
