@@ -18,3 +18,5 @@ stateless and does not load unecessary information ;
 such ;
 * it is extensively documented 
 [right here on GitHub](https://github.com/Budjhete/XojoORM/wiki).
+
+NB : you need [XOJOUnit](https://github.com/Budjhete/xojo-unit) project to make it run as is.
