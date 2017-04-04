@@ -1103,6 +1103,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function OrOn(pColumn As String, pOperator As String, pValue As Variant, pType as DataType) As ORM
+		  Call Super.OrOn(pColumn, pOperator, pValue, pType)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function OrWhere(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.OrWhere(pColumn, pOperator, pValue)
 		  

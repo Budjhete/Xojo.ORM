@@ -374,6 +374,14 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function OrOn(pLeft As Variant, pOperator As String, pRight As Variant, pType as DataType) As QueryBuilder
+		  mQuery.Append(new OrOnQueryExpression(pLeft, pOperator, pRight, pType))
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function OrWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Append(new OrWhereQueryExpression(pLeft, pOperator, pRight))
 		  
