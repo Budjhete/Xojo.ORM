@@ -912,7 +912,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As String) As ORM
+		Function Join(pTableName As QueryExpression, pTableAlias As String) As ORM
+		  Call Super.Join(pTableName, pTableAlias)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Join(pTableName As string) As ORM
 		  Call Super.Join(pTableName)
 		  
 		  Return Me

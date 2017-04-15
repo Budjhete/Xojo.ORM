@@ -260,6 +260,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Join(pTableName As QueryExpression, pTableAlias As String) As QueryBuilder
+		  Return Append(new JoinQueryExpression(pTableName, pTableAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Join(pTableName As String) As QueryBuilder
 		  Return Join(pTableName, pTableName)
 		End Function

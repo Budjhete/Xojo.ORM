@@ -4,13 +4,17 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  #Pragma Unused pLastQueryExpression
-		  
-		  Return "JOIN " + QueryCompiler.TableName(mTableName, mTableAlias)
+		  if mTableName isa QueryExpression then
+		    Return "JOIN " + QueryCompiler.Value(mTableName) + " AS `" +mTableAlias+"`"
+		  else
+		    Return "JOIN " + QueryCompiler.TableName(mTableName, mTableAlias)
+		    
+		  end if
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pTableAlias As String)
+		Sub Constructor(pTableName As variant, pTableAlias As String)
 		  mTableName = pTableName
 		  mTableAlias = pTableAlias
 		End Sub
@@ -28,7 +32,7 @@ Implements QueryExpression
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableName As String
+		Private mTableName As variant
 	#tag EndProperty
 
 
