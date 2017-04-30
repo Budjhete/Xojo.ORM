@@ -388,6 +388,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Round(pColumn As Variant, pSubtitu as Integer = 4) As QueryExpression
+		  Return DB.Expression("ROUND( " + QueryCompiler.Column(pColumn)  + ", "+Str(pSubtitu)+" )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Set(pValues() As Variant) As QueryExpression
 		  Return new ExpressionQueryExpression("(" + QueryCompiler.Values(pValues) + ")")
 		End Function
@@ -421,6 +427,12 @@ Protected Module DB
 	#tag Method, Flags = &h0
 		Function Total(pColumn As Variant, pAlias As String) As QueryExpression
 		  Return DB.Alias(DB.Total(pColumn), pAlias)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Total(pColumn As Variant, pAlias As String, pRound as integer) As QueryExpression
+		  Return DB.Alias(DB.Round(DB.Total(pColumn), pRound), pAlias)
 		End Function
 	#tag EndMethod
 
