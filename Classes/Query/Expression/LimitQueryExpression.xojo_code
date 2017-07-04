@@ -4,13 +4,20 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  #Pragma Unused pLastQueryExpression
-		  
-		  Return "LIMIT " + Str(mLimit)
+		  dim Offset as string
+		  if mOffset > 0 then Offset = mOffset.StringValue + ", "
+		  Return "LIMIT " + Offset + Str(mLimit)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Sub Constructor(pLimit As Integer)
+		  mLimit = pLimit
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pOffset as integer, pLimit As Integer)
 		  mLimit = pLimit
 		End Sub
 	#tag EndMethod
@@ -24,6 +31,10 @@ Implements QueryExpression
 
 	#tag Property, Flags = &h21
 		Private mLimit As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mOffset As Integer
 	#tag EndProperty
 
 
