@@ -19,6 +19,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Sub Constructor(pOffset as integer, pLimit As Integer)
 		  mLimit = pLimit
+		  mOffset = pOffset
 		End Sub
 	#tag EndMethod
 
