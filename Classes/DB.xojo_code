@@ -247,7 +247,7 @@ Protected Module DB
 		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
 		  // *******************************
 		  // Perform type detection for unknown data type
-		  If pColumnType = -1 and  Company.Current.Database isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
+		  If pColumnType = -1 and  App.CurrentCompany.Database isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
 		    If IsNumeric(pDatabaseFieldValue) Then
 		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
 		      Return pDatabaseFieldValue.CurrencyValue
@@ -262,11 +262,11 @@ Protected Module DB
 		  'End If
 		  'End If
 		  
-		  If pColumnType = 11 and Company.Current.Database isa MySQLCommunityServer Then
+		  If pColumnType = 11 and App.CurrentCompany.Database isa MySQLCommunityServer Then
 		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
-		  If pColumnType = 13 and Company.Current.Database isa MySQLCommunityServer Then
+		  If pColumnType = 13 and App.CurrentCompany.Database isa MySQLCommunityServer Then
 		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
