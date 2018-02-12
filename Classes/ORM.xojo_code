@@ -119,6 +119,39 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Archive(pDatabase As Database, pCommit As Boolean = True) As ORM
+		  if Not Loaded() then
+		    Raise new ORMException("Cannot archive " + TableName() + " model because it is not loaded.")
+		  end
+		  
+		  If Not RaiseEvent Updating() Then
+		    pDatabase.Begin
+		    
+		    dim pD as new Dictionary
+		    If mData.HasKey("estActif") Then
+		      pd.Value("estActif") = not mData.Value("estActif")
+		    End If
+		    
+		    If pD.Count > 0 Then
+		      DB.Update(Me.TableName).Set(pD).Where(Me.Pks).Execute(pDatabase, pCommit)
+		    End If
+		    
+		    // Merge mData with mChanged
+		    For Each pKey As Variant In mChanged.Keys
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear mChanged, they are merged in mData
+		    mChanged.Clear
+		    
+		    pDatabase.Commit
+		    
+		    RaiseEvent Updated()
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function BelongsTo(pORM As ORM, pForeignKey As String) As ORM
 		  // Return the related model in belongs to relationship
 		  // @todo support multiple primary keys
@@ -338,7 +371,32 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Copy(pORM As ORM) As ORM
+		Sub Copy(cORM as ORM)
+		  // Copy the QueryBuilder
+		  For Each pQueryExpression As QueryExpression In cORM.mQuery
+		    me.mQuery.Append(pQueryExpression)
+		  Next
+		  
+		  For Each pColumn As String In cORM.mData.Keys
+		    me.mData.Value(pColumn) = cORM.mData.Value(pColumn)
+		  Next
+		  
+		  For Each pColumn As String In cORM.mChanged.Keys
+		    me.mChanged.Value(pColumn) = cORM.mChanged.Value(pColumn)
+		  Next
+		  
+		  For Each pKey As Variant In cORM.mAdded.Keys
+		    me.mAdded.Value(pKey) = cORM.mAdded.Value(pKey)
+		  Next
+		  
+		  For Each pKey As Variant In cORM.mRemoved.Keys
+		    me.mRemoved.Value(pKey) = cORM.mRemoved.Value(pKey)
+		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Attributes( deprecated = true )  Function Copy(pORM As ORM, dEprecated as String) As ORM
 		  // Returns a copy of this ORM
 		  // @deprecated
 		  Call pORM.Deflate(Self)
@@ -743,6 +801,12 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
+		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns() As String) As ORM
+		  Return Me.HasMany(pORM, pForeignColumns)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
 		Protected Function HasMany(pORM As ORM, pForeignColumns() As String) As ORM
 		  // pForeignColumns must be specified in the same order as PrimaryKeys
 		  
@@ -751,12 +815,6 @@ Inherits QueryBuilder
 		  Next
 		  
 		  Return pORM
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h1
-		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns() As String) As ORM
-		  Return Me.HasMany(pORM, pForeignColumns)
 		End Function
 	#tag EndMethod
 
@@ -1787,6 +1845,12 @@ Inherits QueryBuilder
 			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="Handle"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Index"
 			Visible=true
 			Group="ID"
@@ -1797,6 +1861,18 @@ Inherits QueryBuilder
 			Name="Left"
 			Visible=true
 			Group="Position"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="MouseX"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="MouseY"
+			Group="Behavior"
 			InitialValue="0"
 			Type="Integer"
 		#tag EndViewProperty
@@ -1813,10 +1889,22 @@ Inherits QueryBuilder
 			Type="String"
 		#tag EndViewProperty
 		#tag ViewProperty
+			Name="PanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
 			Type="String"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TabPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -1824,6 +1912,42 @@ Inherits QueryBuilder
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Window"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mInitialParent"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mWindow"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
