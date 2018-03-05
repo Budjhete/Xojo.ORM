@@ -111,6 +111,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Append(pQueryBuilder As QueryBuilder) As ORM
+		  // Append another QueryBuilder
+		  Call Super.Append(pQueryBuilder.mQuery)
+		  Return Me
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Append(pQueryExpression As QueryExpression) As ORM
 		  Call Super.Append(pQueryExpression)
 		  
