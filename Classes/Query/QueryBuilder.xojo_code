@@ -404,6 +404,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function OrWhereOpen() As QueryBuilder
+		  Return Append(new OrWhereOpenQueryExpression())
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Query() As QueryExpression()
 		  Return Me.mQuery
 		End Function

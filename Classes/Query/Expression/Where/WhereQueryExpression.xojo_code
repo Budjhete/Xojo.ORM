@@ -11,7 +11,7 @@ Implements QueryExpression
 		    Return "AND " + Predicate()
 		  End If
 		  
-		  If pLastQueryExpression IsA WhereOpenQueryExpression Then
+		  If pLastQueryExpression IsA WhereOpenQueryExpression OR pLastQueryExpression IsA OrWhereOpenQueryExpression Then
 		    Return Predicate()
 		  End If
 		  
