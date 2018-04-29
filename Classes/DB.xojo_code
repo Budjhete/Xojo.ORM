@@ -52,7 +52,10 @@ Protected Module DB
 		  // 4. host
 		  // 5. port
 		  // 6. path
-		  pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::([\w+\[[:punct:]]+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w\W \.:\\-]+)?"
+		  //7.  localpath
+		  //pRegEx.SearchPattern = "(\w+):\/\/(?:(?:(\w+)(?::([\w+\[[:punct:]]+))@)?([\w\.]+)(?::(\d+))?\/)?([\/\w\W \.:\\-]+)?"
+		  
+		  pRegEx.SearchPattern = "(\w+)\:\/\/(?:(?:(.+?)(?:\:(.+?))?\@)?((?:[\w-éèàō]+\.)+[A-Za-z0-9]+)(?:\:(\d{2,5}))?(?:\/([\/\w\W \.:\\-]+)+))?([\/\w\W \.:\\-]+)?"
 		  
 		  Dim pMatch As RegExMatch = pRegEx.Search(pURL)
 		  
@@ -68,7 +71,7 @@ Protected Module DB
 		      // Attempt each path type to match the database path
 		      For Each pPathType As Integer In Array(FolderItem.PathTypeNative, FolderItem.PathTypeAbsolute, FolderItem.PathTypeShell)
 		        
-		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(6), pPathType)
+		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(7), pPathType)
 		        
 		        If SQLiteDatabase(pDatabase).DatabaseFile <> Nil and SQLiteDatabase(pDatabase).DatabaseFile.Exists Then
 		          Exit
@@ -141,6 +144,7 @@ Protected Module DB
 		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		        
 		        pDatabase.SQLExecute("SET NAMES 'utf8'")
+		        pDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		        
 		        Return pDatabase
 		        
