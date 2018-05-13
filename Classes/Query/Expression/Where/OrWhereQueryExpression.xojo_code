@@ -1,6 +1,6 @@
 #tag Class
-Protected Class OrWhereOpenQueryExpression
-Inherits OpenQueryExpression
+Protected Class OrWhereQueryExpression
+Inherits WhereQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Select Case pLastQueryExpression
