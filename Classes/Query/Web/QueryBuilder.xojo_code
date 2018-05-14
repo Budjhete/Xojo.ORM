@@ -1,6 +1,7 @@
 #tag Class
 Protected Class QueryBuilder
 Inherits WebControl
+Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  Return Append(new AndHavingQueryExpression(pLeft, pOperator, pRight))
