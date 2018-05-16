@@ -3,14 +3,11 @@ Protected Class OrWhereQueryExpression
 Inherits WhereQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  Select Case pLastQueryExpression
-		    
-		  Case IsA WhereQueryExpression, IsA WhereCloseQueryExpression
-		    Return "OR " + Super.Compile()
-		    
-		  End Select
+		  If pLastQueryExpression IsA WhereOpenQueryExpression Then
+		    Return Predicate()
+		  End If
 		  
-		  Return "WHERE " + Super.Compile()
+		  Return "OR " + Predicate()
 		End Function
 	#tag EndMethod
 
