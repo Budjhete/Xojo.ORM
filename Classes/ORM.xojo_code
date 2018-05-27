@@ -869,7 +869,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasOneThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pForeignValue as variant) As ORM
+		Protected Function HasOneThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pForeignValue as Variant) As ORM
 		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
 		  From(pPivotTableName). _
 		  Where(pForeignColumn, "=", pForeignValue)_

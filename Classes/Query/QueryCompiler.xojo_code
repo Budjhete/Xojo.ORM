@@ -104,7 +104,16 @@ Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Value(pValue As Variant) As String
 		  If pValue.IsArray Then
-		    Return "( " + QueryCompiler.Values(pValue) + " )"
+		    
+		    select case pValue.ArrayElementType
+		    case 2
+		      dim i() as integer = pValue
+		      Return "( " + QueryCompiler.Values(i) + " )"
+		      
+		    else  // maybe a string
+		      dim s() as string = pValue
+		      Return "( " + QueryCompiler.Values(s) + " )"
+		    end select
 		  End If
 		  
 		  // Test specific types
@@ -156,12 +165,45 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Values(pValues() As Integer) As String
+		  // Compile values
+		  Dim pCompiledValues() As String
+		  
+		  For i As Integer = 0 To pValues.Ubound
+		    dim v as Variant = pValues(i)
+		    pCompiledValues.Append(QueryCompiler.Value(v))
+		  Next
+		  
+		  Return Join(pCompiledValues, ", ")
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Values(pValues() As String) As String
+		  // Compile values
+		  Dim pCompiledValues() As String
+		  
+		  For i As Integer = 0 To pValues.Ubound
+		    dim v as Variant = pValues(i)
+		    pCompiledValues.Append(QueryCompiler.Value(v))
+		  Next
+		  
+		  Return Join(pCompiledValues, ", ")
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Values(pValues() As Variant) As String
 		  // Compile values
 		  Dim pCompiledValues() As String
 		  
 		  For i As Integer = 0 To pValues.Ubound
-		    pCompiledValues.Append(QueryCompiler.Value(pValues(i)))
+		    dim v as Variant = pValues(i)
+		    pCompiledValues.Append(QueryCompiler.Value(v))
 		  Next
 		  
 		  Return Join(pCompiledValues, ", ")
