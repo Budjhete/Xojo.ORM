@@ -97,7 +97,7 @@ Inherits TestGroup
 		  // From a RecordSet
 		  Dim pRecordSet As RecordSet = DB.Find.From("Users").Where("id", "=", 10).Execute(ORMTestDatabase)
 		  Assert.AreEqual(pRecordSet.RecordCount, 1)
-		  pUser = New UserTest(pRecordSet)
+		  pUser = New UserTest(pRecordSet, ORMTestDatabase)
 		  Assert.IsTrue pUser.Loaded
 		  
 		  // From another ORM (not a copy!)
@@ -115,7 +115,7 @@ Inherits TestGroup
 		  Dim pRecords As RecordSet = pUsers.FindAll(ORMTestDatabase)
 		  
 		  While Not pRecords.EOF
-		    Dim pUser As New UserTest(pRecords)
+		    Dim pUser As New UserTest(pRecords, ORMTestDatabase)
 		    Assert.AreEqual(pRecords.Field("username").StringValue, pUser.Data("username").StringValue.DefineEncoding(Encodings.UTF8))
 		    pRecords.MoveNext
 		  Wend

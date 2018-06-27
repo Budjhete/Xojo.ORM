@@ -248,6 +248,66 @@ Protected Module DB
 		  'MsgBox pColumnType.StringValue
 		  'end if
 		  // *******************************
+		  // NOTE :  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor of your MODEL, this part is a patch because the current MysQL plugin made a mess with some kind of data
+		  // *******************************
+		  // Perform type detection for unknown data type
+		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
+		    If IsNumeric(pDatabaseFieldValue) Then
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
+		      Return pDatabaseFieldValue.CurrencyValue
+		    End If
+		  End If
+		  
+		  // Correction caca pour SQLite
+		  'If pColumnType = 19 and  Company.Current.Database isa SQLiteDatabase and pDatabaseFieldName = "montant" Then
+		  'if NOT (pDatabaseFieldValue.DoubleValue > 0.0001 OR pDatabaseFieldValue.DoubleValue <-0.0001 OR pDatabaseFieldValue.DoubleValue = 0.0000) then
+		  'dim cc as currency = 0.0000
+		  'Return cc
+		  'End If
+		  'End If
+		  
+		  If pColumnType = 11 Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
+		  
+		  If pColumnType = 13 Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
+		  
+		  // Set encoding to UTF8 for string
+		  If pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		  End If
+		  
+		  return pDatabaseFieldValue
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Extract(pRecordSet As RecordSet, pIndex As Integer, pDB as Database) As Variant
+		  // Properly extract a DatabaseField from a RecordSet
+		  
+		  // Internaly, the ORM uses Variant to store its data in a Dictionary,
+		  // so it has to extract data properly at some time. It is the purpose
+		  // of this function.
+		  
+		  
+		  
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  
+		  // juste pour tester
+		  'if pDatabaseFieldName = "montant" then
+		  'System.DebugLog pDatabaseFieldValue
+		  'End If
+		  '
+		  'if  then
+		  'MsgBox pDatabaseField.NativeValue
+		  'MsgBox pColumnType.StringValue
+		  'end if
+		  // *******************************
 		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
 		  // *******************************
 		  // Perform type detection for unknown data type

@@ -318,7 +318,21 @@ Inherits QueryBuilder
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex)
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex)  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor
+		  Next
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pRecordSet As RecordSet, pDB as Database)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.FieldCount
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pDB)
 		  Next
 		  
 		  
@@ -332,7 +346,7 @@ Inherits QueryBuilder
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name) )
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
 		  Next
 		End Sub
 	#tag EndMethod
@@ -720,9 +734,9 @@ Inherits QueryBuilder
 		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
 		        if pColumnType <> nil then
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn))
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
 		        else
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex)
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase)
 		        end if
 		        
 		        // @todo check if mChanged.Clear is not more appropriate
