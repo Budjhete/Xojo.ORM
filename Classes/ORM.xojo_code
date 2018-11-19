@@ -273,6 +273,7 @@ Inherits QueryBuilder
 		  mRemoved = New Dictionary
 		  
 		  Call Me.Where(pCriterias)
+		  
 		End Sub
 	#tag EndMethod
 
@@ -1500,6 +1501,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function TimeStampKey() As String
+		  // Retourne la colonne de la clé primaire
+		  Return "timestamp"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Unload() As ORM
 		  // Empties only the primary keys
 		  
@@ -1510,6 +1518,9 @@ Inherits QueryBuilder
 		        mData.Remove(pPrimaryKey)
 		      End If
 		    Next
+		    if mData.HasKey(TimeStampKey) then
+		      mData.Remove(TimeStampKey)
+		    End If
 		    
 		    RaiseEvent Unloaded
 		    
