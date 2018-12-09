@@ -438,6 +438,46 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Max(pColumn As Variant) As QueryExpression
+		  Return DB.Expression("COALESCE( " + DB.Expression("MAX( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Max(pColumn As Variant, pAlias As String) As QueryExpression
+		  Return DB.Alias(DB.Max(pColumn), pAlias)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Max(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
+		  Return DB.Alias(DB.Round(DB.Max(pColumn), pRound), pAlias)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Min(pColumn As Variant) As QueryExpression
+		  Return DB.Expression("COALESCE( " + DB.Expression("MIN( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Min(pColumn As Variant, pAlias As String) As QueryExpression
+		  Return DB.Alias(DB.Min(pColumn), pAlias)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Min(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
+		  Return DB.Alias(DB.Round(DB.Min(pColumn), pRound), pAlias)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Replace(pTableName As String, pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
