@@ -767,6 +767,9 @@ Inherits QueryBuilder
 		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    pColumns.Append(TableName + "." + pColumn)
 		  Next
+		  If pColumns.Ubound = -1 then
+		    pColumns.Append(DB.Expression("*"))
+		  End If
 		  
 		  Return Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _

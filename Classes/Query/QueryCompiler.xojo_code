@@ -106,7 +106,7 @@ Protected Module QueryCompiler
 		  If pValue.IsArray Then
 		    
 		    select case pValue.ArrayElementType
-		    case 2
+		    case 2, 3
 		      dim i() as integer = pValue
 		      Return "( " + QueryCompiler.Values(i) + " )"
 		      
