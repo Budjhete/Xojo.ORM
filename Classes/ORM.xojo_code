@@ -1206,6 +1206,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function OrWhereOpen() As ORM
+		  // Calling the overridden superclass method.
+		  Call Super.OrWhereOpen()
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Pk() As Variant
 		  // Initial primary key value
 		  Return Me.Initial(Me.PrimaryKey)
