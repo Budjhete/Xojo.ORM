@@ -1438,6 +1438,10 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Reset() As ORM
+		  mChanged.Clear
+		  mAdded.Clear
+		  mRemoved.Clear
+		  
 		  Call Super.Reset()
 		  
 		  Return Me
