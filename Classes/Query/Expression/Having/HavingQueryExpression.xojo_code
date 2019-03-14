@@ -2,7 +2,7 @@
 Protected Class HavingQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  If pLastQueryExpression IsA HavingQueryExpression Then
 		    Return "AND " + Predicate()
 		  End If
@@ -20,7 +20,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pLeft As Variant, pOperator As String, pRight As Variant)
+		Sub Constructor(pLeft As Auto, pOperator As Text, pRight As Auto)
 		  mLeft = pLeft
 		  mOperator = pOperator
 		  mRight = pRight
@@ -34,22 +34,22 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Predicate() As String
+		Protected Function Predicate() As Text
 		  Return QueryCompiler.Column(mLeft) + " " + QueryCompiler.Operator(mLeft, mOperator, mRight) + " " + QueryCompiler.Value(mRight)
 		End Function
 	#tag EndMethod
 
 
 	#tag Property, Flags = &h21
-		Private mLeft As Variant
+		Private mLeft As Auto
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOperator As String
+		Private mOperator As Text
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mRight As Variant
+		Private mRight As Auto
 	#tag EndProperty
 
 

@@ -2,7 +2,7 @@
 Protected Class OrWhereQueryExpression
 Inherits WhereQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  If pLastQueryExpression IsA WhereOpenQueryExpression Then
 		    Return Predicate()
 		  End If

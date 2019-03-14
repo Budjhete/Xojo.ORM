@@ -2,8 +2,8 @@
 Protected Class FromQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  Dim pStatement As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		  Dim pStatement As Text
 		  
 		  If pLastQueryExpression IsA FromQueryExpression Then
 		    pStatement = ", "
@@ -11,7 +11,7 @@ Implements QueryExpression
 		    pStatement = "FROM "
 		  End If
 		  
-		  If mTable.Type = 8 Then // String
+		  If Xojo.Introspection.GetType(mTable) = GetTypeInfo(Text) Then // Text
 		    Return pStatement + QueryCompiler.TableName(mTable, mTableAlias)
 		  ElseIf mTable IsA QueryBuilder Then
 		    Return pStatement + QueryCompiler.Column(mTable) + " AS " + QueryCompiler.Alias(mTableAlias)
@@ -20,7 +20,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTable As Variant, pTableAlias As String)
+		Sub Constructor(pTable As Auto, pTableAlias As Text)
 		  mTable = pTable
 		  mTableAlias = pTableAlias
 		End Sub
@@ -35,13 +35,13 @@ Implements QueryExpression
 
 	#tag Property, Flags = &h21
 		#tag Note
-			mTable can be either a String containing a table name, either a QueryExpression containing the definition of a temporary table
+			mTable can be either a Text containing a table name, either a QueryExpression containing the definition of a temporary table
 		#tag EndNote
-		Private mTable As Variant
+		Private mTable As Auto
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableAlias As String
+		Private mTableAlias As Text
 	#tag EndProperty
 
 

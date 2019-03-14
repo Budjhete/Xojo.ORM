@@ -2,16 +2,20 @@
 Protected Class ORMException
 Inherits RuntimeException
 	#tag Method, Flags = &h1000
-		Sub Constructor(pMessage As String)
+		Sub Constructor(pMessage As Text)
 		  Constructor(pMessage, "")
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pMessage As String, pStatement As String, pCode As Integer = 0)
+		Sub Constructor(pMessage As Text, pStatement As Text, pCode As Integer = 0)
 		  // Constructor for SQL error
 		  
-		  Message = pMessage
+		  #if TargetIOS then
+		    Reason = pMessage
+		  #else
+		    Message = pMessage
+		  #endif
 		  Statement = pStatement
 		  Code = pCode
 		End Sub
@@ -23,11 +27,16 @@ Inherits RuntimeException
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Statement As String
+		Statement As Text
 	#tag EndProperty
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="Reason"
+			Group="Behavior"
+			Type="Text"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Code"
 			Group="Behavior"
@@ -68,7 +77,7 @@ Inherits RuntimeException
 		#tag ViewProperty
 			Name="Statement"
 			Group="Behavior"
-			Type="String"
+			Type="Text"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty

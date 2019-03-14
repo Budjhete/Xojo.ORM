@@ -2,7 +2,7 @@
 Protected Class ExpressionQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  #Pragma Unused pLastQueryExpression
 		  
 		  Return mExpression
@@ -10,7 +10,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pExpression As String)
+		Sub Constructor(pExpression As Text)
 		  mExpression = pExpression
 		End Sub
 	#tag EndMethod
@@ -24,7 +24,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mExpression As String
+		Private mExpression As Text
 	#tag EndProperty
 
 

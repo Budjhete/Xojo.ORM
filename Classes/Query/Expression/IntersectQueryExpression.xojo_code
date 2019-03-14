@@ -2,7 +2,7 @@
 Protected Class IntersectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  Return "INTERSECT " + mQueryBuilder.Compile
 		  
 		  

@@ -2,8 +2,8 @@
 Protected Class OrderByQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  Dim pCompiledColumns() As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		  Dim pCompiledColumns() As Text
 		  
 		  // Compile each column and add its direction
 		  For i As Integer = 0 To mColumns.UBound
@@ -16,17 +16,17 @@ Implements QueryExpression
 		  
 		  If pLastQueryExpression IsA OrderByQueryExpression Then
 		    // @TODO fixer l'espace avant la virgule
-		    Return ", " + Join(pCompiledColumns, ", ")
+		    Return ", " + Text.Join(pCompiledColumns, ", ")
 		  End If
 		  
-		  Return "ORDER BY " + Join(pCompiledColumns, ", ")
+		  Return "ORDER BY " + Text.Join(pCompiledColumns, ", ")
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumns() As Variant, pDirections() As String, pComparators() as String = nil)
+		Sub Constructor(pColumns() as Auto, pDirections() as Text, pComparators() as Text = nil)
 		  mColumns = pColumns
 		  mDirections = pDirections
 		  mComparator = pComparators
@@ -41,15 +41,15 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumns() As Variant
+		Private mColumns() As Auto
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mComparator() As String
+		Private mComparator() As Text
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mDirections() As String
+		Private mDirections() As Text
 	#tag EndProperty
 
 

@@ -1,8 +1,25 @@
 #tag Class
 Protected Class ORMRelationHasManyHard
 Inherits ORMRelationHasMany
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
+		  #Pragma Unused pORM
+		  
+		  // Remove the entry instead of nullifying the primary key
+		  DB.Delete(mORM.TableName). _
+		  Where(mORM.Pks). _
+		  Execute(pDatabase, pCommit)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+		  // Calling the overridden superclass method.
+		  // Note that this may need modifications if there are multiple  choices.
+		  // Possible calls:
+		  // Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean) -- From ORMRelationHasMany
+		  // Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean) -- From ORMRelationHasMany
+		  Super.Remove(pORM, pDatabase, pCommit)
 		  #Pragma Unused pORM
 		  
 		  // Remove the entry instead of nullifying the primary key

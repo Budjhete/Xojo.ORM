@@ -1,7 +1,7 @@
 #tag Class
 Protected Class ORMRelationHasManyThrough
 Implements ORMRelation
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Add(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
 		  Values(pORM.Pk, mORM.Pk)._
@@ -9,8 +9,16 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Add(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
+		  Values(pORM.Pk, mORM.Pk)._
+		  Execute(pDatabase, pCommit)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
-		Sub Constructor(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM)
+		Sub Constructor(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, pORM As ORM)
 		  mPivotTableName = pPivotTableName
 		  
 		  mForeignColumn = pForeignColumn
@@ -21,13 +29,22 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Dump() As String
-		  Return mPivotTableName + ":" + Str(mORM.Pk)
+		Function Dump() As Text
+		  Return mPivotTableName + ":" + mORM.Pk.TextValue
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
+		  DB.Delete(mPivotTableName)._
+		  Where(mForeignColumn, "=", pORM.Pk)._
+		  AndWhere(mFarColumn, "=", mORM.Pk)._
+		  Execute(pDatabase, pCommit)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
 		  DB.Delete(mPivotTableName)._
 		  Where(mForeignColumn, "=", pORM.Pk)._
 		  AndWhere(mFarColumn, "=", mORM.Pk)._
@@ -37,11 +54,11 @@ Implements ORMRelation
 
 
 	#tag Property, Flags = &h21
-		Private mFarColumn As String
+		Private mFarColumn As Text
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mForeignColumn As String
+		Private mForeignColumn As Text
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -49,7 +66,7 @@ Implements ORMRelation
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mPivotTableName As String
+		Private mPivotTableName As Text
 	#tag EndProperty
 
 

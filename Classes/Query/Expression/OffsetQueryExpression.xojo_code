@@ -2,10 +2,10 @@
 Protected Class OffsetQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  #Pragma Unused pLastQueryExpression
 		  
-		  Return "OFFSET " + Str(mOffset)
+		  Return "OFFSET " + mOffset.ToText
 		  
 		End Function
 	#tag EndMethod

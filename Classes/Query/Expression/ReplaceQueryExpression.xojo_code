@@ -2,10 +2,10 @@
 Protected Class ReplaceQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  #Pragma Unused pLastQueryExpression
 		  
-		  Dim pColumns As String
+		  Dim pColumns As Text
 		  
 		  // No columns makes a simple insertion
 		  If mColumns.Ubound > -1 Then
@@ -17,7 +17,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As String, pColumns() As Variant)
+		Sub Constructor(pTableName As Text, pColumns() As Auto)
 		  mTableName = pTableName
 		  mColumns = pColumns
 		End Sub
@@ -31,11 +31,11 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumns() As Variant
+		Private mColumns() As Auto
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableName As String
+		Private mTableName As Text
 	#tag EndProperty
 
 

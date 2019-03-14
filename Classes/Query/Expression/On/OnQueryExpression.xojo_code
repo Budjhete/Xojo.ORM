@@ -2,7 +2,7 @@
 Protected Class OnQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  If pLastQueryExpression IsA OnQueryExpression Then
 		    Return "AND " + Predicate()
 		  End If
@@ -21,7 +21,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant)
+		Sub Constructor(pLeftColumn As Auto, pOperator As Text, pRightColumn As Auto)
 		  mLeftColumn = pLeftColumn
 		  mOperator = pOperator
 		  mRightColumn = pRightColumn
@@ -29,7 +29,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant, pDataType as DataType)
+		Sub Constructor(pLeftColumn as Auto, pOperator as Text, pRightColumn as Auto, pDataType as DataType)
 		  mLeftColumn = pLeftColumn
 		  mOperator = pOperator
 		  mRightColumn = pRightColumn
@@ -46,11 +46,11 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function Predicate() As String
-		  if mDatatype = DataType.IntegerType or IsNumeric(mRightColumn) then
-		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
+		Protected Function Predicate() As Text
+		  if mDatatype = DataType.IntegerType or mRightColumn.IsNumeric then
+		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.TextValue
 		  elseif mDatatype = DataType.TextType or mDatatype = DataType.CharType or mDatatype = DataType.VarCharType  then
-		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
+		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.TextValue
 		    
 		  else
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + QueryCompiler.Column(mRightColumn)
@@ -64,15 +64,15 @@ Implements QueryExpression
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mLeftColumn As Variant
+		Private mLeftColumn As Auto
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mOperator As String
+		Private mOperator As Text
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mRightColumn As Variant
+		Private mRightColumn As Auto
 	#tag EndProperty
 
 
