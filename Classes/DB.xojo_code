@@ -551,7 +551,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Max(pColumn As Variant) As QueryExpression
+		Function Max(pColumn As Auto) As QueryExpression
 		  Return DB.Expression("COALESCE( " + DB.Expression("MAX( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
 		  
 		  
@@ -559,39 +559,39 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Max(pColumn As Variant, pAlias As String) As QueryExpression
+		Function Max(pColumn As Auto, pAlias As Text) As QueryExpression
 		  Return DB.Alias(DB.Max(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Max(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
+		Function Max(pColumn as Auto, pAlias as Text, pRound as integer) As QueryExpression
 		  Return DB.Alias(DB.Round(DB.Max(pColumn), pRound), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Min(pColumn As Variant) As QueryExpression
+		Function Min(pColumn As Auto) As QueryExpression
 		  Return DB.Expression("COALESCE( " + DB.Expression("MIN( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
 		  
 		  
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Min(pColumn As Variant, pAlias As String) As QueryExpression
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+		Function Min(pColumn As Auto, pAlias As Text) As QueryExpression
 		  Return DB.Alias(DB.Min(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Min(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+		Function Min(pColumn as Auto, pAlias as Text, pRound as integer) As QueryExpression
 		  Return DB.Alias(DB.Round(DB.Min(pColumn), pRound), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Replace(pTableName As String, pColumns() As Variant) As QueryBuilder
+		Function Replace(pTableName As Text, pColumns() As Auto) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(new ReplaceQueryExpression(pTableName, pColumns))

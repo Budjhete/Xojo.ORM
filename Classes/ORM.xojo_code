@@ -261,7 +261,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Constructor(pCriterias As Dictionary)
 		  // Basic ORM constructor
 		  
@@ -277,7 +277,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Constructor(pPks As Dictionary, pDatabase As Database)
 		  // Initialize an ORM with primary keys and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -1540,7 +1540,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Pk() As Variant
+		Function Pk() As Auto
 		  // Initial primary key value
 		  Return Me.Initial(Me.PrimaryKey)
 		End Function
@@ -1955,7 +1955,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TimeStampKey() As String
+		Function TimeStampKey() As Text
 		  // Retourne la colonne de la clé primaire
 		  Return "timestamp"
 		End Function
