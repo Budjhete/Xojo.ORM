@@ -12,7 +12,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pValues As Dictionary)
+		Sub Constructor(pValues As Xojo.Core.Dictionary)
 		  mValues = pValues
 		End Sub
 	#tag EndMethod
@@ -27,7 +27,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mValues As Dictionary
+		Private mValues As Xojo.Core.Dictionary
 	#tag EndProperty
 
 

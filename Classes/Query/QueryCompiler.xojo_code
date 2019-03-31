@@ -24,7 +24,7 @@ Protected Module QueryCompiler
 		  end if
 		  
 		  // Compile column
-		  Dim pParts() As Text = pColumn.TextValue.Split(".")
+		  Dim pParts() As Text = pColumn.AutoTextValue.Split(".")
 		  
 		  For i As Integer = 0 To pParts.Ubound
 		    
@@ -76,6 +76,8 @@ Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Set(pValues As Xojo.Core.Dictionary) As Text
 		  // Compile values
+		  Using Xojo.Core
+		  
 		  Dim pCompiledValues() As Text
 		  
 		  For Each pColumn As DictionaryEntry In pValues
@@ -129,7 +131,7 @@ Protected Module QueryCompiler
 		      Return QueryExpression(pValue).Compile
 		      
 		    Case IsA Date // Date
-		      Return QueryCompiler.Value(pValue.DateValue.SQLDateTime)
+		      Return QueryCompiler.Value(pValue.AutoDateValue.SQLDateTime)
 		      
 		    Case Nil // NULL
 		      Return "NULL"
@@ -145,11 +147,11 @@ Protected Module QueryCompiler
 		    'Dim locale As New Xojo.Core.Locale("en-US")
 		    'Return pValue.DoubleValue.ToText(locale, "0.000000000000") // return e-12
 		    'end if
-		    Return pValue.TextValue
+		    Return pValue.AutoTextValue
 		    
 		  Case GetTypeInfo(Boolean)
 		    
-		    If pValue.BooleanValue Then
+		    If pValue.AutoBooleanValue Then
 		      Return "1"
 		    Else
 		      Return "0"
@@ -158,10 +160,10 @@ Protected Module QueryCompiler
 		  End Select
 		  
 		  // Remove bad characters
-		  pValue = pValue.TextValue.ReplaceAll( Chr(0), "")
+		  pValue = pValue.AutoTextValue.ReplaceAll( Chr(0).ToText, "")
 		  
 		  // Quote quotes
-		  pValue = pValue.TextValue.ReplaceAll("'", "''")
+		  pValue = pValue.AutoTextValue.ReplaceAll("'", "''")
 		  
 		  Return "'" + pValue + "'"
 		  

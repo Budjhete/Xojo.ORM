@@ -33,7 +33,7 @@ Implements ORMRelation
 
 	#tag Method, Flags = &h0
 		Function Dump() As Text
-		  Return mORM.TableName + ":" + mORM.Pk.TextValue
+		  Return mORM.TableName + ":" + mORM.Pk.AutoTextValue
 		End Function
 	#tag EndMethod
 

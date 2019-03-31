@@ -71,7 +71,7 @@ Protected Module DB
 		  If pMatch <> Nil Then
 		    
 		    // Configuration de la base de données
-		    Select Case pMatch.SubExpressionText(1)
+		    Select Case pMatch.SubExpressionString(1)
 		      
 		    Case "sqlite" // <protocol>:///<database>
 		      
@@ -80,7 +80,7 @@ Protected Module DB
 		      // Attempt each path type to match the database path
 		      For Each pPathType As Integer In Array(FolderItem.PathTypeNative, FolderItem.PathTypeAbsolute, FolderItem.PathTypeShell)
 		        
-		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionText(7), pPathType)
+		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(7), pPathType)
 		        
 		        If SQLiteDatabase(pDatabase).DatabaseFile <> Nil and SQLiteDatabase(pDatabase).DatabaseFile.Exists Then
 		          Exit
@@ -347,8 +347,8 @@ Protected Module DB
 		  
 		  
 		  
-		  Dim pDatabaseFieldName as Text = pRecordSet.IdxField(pIndex).Name  // base 1
-		  Dim pDatabaseFieldValue as Auto = pRecordSet.IdxField(pIndex).Value  // base 1
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
@@ -388,8 +388,8 @@ Protected Module DB
 		  End If
 		  
 		  // Set encoding to UTF8 for Text
-		  If pDatabaseFieldValue.Type = Auto.TypeText Then
-		    Return pDatabaseFieldValue.TextValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeText Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		  End If
 		  
 		  return pDatabaseFieldValue
@@ -407,8 +407,8 @@ Protected Module DB
 		  
 		  
 		  
-		  Dim pDatabaseFieldName as Text = pRecordSet.IdxField(pIndex).Name  // base 1
-		  Dim pDatabaseFieldValue as Auto = pRecordSet.IdxField(pIndex).Value  // base 1
+		  Dim pDatabaseFieldName as string = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
@@ -448,8 +448,8 @@ Protected Module DB
 		  End If
 		  
 		  // Set encoding to UTF8 for Text
-		  If pDatabaseFieldValue.Type = Auto.TypeText Then
-		    Return pDatabaseFieldValue.TextValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeText Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		  End If
 		  
 		  return pDatabaseFieldValue
@@ -469,7 +469,7 @@ Protected Module DB
 		  
 		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
 		  'Dim pDatabaseFieldName as Text = pRecordSet.IdxField(pIndex).Name  // base 1
-		  Dim pDatabaseFieldValue as Auto = pRecordSet.IdxField(pIndex).Value  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
@@ -485,7 +485,7 @@ Protected Module DB
 		    
 		    Select Case pColumnType
 		    Case 4, 5, 15, 16, 18
-		      Return pDatabaseFieldValue.TextValue.DefineEncoding(Encodings.UTF8)
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		    Case 12
 		      Return pDatabaseFieldValue.BooleanValue
 		    Case 11, 13
@@ -499,8 +499,8 @@ Protected Module DB
 		    Case 14
 		      Return pDatabaseFieldValue.TextValue
 		    Else
-		      If pDatabaseFieldValue.Type = Auto.TypeText Then
-		        Return pDatabaseFieldValue.TextValue.DefineEncoding(Encodings.UTF8)
+		      If pDatabaseFieldValue.Type = Variant.TypeText Then
+		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		      else
 		        return pDatabaseFieldValue
 		      End If

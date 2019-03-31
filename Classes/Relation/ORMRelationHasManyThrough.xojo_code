@@ -30,7 +30,7 @@ Implements ORMRelation
 
 	#tag Method, Flags = &h0
 		Function Dump() As Text
-		  Return mPivotTableName + ":" + mORM.Pk.TextValue
+		  Return mPivotTableName + ":" + mORM.Pk.AutoTextValue
 		End Function
 	#tag EndMethod
 
