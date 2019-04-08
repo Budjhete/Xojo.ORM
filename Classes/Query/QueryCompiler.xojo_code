@@ -8,7 +8,9 @@ Protected Module QueryCompiler
 
 	#tag Method, Flags = &h0
 		Function Column(pColumn As Auto) As Text
-		  if pColumn.Type = 9 then
+		  if pColumn = Nil then Return "NULL"
+		  
+		  if pColumn.Type = 9 or pColumn.Type = 10 then  // 9 = Object // 10 = Class
 		    Select Case pColumn
 		      
 		    Case IsA QueryBuilder
@@ -121,7 +123,7 @@ Protected Module QueryCompiler
 		  End If
 		  
 		  // Test specific types
-		  if pValue.Type = 9 then
+		  if pValue.Type = 9 or pValue.Type = 10 OR pValue.type = 0 then
 		    Select Case pValue
 		      
 		    Case IsA QueryBuilder // Subquery
@@ -131,6 +133,9 @@ Protected Module QueryCompiler
 		      Return QueryExpression(pValue).Compile
 		      
 		    Case IsA Date // Date
+		      Return QueryCompiler.Value(pValue.AutoDateValue.SQLDateTime)
+		      
+		    Case IsA Xojo.Core.Date // Date
 		      Return QueryCompiler.Value(pValue.AutoDateValue.SQLDateTime)
 		      
 		    Case Nil // NULL

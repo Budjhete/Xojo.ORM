@@ -352,8 +352,8 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "montant" then
-		  'System.DebugLog pDatabaseFieldValue
+		  'if pDatabaseFieldName = "quantite" then
+		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
 		  'if  then
@@ -388,8 +388,8 @@ Protected Module DB
 		  End If
 		  
 		  // Set encoding to UTF8 for Text
-		  If pDatabaseFieldValue.Type = Variant.TypeText Then
-		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
 		  End If
 		  
 		  return pDatabaseFieldValue
@@ -412,8 +412,8 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "montant" then
-		  'System.DebugLog pDatabaseFieldValue
+		  'if pDatabaseFieldName = "quantite" then
+		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
 		  'if  then
@@ -439,17 +439,17 @@ Protected Module DB
 		  'End If
 		  'End If
 		  
-		  If pColumnType = 11 and pDB isa MySQLCommunityServer Then
+		  If pColumnType = 11 OR (pColumnType = 11 and pDB isa MySQLCommunityServer) Then
 		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
-		  If pColumnType = 13 and pDB isa MySQLCommunityServer Then
+		  If pColumnType = 13 OR (pColumnType = 13 and pDB isa MySQLCommunityServer) Then
 		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
 		  // Set encoding to UTF8 for Text
-		  If pDatabaseFieldValue.Type = Variant.TypeText Then
-		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeText  OR pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
 		  End If
 		  
 		  return pDatabaseFieldValue
@@ -468,13 +468,13 @@ Protected Module DB
 		  // use colomns exception for extracting data for MySQLplugin that can not manage column type !
 		  
 		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
-		  'Dim pDatabaseFieldName as Text = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldName as string = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
-		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "compte" then
-		  'MsgBox pCurrentColumnType.TextValue + "  " + pDatabaseFieldValue.TextValue
+		  'if pDatabaseFieldName = "date" then
+		  'MsgBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  
 		  'if  then
@@ -485,22 +485,22 @@ Protected Module DB
 		    
 		    Select Case pColumnType
 		    Case 4, 5, 15, 16, 18
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		    Case 12
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		    Case 1, 12
 		      Return pDatabaseFieldValue.BooleanValue
 		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
-		    Case 8, 10
-		      Return pDatabaseFieldValue.DateValue
+		      'Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un Xojo.core.date
+		      'Return pDatabaseFieldValue.DateValue
 		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
 		    Case 2, 3, 19
 		      Return pDatabaseFieldValue.IntegerValue
 		    Case 14
-		      Return pDatabaseFieldValue.TextValue
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
 		    Else
-		      If pDatabaseFieldValue.Type = Variant.TypeText Then
-		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		      If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
+		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
 		      else
 		        return pDatabaseFieldValue
 		      End If

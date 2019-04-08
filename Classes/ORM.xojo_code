@@ -363,7 +363,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Constructor(ParamArray pCriterias() As Pair)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -966,7 +966,7 @@ Inherits QueryBuilder
 		    dim pColumnType as new Dictionary
 		    
 		    while not pRecordSetType.EOF
-		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
+		      pColumnType.Value(pRecordSetType.Field("ColumnName").TextValue) = pRecordSetType.Field("FieldType").IntegerValue
 		      pRecordSetType.MoveNext
 		    wend
 		    // Clear any existing data
@@ -977,7 +977,7 @@ Inherits QueryBuilder
 		      
 		      For pIndex As Integer = 1 To pRecordSet.FieldCount
 		        
-		        Dim pColumn As Text = pRecordSet.IdxField(pIndex).Name.ToText
+		        Dim pColumn As Text = pRecordSet.IdxField(pIndex).Name.DefineEncoding(Encodings.UTF8).ToText
 		        
 		        if pColumnType <> nil then
 		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).AutoIntegerValue)

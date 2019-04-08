@@ -4,8 +4,10 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  #Pragma Unused pLastQueryExpression
-		  if mTableName isa QueryExpression then
-		    Return "JOIN " + QueryCompiler.Value(mTableName) + " AS `" +mTableAlias+"`"
+		  if mTableName.Type = 10 or mTableName.Type = 9 then
+		    if mTableName isa QueryExpression then
+		      Return "JOIN " + QueryCompiler.Value(mTableName) + " AS `" +mTableAlias+"`"
+		    end if
 		  else
 		    Return "JOIN " + QueryCompiler.TableName(mTableName, mTableAlias)
 		    

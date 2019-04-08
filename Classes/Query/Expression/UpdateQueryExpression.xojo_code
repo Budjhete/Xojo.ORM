@@ -5,7 +5,7 @@ Implements QueryExpression
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
 		  #Pragma Unused pLastQueryExpression
 		  
-		  Return "UPDATE OR IGNORE " + QueryCompiler.TableName(mTableName)
+		  Return "UPDATE " + QueryCompiler.TableName(mTableName) // OR IGNORE ne fonctionne pas en mysql, mais avant de faire update, faire une vérification si la fiche existe...
 		  
 		  
 		End Function

@@ -471,7 +471,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(ParamArray pValues As Variant) As QueryBuilder
+		Function Values(ParamArray pValues As Auto) As QueryBuilder
 		  Return Values(pValues)
 		End Function
 	#tag EndMethod
