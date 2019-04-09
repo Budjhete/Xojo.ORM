@@ -352,7 +352,7 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "quantite" then
+		  'if pDatabaseFieldName = "defaut" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
@@ -412,7 +412,7 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "quantite" then
+		  'if pDatabaseFieldName = "defaut" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
@@ -438,6 +438,10 @@ Protected Module DB
 		  'Return cc
 		  'End If
 		  'End If
+		  
+		  If pColumnType = 1 Then
+		    Return pDatabaseFieldValue.BooleanValue
+		  End If
 		  
 		  If pColumnType = 11 OR (pColumnType = 11 and pDB isa MySQLCommunityServer) Then
 		    Return pDatabaseFieldValue.CurrencyValue
@@ -473,7 +477,7 @@ Protected Module DB
 		  Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "date" then
+		  'if pDatabaseFieldName = "defaut" then
 		  'MsgBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  

@@ -1347,8 +1347,8 @@ Inherits QueryBuilder
 		  For Each pColumn As Text In Me.Data.Keys
 		    System.DebugLog pColumn
 		    dim v as Auto = Me.Data(pColumn)
-		    System.DebugLog "type : " + str(v.Type)
-		    if v.Type = 6 then
+		    System.DebugLog "type : " + v.TypeText
+		    if v.Type=6 then
 		      pJSONItem.Value(pColumn) = v.AutoDoubleValue
 		    else
 		      pJSONItem.Value(pColumn) = v
