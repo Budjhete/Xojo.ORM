@@ -352,7 +352,7 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "defaut" then
+		  'if pDatabaseFieldName = "date" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
@@ -412,7 +412,7 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "defaut" then
+		  'if pDatabaseFieldName = "date" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
@@ -477,7 +477,7 @@ Protected Module DB
 		  Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "defaut" then
+		  'if pDatabaseFieldName = "date" then
 		  'MsgBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  
@@ -494,8 +494,8 @@ Protected Module DB
 		      Return pDatabaseFieldValue.BooleanValue
 		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
-		      'Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un Xojo.core.date
-		      'Return pDatabaseFieldValue.DateValue
+		    Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un Xojo.core.date
+		      Return pDatabaseFieldValue.DateValue.SQLDateTime.ToText
 		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
 		    Case 2, 3, 19
