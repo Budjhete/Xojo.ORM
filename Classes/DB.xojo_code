@@ -352,10 +352,10 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "date" then
+		  'if pDatabaseFieldName = "categorie" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
-		  '
+		  
 		  'if  then
 		  'MsgBox pDatabaseField.NativeValue
 		  'MsgBox pColumnType.TextValue
@@ -412,7 +412,7 @@ Protected Module DB
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "date" then
+		  'if pDatabaseFieldName = "categorie" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
@@ -441,6 +441,11 @@ Protected Module DB
 		  
 		  If pColumnType = 1 Then
 		    Return pDatabaseFieldValue.BooleanValue
+		  End If
+		  
+		  // MySQL and SQLite dont manage dates exactly the same, so we use text instead
+		  If pColumnType = 10 or pColumnType = 8 Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
 		  End If
 		  
 		  If pColumnType = 11 OR (pColumnType = 11 and pDB isa MySQLCommunityServer) Then
@@ -477,7 +482,7 @@ Protected Module DB
 		  Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "date" then
+		  'if pDatabaseFieldName = "categorie" then
 		  'MsgBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  

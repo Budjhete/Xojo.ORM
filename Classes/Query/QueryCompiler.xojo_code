@@ -122,8 +122,9 @@ Protected Module QueryCompiler
 		    end select
 		  End If
 		  
+		  Dim pType as Integer = pValue.Type
 		  // Test specific types
-		  if pValue.Type = 9 or pValue.Type = 10 OR pValue.type = 0 then
+		  if pType = 9 or pType = 10 OR pType = 0 OR pType = 17 then
 		    Select Case pValue
 		      
 		    Case IsA QueryBuilder // Subquery
