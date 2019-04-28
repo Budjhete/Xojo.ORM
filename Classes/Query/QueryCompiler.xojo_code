@@ -166,7 +166,9 @@ Protected Module QueryCompiler
 		  End Select
 		  
 		  // Remove bad characters
-		  pValue = pValue.AutoTextValue.ReplaceAll( Chr(0).ToText, "")
+		  #if TargetMacOS then
+		    pValue = pValue.AutoTextValue.ReplaceAll( text.FromUnicodeCodepoint(0), "")
+		  #endif
 		  
 		  // Quote quotes
 		  pValue = pValue.AutoTextValue.ReplaceAll("'", "''")
