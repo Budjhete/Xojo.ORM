@@ -1338,21 +1338,27 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function JSONValue() As JSONItem
+		Function JSONValue() As Xojo.Core.Dictionary
 		  // Shallow export
 		  
-		  Dim pJSONItem As New JSONItem
+		  Dim pJSONItem As New Xojo.Core.Dictionary
 		  
 		  // Adds each column as an Attribute
-		  For Each pColumn As Text In Me.Data.Keys
-		    System.DebugLog pColumn
-		    dim v as Auto = Me.Data(pColumn)
-		    System.DebugLog "type : " + v.TypeText
-		    if v.Type=6 then
-		      pJSONItem.Value(pColumn) = v.AutoDoubleValue
-		    else
-		      pJSONItem.Value(pColumn) = v
+		  For Each pColumn As String In Me.Data.Keys
+		    if pColumn = "logo" then
+		      System.DebugLog "shit comming"
 		    end if
+		    System.DebugLog pColumn
+		    dim v as Auto = Me.Data(pColumn.DefineEncoding(Encodings.UTF8).ToText)
+		    System.DebugLog "type : " + v.TypeText
+		    Select Case v.Type
+		    case 6
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v.AutoDoubleValue
+		    case 8, 37
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v.AutoTextValue
+		    else
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v
+		    End Select
 		    'System.DebugLog pJSONItem.ToText
 		  Next
 		  
@@ -1385,7 +1391,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = false
-		Function JSONValue(pDatabase As Database) As JSONItem
+		Function JSONValue(pDatabase As Database) As Xojo.Core.Dictionary
 		  // Deep export
 		  
 		  // You must override this method to provide a custom export for your model
