@@ -718,10 +718,10 @@ Inherits QueryBuilder
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
-		      System.DebugLog "ORM.create pColum = " + pColumn.TextValue
+		      System.DebugLog "ORM.create pColum = " + pColumn.AutoTextValue
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.TextValue+" = " + pRaw.Value(pColumn).TextValue
+		        System.DebugLog "ORM.create "+pColumn.AutoTextValue+" = " + pRaw.Value(pColumn).AutoTextValue
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
@@ -1370,10 +1370,10 @@ Inherits QueryBuilder
 		  // Adds each column as an Attribute
 		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
 		    System.DebugLog pDataKeyColumn.key
-		    dim v as Variant = pDataKeyColumn.Value
+		    dim v as Auto = pDataKeyColumn.Value
 		    'System.DebugLog "type : " + v.Type.StringValue
 		    if v.Type = 6 then
-		      pJSONItem.Value(pDataKeyColumn.Key) = v.DoubleValue
+		      pJSONItem.Value(pDataKeyColumn.Key) = v.AutoDoubleValue
 		    else
 		      pJSONItem.Value(pDataKeyColumn.Key) = v
 		    end if
@@ -2424,70 +2424,32 @@ Inherits QueryBuilder
 
 	#tag ViewBehavior
 		#tag ViewProperty
-			Name="Handle"
+			Name="AccessibilityHint"
 			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="MouseX"
+			Name="AccessibilityLabel"
 			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
+			Type="Text"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="MouseY"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
+			Name="Height"
+			Visible=true
+			Group="Position"
+			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="PanelIndex"
+			Name="Visible"
+			Visible=true
 			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
+			Type="Boolean"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="TabPanelIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Window"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Window"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mInitialParent"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mName"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mPanelIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mWindow"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Window"
+			Name="Width"
+			Visible=true
+			Group="Position"
+			Type="Double"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
