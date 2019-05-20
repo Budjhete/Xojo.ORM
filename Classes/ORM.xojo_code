@@ -553,16 +553,6 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Attributes( deprecated = true )  Function Copy(pORM as ORM, dEprecated as Text) As ORM
-		  // Returns a copy of this ORM
-		  // @deprecated
-		  Call pORM.Deflate(Self)
-		  
-		  Return pORM
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CountAll(pDatabase As Database) As Integer
 		  Dim pColumns() As Auto
@@ -2430,32 +2420,70 @@ Inherits QueryBuilder
 
 	#tag ViewBehavior
 		#tag ViewProperty
-			Name="AccessibilityHint"
+			Name="Handle"
 			Group="Behavior"
-			Type="Text"
+			InitialValue="0"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="AccessibilityLabel"
+			Name="MouseX"
 			Group="Behavior"
-			Type="Text"
+			InitialValue="0"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="Height"
-			Visible=true
-			Group="Position"
-			Type="Double"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Visible"
-			Visible=true
+			Name="MouseY"
 			Group="Behavior"
-			Type="Boolean"
+			InitialValue="0"
+			Type="Integer"
 		#tag EndViewProperty
 		#tag ViewProperty
-			Name="Width"
-			Visible=true
-			Group="Position"
-			Type="Double"
+			Name="PanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="TabPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Window"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mInitialParent"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mName"
+			Group="Behavior"
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mPanelIndex"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Integer"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="_mWindow"
+			Group="Behavior"
+			InitialValue="0"
+			Type="Window"
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
