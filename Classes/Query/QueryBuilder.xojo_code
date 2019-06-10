@@ -180,6 +180,12 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Find(pColonms() As Auto) As QueryBuilder
+		  Return Append(new SelectQueryExpression(pColonms))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function From(pQueryBuilder As QueryBuilder, pTableAlias As Text) As QueryBuilder
 		  Return Append(new FromQueryExpression(pQueryBuilder, pTableAlias))
 		End Function
