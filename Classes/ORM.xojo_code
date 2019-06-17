@@ -930,7 +930,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as Database, pExpiration as Xojo.Core.Date = Nil, pColumnsType() as DB.DataType = Nil) As ORM
+		Function Find(pDatabase as Database, pExpiration as Xojo.Core.Date = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  Using Xojo.Core
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
@@ -986,7 +986,7 @@ Inherits QueryBuilder
 		      
 		    End If
 		    
-		    RaiseEvent Found
+		    if pFiringFoundEvent then RaiseEvent Found
 		    
 		  End If
 		  
@@ -2419,72 +2419,6 @@ Inherits QueryBuilder
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="Handle"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="MouseX"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="MouseY"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="PanelIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="TabPanelIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Window"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Window"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mInitialParent"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mName"
-			Group="Behavior"
-			Type="String"
-			EditorType="MultiLineEditor"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mPanelIndex"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Integer"
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="_mWindow"
-			Group="Behavior"
-			InitialValue="0"
-			Type="Window"
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
 			Group="Behavior"
