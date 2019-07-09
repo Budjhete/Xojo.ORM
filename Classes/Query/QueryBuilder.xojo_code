@@ -330,12 +330,6 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function name() As Text
-		  Return me.name
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
 		Function Nice() As Integer
 		  Return 0
 		End Function
