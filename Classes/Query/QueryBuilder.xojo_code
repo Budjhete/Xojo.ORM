@@ -155,6 +155,9 @@ Implements QueryExpression
 		      
 		      // Check for error
 		      If pDatabase.Error Then
+		        if pDatabase.ErrorCode = 1055 then
+		          pDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
+		        End If
 		        Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement)
 		      End If
 		      
