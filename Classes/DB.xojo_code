@@ -389,7 +389,13 @@ Protected Module DB
 		  
 		  // Set encoding to UTF8 for Text
 		  If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
-		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		    #Pragma BreakOnExceptions False
+		    Try 
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		    Catch Error as RuntimeException
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.ISOLatin1).ToText
+		    End Try
+		    
 		  End If
 		  
 		  return pDatabaseFieldValue

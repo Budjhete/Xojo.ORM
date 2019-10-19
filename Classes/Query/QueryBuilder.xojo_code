@@ -157,8 +157,39 @@ Implements QueryExpression
 		      If pDatabase.Error Then
 		        if pDatabase.ErrorCode = 1055 then
 		          pDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
+		          pRecordSet = pDatabase.SQLSelect(pStatement)
+		        elseif pDatabase.ErrorCode = 48879 then
+		          Dim tDatabase as Database
+		          if pDatabase isa MySQLCommunityServer then
+		            tDatabase = new MySQLCommunityServer
+		            tDatabase.UserName = pDatabase.UserName
+		            tDatabase.Password = pDatabase.Password
+		            tDatabase.Host = pDatabase.Host
+		            MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
+		          else
+		            tDatabase = new SQLiteDatabase
+		            SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		          End If
+		          tDatabase.DatabaseName = pDatabase.DatabaseName
+		          
+		          if tDatabase.Connect then
+		            pRecordSet = tDatabase.SQLSelect(pStatement)
+		            tDatabase.Close
+		          else
+		            Raise New ORMException(tDatabase.ErrorMessage.totext, pStatement)
+		          End If
+		          
+		          
+		        elseif pDatabase.ErrorCode = 2006 then
+		          if pDatabase.Connect then
+		            pRecordSet = pDatabase.SQLSelect(pStatement)
+		          else
+		            Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement)
+		          End If
+		        else
+		          Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement)
 		        End If
-		        Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement)
+		        
 		      End If
 		      
 		    End If
