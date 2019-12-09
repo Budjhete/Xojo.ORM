@@ -566,6 +566,45 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Instance(pDatabase as Database) As Database
+		  Var tDatabase as Database
+		  
+		  if pDatabase isa MySQLCommunityServer then
+		    tDatabase = new MySQLCommunityServer
+		    tDatabase.UserName = pDatabase.UserName
+		    tDatabase.Password = pDatabase.Password
+		    tDatabase.Host = pDatabase.Host
+		    MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
+		    
+		  else
+		    tDatabase = new SQLiteDatabase
+		    SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		  end if
+		  tDatabase.DatabaseName = pDatabase.DatabaseName
+		  
+		  Try
+		    tDatabase.Connect
+		    
+		    if tDatabase isa MySQLCommunityServer then
+		      tDatabase.SQLExecute("SET NAMES 'utf8'")
+		      tDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		    else
+		      tDatabase.SQLExecute("PRAGMA encoding = 'utf-8'")
+		      tDatabase.SQLExecute("PRAGMA foreign_keys = ON")
+		    end if
+		    Return tDatabase
+		  Catch error As DatabaseException
+		    
+		    MessageBox("Error connecting to Database: " + error.Message)
+		    
+		    Return tDatabase
+		  End Try
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Max(pColumn As Auto) As QueryExpression
 		  Return DB.Expression("COALESCE( " + DB.Expression("MAX( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
 		  
