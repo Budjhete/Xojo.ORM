@@ -347,12 +347,12 @@ Protected Module DB
 		  
 		  
 		  
-		  'Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "categorie" then
+		  'if pDatabaseFieldName = "dateLogiciel" then
 		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  
@@ -379,13 +379,18 @@ Protected Module DB
 		  'End If
 		  'End If
 		  
-		  If pColumnType = 11 Then
+		  If pColumnType = 11 OR pColumnType = 13 Then
 		    Return pDatabaseFieldValue.CurrencyValue
 		  End If
 		  
-		  If pColumnType = 13 Then
-		    Return pDatabaseFieldValue.CurrencyValue
+		  If pColumnType = 8 OR pColumnType = 10 Then
+		    if pDatabaseFieldValue<>nil then
+		      Return pDatabaseFieldValue.DateValue.SQLDateTime.ToText
+		    else
+		      return pDatabaseFieldValue
+		    End If
 		  End If
+		  
 		  
 		  // Set encoding to UTF8 for Text
 		  If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
@@ -488,7 +493,7 @@ Protected Module DB
 		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "categorie" then
+		  'if pDatabaseFieldName = "date" or pDatabaseFieldName = "dateLogiciel"then
 		  'MsgBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  
