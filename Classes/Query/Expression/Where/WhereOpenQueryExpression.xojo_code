@@ -8,6 +8,10 @@ Inherits OpenQueryExpression
 		  Case IsA WhereQueryExpression, IsA WhereCloseQueryExpression
 		    Return "AND " + Super.Compile()
 		    
+		  case IsA WhereOpenQueryExpression
+		    
+		    Return Super.Compile()
+		    
 		  End Select
 		  
 		  Return "WHERE " + Super.Compile()
