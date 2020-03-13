@@ -1061,11 +1061,15 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase As Database, pExpiration As Xojo.Core.Date = Nil) As RecordSet
+		Function FindAll(pDatabase as Database, pExpiration as Xojo.Core.Date = Nil, pOtherColumn() as Auto = nil) As RecordSet
 		  Dim pColumns() As Auto
 		  
 		  For Each pColumn As Auto In TableColumns(pDatabase)
 		    pColumns.Append(TableName + "." + pColumn)
+		  Next
+		  
+		  For Each nColumn as Auto in pOtherColumn
+		    pColumns.Append(nColumn)
 		  Next
 		  
 		  Return Append(new SelectQueryExpression(pColumns)). _
