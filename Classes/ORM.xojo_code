@@ -1340,7 +1340,7 @@ Inherits QueryBuilder
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Me.Data.Keys
 		    if pColumn = "logo" then
-		      System.DebugLog "shit comming"
+		      System.DebugLog "logo"
 		    end if
 		    System.DebugLog pColumn
 		    dim v as Auto = Me.Data(pColumn.DefineEncoding(Encodings.UTF8).ToText)
