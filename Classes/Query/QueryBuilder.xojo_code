@@ -322,14 +322,14 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftJoin(pTableName As Text) As QueryBuilder
-		  Return LeftJoin(pTableName, pTableName)
+		Function LeftJoin(pTableName As Auto, pTableAlias As Text) As QueryBuilder
+		  Return Append(new LeftJoinQueryExpression(pTableName, pTableAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftJoin(pTableName As Text, pTableAlias As Text) As QueryBuilder
-		  Return Append(new LeftJoinQueryExpression(pTableName, pTableAlias))
+		Function LeftJoin(pTableName As Text) As QueryBuilder
+		  Return LeftJoin(pTableName, pTableName)
 		End Function
 	#tag EndMethod
 
