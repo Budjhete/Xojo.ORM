@@ -18,6 +18,12 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, pORM As ORM)
 		  mPivotTableName = pPivotTableName
 		  
@@ -49,6 +55,12 @@ Implements ORMRelation
 		  Where(mForeignColumn, "=", pORM.Pk)._
 		  AndWhere(mFarColumn, "=", mORM.Pk)._
 		  Execute(pDatabase, pCommit)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub remove(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		  
 		End Sub
 	#tag EndMethod
 
