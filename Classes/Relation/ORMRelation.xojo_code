@@ -12,6 +12,12 @@ Protected Interface ORMRelation
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Dump() As Text
 		  
@@ -26,6 +32,12 @@ Protected Interface ORMRelation
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
 		Sub Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Remove(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
 		  
 		End Sub
 	#tag EndMethod

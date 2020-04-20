@@ -24,6 +24,12 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub Constructor(pForeignColumn As Text, pORM As ORM)
 		  mForeignColumn = pForeignColumn
 		  
@@ -55,6 +61,12 @@ Implements ORMRelation
 		  d.Value(mForeignColumn) = Nil
 		  DB.Update(mORM.TableName).Set(d).Where(mORM.Pks).AndWhere(mForeignColumn, "=", pORM.Pk).Execute(pDatabase, pCommit)
 		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Remove(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
 		  
 		End Sub
 	#tag EndMethod

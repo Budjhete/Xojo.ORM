@@ -262,6 +262,17 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target64Bit))
+		Sub Constructor()
+		  // ORM constructor with a ParamArray of initial criteria
+		  // Also used for the empty constructor
+		  
+		  Dim pDictionary As New Xojo.Core.Dictionary
+		  
+		  Me.Constructor(pDictionary)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Constructor(pPk As Auto, pDatabase As Database)
 		  // Initialize an ORM with a primary key and the call Find
@@ -470,7 +481,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pCriterias As Xojo.Core.Dictionary)
+		Sub Constructor(pCriterias as Xojo.Core.Dictionary, LoadFromJSON as Boolean = False)
 		  Using Xojo.Core
 		  // Basic ORM constructor
 		  
@@ -481,8 +492,11 @@ Inherits QueryBuilder
 		  mAdded = New Dictionary
 		  mRemoved = New Dictionary
 		  
-		  Call Me.Where(pCriterias)
-		  
+		  if LoadFromJSON then
+		    mData = pCriterias
+		  else
+		    Call Me.Where(pCriterias)
+		  end if
 		End Sub
 	#tag EndMethod
 
@@ -2407,6 +2421,10 @@ Inherits QueryBuilder
 
 
 	#tag Property, Flags = &h0
+		ColumnsList As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = False
 	#tag EndProperty
 
@@ -2432,6 +2450,46 @@ Inherits QueryBuilder
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="AccessibilityHint"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Text"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="AccessibilityLabel"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="Text"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Height"
+			Visible=true
+			Group="Position"
+			InitialValue=""
+			Type="Double"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Visible"
+			Visible=true
+			Group="Behavior"
+			InitialValue=""
+			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="Width"
+			Visible=true
+			Group="Position"
+			InitialValue=""
+			Type="Double"
+			EditorType=""
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
 			Visible=false
