@@ -347,7 +347,7 @@ Protected Module DB
 		  
 		  
 		  
-		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  'Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
@@ -557,6 +557,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function GroupConcat(pColumn as Auto) As QueryExpression
+		  Return DB.Expression("GROUP_CONCAT( " + QueryCompiler.Column(pColumn)  + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Insert(pTableName As Text, pColumns() As Auto) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
@@ -606,6 +612,12 @@ Protected Module DB
 		  End Try
 		  
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Length(pColumn As Auto) As QueryExpression
+		  Return DB.Expression("LENGTH( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
@@ -678,6 +690,19 @@ Protected Module DB
 	#tag Method, Flags = &h0
 		Function Set(ParamArray pValues As Auto) As QueryExpression
 		  Return Set(pValues)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Substr(pColumn as Auto, pLength as Text) As QueryExpression
+		  Return DB.Expression("SUBSTR( " + QueryCompiler.Column(pColumn) + ", "+ pLength+" )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Substr(pColumn As Auto, pLength As Text, pAlias As Text) As QueryExpression
+		  // Create a SUM expression with an alias
+		  Return DB.Alias(DB.Substr(pColumn, pLength), pAlias)
 		End Function
 	#tag EndMethod
 
