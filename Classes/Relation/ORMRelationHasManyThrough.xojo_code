@@ -17,7 +17,7 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
 		  
 		End Sub
@@ -58,7 +58,7 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Sub remove(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
 		  
 		End Sub

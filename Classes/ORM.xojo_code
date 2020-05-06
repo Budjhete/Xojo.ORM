@@ -798,6 +798,95 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function CreateTable(pDatabase as Database) As Boolean
+		  if pDatabase isa MySQLCommunityServer then
+		    'Try
+		    Dim sql As Text
+		    dim HasPrimaryKeys as boolean = false
+		    dim HasUniqueKeys as Boolean = false
+		    Dim mPrimaryKeys as Text = "PRIMARY KEY ("
+		    Dim mUniqueKeys as Text = "UNIQUE ("
+		    sql = "CREATE TABLE `"+me.TableName+"` ( "
+		    for each dField as Xojo.Core.DictionaryEntry in Schema
+		      dim field as ORMField = dField.Value
+		      sql = sql + EndOfLine_ + "`"+ dField.Key + "` " 
+		      sql = sql + field.Type(pDatabase) +field.Length
+		      sql = sql + " " + field.NotNull
+		      if field.Type(pDatabase) <> "DECIMAL" then sql = sql + " " + field.DefaultValue(pDatabase)
+		      sql = sql + " " + field.Extra(pDatabase)
+		      sql = sql + ","
+		      if field.PrimaryKey then
+		        HasPrimaryKeys = HasPrimaryKeys OR true
+		        mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
+		      end if
+		      
+		      if field.Unique then
+		        HasUniqueKeys = HasUniqueKeys OR true
+		        mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
+		      end if
+		      
+		      
+		      
+		    next
+		    sql = sql.left(sql.Length -1)
+		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine_ +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
+		    if HasUniqueKeys then sql = sql + ", "+EndOfLine_ +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		    
+		    sql = sql +");"
+		    pDatabase.ExecuteSQL(sql)
+		    
+		    'Catch error As DatabaseExeception
+		    'MessageBox("Database error: " + error.Message)
+		    'End Try
+		    
+		  else
+		    'Try
+		    Dim sql As Text
+		    dim HasPrimaryKeys as boolean = false
+		    dim HasUniqueKeys as Boolean = false
+		    Dim mPrimaryKeys as Text = "PRIMARY KEY ("
+		    Dim mUniqueKeys as Text = "UNIQUE ("
+		    sql = "CREATE TABLE `"+me.TableName+"` ( "
+		    for each dField as Xojo.Core.DictionaryEntry in Schema
+		      dim field as ORMField = dField.Value
+		      sql = sql + EndOfLine_ + "`"+ dField.Key + "` " 
+		      sql = sql + field.Type(pDatabase)
+		      if field.Type(pDatabase) = "DECIMAL" then
+		        sql = sql +field.Length
+		      end if
+		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		      sql = sql + " " + field.Extra(pDatabase)
+		      sql = sql + ","
+		      if field.PrimaryKey then
+		        HasPrimaryKeys = HasPrimaryKeys OR true
+		        mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
+		      end if
+		      
+		      if field.Unique then
+		        HasUniqueKeys = HasUniqueKeys OR true
+		        mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
+		      end if
+		      
+		      
+		      
+		      
+		    next
+		    sql = sql.left(sql.Length -1)
+		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine_ +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
+		    if HasUniqueKeys then sql = sql + ", "+EndOfLine_ +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		    
+		    sql = sql +");"
+		    pDatabase.ExecuteSQL(sql)
+		    
+		    'Catch error As DatabaseExeception
+		    'MessageBox("Database error: " + error.Message)
+		    'End Try
+		    
+		  end if
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Function Data() As Xojo.Core.Dictionary
 		  Using Xojo.Core
@@ -940,6 +1029,58 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function FieldSchema(pDatabase As Database) As RecordSet
 		  Return pDatabase.FieldSchema(Me.TableName)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function FieldType(pValue as Integer) As ORMField.TypeList
+		  Select Case pValue
+		    
+		    'case 0 //null
+		    'Return NIL
+		  case 1
+		    Return ORMField.TypeList.BOOLEAN
+		  case 2
+		    Return ORMField.TypeList.INTEGER
+		  case 3
+		    Return ORMField.TypeList.INTEGER
+		  case 4
+		    Return ORMField.TypeList.TEXT
+		  case 5
+		    Return ORMField.TypeList.TEXT
+		  case 6
+		    Return ORMField.TypeList.DECIMAL
+		  case 7
+		    Return ORMField.TypeList.DECIMAL
+		  case 8 //DATE
+		    Return ORMField.TypeList.DATETIME
+		  case 9 // TIME
+		    Return ORMField.TypeList.DATETIME
+		  case 10
+		    Return ORMField.TypeList.TIMESTAMP
+		  case 11
+		    Return ORMField.TypeList.DECIMAL
+		  case 12
+		    Return ORMField.TypeList.BOOLEAN
+		  case 13
+		    Return ORMField.TypeList.DECIMAL
+		  case 14
+		    Return ORMField.TypeList.BLOB
+		  case 15
+		    Return ORMField.TypeList.BLOB
+		  case 16
+		    Return ORMField.TypeList.BLOB
+		  case 17
+		    Return ORMField.TypeList.BLOB
+		  case 18
+		    Return ORMField.TypeList.TEXT
+		  case 19
+		    Return ORMField.TypeList.INTEGER
+		  case 255  // unknown
+		    Return ORMField.TypeList.TEXT
+		  else
+		    Return ORMField.TypeList.TEXT
+		  End Select
 		End Function
 	#tag EndMethod
 
@@ -1331,6 +1472,38 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub InsertBaseData(pDatabase as Database)
+		  #Pragma BreakOnExceptions False
+		  
+		  dim rCol as string
+		  for each cCol as Xojo.Core.DictionaryEntry in Schema
+		    rCol = rCol + "`"+cCol.Key+ "`, "
+		  next
+		  rcol = rCol.left(rcol.Length -2)
+		  
+		  for i as integer = 0 to SchemaDefaultDatas.LastRowIndex
+		    dim strrr() as TEXT = SchemaDefaultDatas(i)
+		    
+		    dim sql as string = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
+		    
+		    for each st as string in strrr
+		      if st="NULL" or st = "CURRENT_TIMESTAMP" then
+		        sql = sql +""+st+", "
+		      else
+		        sql = sql +"'"+st+"', "
+		      end if
+		    next
+		    sql = sql.Left(sql.Length-2) + ");"
+		    try
+		      pDatabase.ExecuteSQL(sql)
+		    catch Err as DatabaseException
+		      System.DebugLog me.TableName + "- " + sql + " : " + err.Reason
+		    end try
+		  next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Join(pTableName As QueryExpression, pTableAlias As Text) As ORM
 		  Call Super.Join(pTableName, pTableAlias)
 		  
@@ -1351,6 +1524,30 @@ Inherits QueryBuilder
 		  Call Super.Join(pTableName, pTableAlias)
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function JSONValue() As Xojo.Core.Dictionary
+		  Using Xojo.Core
+		  // Shallow export
+		  
+		  Dim pJSONItem As New Xojo.Core.Dictionary
+		  
+		  // Adds each column as an Attribute
+		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
+		    System.DebugLog pDataKeyColumn.key
+		    dim v as Auto = pDataKeyColumn.Value
+		    'System.DebugLog "type : " + v.Type.StringValue
+		    if v.Type = 6 then
+		      pJSONItem.Value(pDataKeyColumn.Key) = v.AutoDoubleValue
+		    else
+		      pJSONItem.Value(pDataKeyColumn.Key) = v
+		    end if
+		    System.DebugLog pDataKeyColumn.Key + ":" + pDataKeyColumn.Value
+		  Next
+		  
+		  Return pJSONItem
 		End Function
 	#tag EndMethod
 
@@ -1377,30 +1574,6 @@ Inherits QueryBuilder
 		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v
 		    End Select
 		    'System.DebugLog pJSONItem.ToText
-		  Next
-		  
-		  Return pJSONItem
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function JSONValue() As Xojo.Core.Dictionary
-		  Using Xojo.Core
-		  // Shallow export
-		  
-		  Dim pJSONItem As New Xojo.Core.Dictionary
-		  
-		  // Adds each column as an Attribute
-		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
-		    System.DebugLog pDataKeyColumn.key
-		    dim v as Auto = pDataKeyColumn.Value
-		    'System.DebugLog "type : " + v.Type.StringValue
-		    if v.Type = 6 then
-		      pJSONItem.Value(pDataKeyColumn.Key) = v.AutoDoubleValue
-		    else
-		      pJSONItem.Value(pDataKeyColumn.Key) = v
-		    end if
-		    System.DebugLog pDataKeyColumn.Key + ":" + pDataKeyColumn.Value
 		  Next
 		  
 		  Return pJSONItem
@@ -1956,6 +2129,60 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function TableCheck(pDatabase as Database) As Boolean
+		  dim rows as RowSet = pDatabase.TableColumns(TableName)
+		  
+		  SchemaCurrent = new Xojo.Core.Dictionary
+		  
+		  If rows <> Nil Then
+		    if rows.RowCount>0 then
+		      For Each row As DatabaseRow In rows
+		        dim col as new ORMField
+		        col.Type = FieldType(row.Column("FieldType").IntegerValue)
+		        col.PrimaryKey = row.Column("IsPrimary").BooleanValue
+		        col.NotNull = row.Column("NotNull").BooleanValue
+		        if pDatabase isa MySQLCommunityServer then
+		          col.Length = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		        else
+		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		        end if
+		        SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
+		      Next
+		      rows.Close
+		    else
+		      SchemaToCreateTable = true
+		    End If
+		  End If
+		  
+		  SchemaToAdd = new Xojo.Core.Dictionary
+		  SchemaToAlter = new Xojo.Core.Dictionary
+		  
+		  for each dField as Xojo.Core.DictionaryEntry in Schema
+		    if NOT SchemaCurrent.HasKey(dField.key) then
+		      SchemaToAdd.value(dField.key) = dField.Value
+		    else
+		      dim cCurrent as ORMField = SchemaCurrent.value(dField.Key)
+		      dim cReal as ORMField = dField.Value
+		      
+		      if cCurrent.Type(pDatabase)<>cReal.type(pDatabase) then
+		        SchemaToAlter.Value(dField.Key) = cReal
+		      end if
+		    end if
+		  next
+		  
+		  SchemaToRemoveColumn = new Xojo.Core.Dictionary
+		  
+		  for each dField as Xojo.Core.DictionaryEntry in SchemaCurrent
+		    if NOT Schema.HasKey(dField.key) then
+		      SchemaToRemoveColumn.value(dField.key) = dField.Value
+		    end if
+		  next
+		  
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableColumns(pDatabase As Database) As Text()
 		  Dim pColumns() As Text
@@ -2001,8 +2228,169 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function TableCreate(pDatabase as Database) As Boolean
+		  Dim sql As Text
+		  dim HasPrimaryKeys as boolean = false
+		  dim HasUniqueKeys as Boolean = false
+		  Dim mPrimaryKeys as Text = "PRIMARY KEY ("
+		  Dim mUniqueKeys as Text = "UNIQUE ("
+		  sql = "CREATE TABLE `"+me.TableName+"` ( "
+		  for each dField as Xojo.Core.DictionaryEntry in Schema
+		    dim field as ORMField = dField.Value
+		    sql = sql + Text.EndOfLine + "`"+ dField.Key + "`" 
+		    sql = sql + field.Type(pDatabase)
+		    if pDatabase isa MySQLCommunityServer then
+		      sql = sql +" " +field.Length
+		    else
+		      if field.Type = ORMField.TypeList.DECIMAL then sql = sql +" " +field.Length
+		      
+		    end if
+		    
+		    sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		    if pDatabase isa SQLiteDatabase then
+		      if field.PrimaryKey then  sql = sql + " PRIMARY KEY"
+		    end if
+		    sql = sql +"," 
+		    
+		    if field.PrimaryKey then
+		      HasPrimaryKeys = HasPrimaryKeys OR true
+		      mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`,"
+		    end if
+		    
+		    if field.Unique then
+		      HasUniqueKeys = HasUniqueKeys OR true
+		      mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`,"
+		    end if
+		  next
+		  sql = sql.left(sql.Length -1)
+		  if HasPrimaryKeys then sql = sql + ", "+Text.EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
+		  if HasUniqueKeys then sql = sql + ", "+Text.EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		  
+		  sql = sql +");"
+		  pDatabase.ExecuteSQL(sql)
+		  
+		  return true
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function TableName() As Text
 		  Raise New ORMException("TableName must be implemented or be called from its implementation.")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableUpdate(pDatabase as Database) As Boolean
+		  if pDatabase isa MySQLCommunityServer then
+		    
+		    for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
+		      Dim sql As Text
+		      
+		      sql = "ALTER TABLE `"+me.TableName+"` ADD "
+		      
+		      dim field as ORMField = dField.Value
+		      sql = sql + "`"+ dField.Key + "` " 
+		      sql = sql + field.Type(pDatabase) +field.Length
+		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		      sql = sql +";"
+		      pDatabase.ExecuteSQL(sql)
+		    next
+		    
+		    for each dField as Xojo.Core.DictionaryEntry in SchemaToAlter
+		      Dim sql As Text
+		      
+		      
+		      sql = "ALTER TABLE `"+me.TableName+"` CHANGE "
+		      
+		      dim field as ORMField = dField.Value
+		      sql = sql + "`"+ dField.Key + "` " 
+		      sql = sql + "`"+ dField.Key + "` " 
+		      sql = sql + field.Type(pDatabase) +field.Length
+		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		      sql = sql +";"
+		      try
+		        pDatabase.ExecuteSQL(sql)
+		      catch error as DatabaseException
+		        Return false
+		      end try
+		    next
+		    
+		    
+		    
+		  else
+		    if SchemaToCreateTable then
+		      Return TableCreate(pDatabase)
+		    else
+		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
+		        Dim sql As Text
+		        
+		        sql = "ALTER TABLE `"+me.TableName+"` ADD "
+		        
+		        dim field as ORMField = dField.Value
+		        sql = sql + "`"+ dField.Key + "` " 
+		        sql = sql + field.Type(pDatabase)
+		        if field.Type = ORMField.TypeList.DECIMAL then  sql = sql + field.Length
+		        sql = sql +";"
+		        pDatabase.ExecuteSQL(sql)
+		      next
+		      
+		      If SchemaToAlter.Count > 0 then
+		        dim selectSQL as string = "SELECT "
+		        dim collSelect as string
+		        for each dSelect as Xojo.Core.DictionaryEntry in  Schema
+		          collSelect = collSelect +"`"+ dSelect.key + "`, "
+		        next
+		        selectSQL = selectSQL + collSelect.Left(collSelect.Length -2)
+		        
+		        selectSQL = selectSQL + " FROM `" + me.TableName+"`"
+		        dim rr as RowSet = pDatabase.SelectSQL(selectSQL)
+		        if rr.RowCount>0 then
+		          dim insertSQL as String =  "INSERT INTO `"+me.TableName+"` ("+collSelect.Left(collSelect.Length -2)+") VALUES "
+		          
+		          While Not rr.AfterLastRow
+		            insertSQL = insertSQL + "("
+		            For i As Integer = 0 To rr.LastColumnIndex
+		              dim colVal as string
+		              if rr.ColumnAt(i)<>nil then
+		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then colval = rr.ColumnAt(i).BooleanValue.SQLValue.StringValue
+		                colval =  "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
+		              else
+		                colVal = "NULL"
+		              end if
+		              insertSQL = insertSQL + colval
+		            Next
+		            insertSQL = insertSQL.Left(insertSQL.Length -1)
+		            insertSQL = insertSQL + "),"
+		            
+		            rr.MoveToNextRow
+		          Wend
+		          rr.Close
+		          insertSQL = insertSQL.Left(insertSQL.Length -1)
+		          
+		          pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"` RENAME TO '"+me.TableName+"_TMP';")
+		          if TableCreate(pDatabase) then
+		            Try
+		              pDatabase.ExecuteSQL(insertSQL)
+		              
+		            Catch error As DatabaseException
+		              Return false
+		            End Try
+		            pDatabase.ExecuteSQL("PRAGMA foreign_keys = OFF;")
+		            pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"_TMP';")
+		            'pDatabase.ExecuteSQL("COMMIT;")
+		            pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON;")
+		          end if
+		        end if
+		      end if
+		    end if
+		    
+		  end if
+		  SchemaToCreateTable = false
+		  SchemaToAdd = nil
+		  SchemaToAlter = nil
+		  return true
 		End Function
 	#tag EndMethod
 
@@ -2448,48 +2836,40 @@ Inherits QueryBuilder
 		mReplaced As Boolean = False
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		Schema As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaCurrent As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaDefaultDatas() As Auto
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaMadantoryData() As auto
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaToAdd As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaToAlter As Xojo.Core.Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaToCreateTable As boolean = false
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaToRemoveColumn As Xojo.Core.Dictionary
+	#tag EndProperty
+
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="AccessibilityHint"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Text"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="AccessibilityLabel"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Text"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Height"
-			Visible=true
-			Group="Position"
-			InitialValue=""
-			Type="Double"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Visible"
-			Visible=true
-			Group="Behavior"
-			InitialValue=""
-			Type="Boolean"
-			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="Width"
-			Visible=true
-			Group="Position"
-			InitialValue=""
-			Type="Double"
-			EditorType=""
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
 			Visible=false
@@ -2544,6 +2924,14 @@ Inherits QueryBuilder
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="SchemaToCreateTable"
+			Visible=false
+			Group="Behavior"
+			InitialValue="false"
+			Type="boolean"
 			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
