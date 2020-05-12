@@ -1026,6 +1026,33 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function FieldExtra(pValue as String) As ORMField.ExtraList
+		  
+		  if pValue.Contains("auto_increment") then
+		    Return ORMField.ExtraList.AutoIncremente
+		  else
+		    Return ORMField.ExtraList.None
+		  end if
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function FieldLength(pValue as String) As Text
+		  if pValue.Contains("(") then
+		    dim debut, fin as integer
+		    debut = pValue.IndexOf("(")
+		    dim newValue as Text = pValue.Middle(debut).DefineEncoding(Encodings.UTF8).ToText
+		    fin = newValue.IndexOf(")")
+		    dim finalvalue as Text = newValue.left(fin).ToText
+		    
+		    return finalvalue
+		  else
+		    return ""
+		  end if
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function FieldSchema(pDatabase As Database) As RecordSet
 		  Return pDatabase.FieldSchema(Me.TableName)
@@ -1081,6 +1108,39 @@ Inherits QueryBuilder
 		  else
 		    Return ORMField.TypeList.TEXT
 		  End Select
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function FieldType(pValue as String) As ORMField.TypeList
+		  
+		  if pValue.Contains("tinyint") then
+		    Return ORMField.TypeList.BOOLEAN
+		  elseif pValue.Contains("varchar") then
+		    Return ORMField.TypeList.VARCHAR
+		  elseif pValue.Contains("int") then
+		    Return ORMField.TypeList.INTEGER
+		  elseif pValue.Contains("decimal") then
+		    Return ORMField.TypeList.DECIMAL
+		  elseif pValue.Contains("char") then
+		    Return ORMField.TypeList.VARCHAR
+		  elseif pValue.Contains("blob") then
+		    Return ORMField.TypeList.BLOB
+		  elseif pValue.Contains("longblob") then
+		    Return ORMField.TypeList.LONGBLOG
+		  elseif pValue.Contains("timestamp") then
+		    Return ORMField.TypeList.TIMESTAMP
+		  elseif pValue.Contains("datetime") then
+		    Return ORMField.TypeList.DATETIME
+		  elseif pValue.Contains("date") then
+		    Return ORMField.TypeList.DATE
+		  elseif pValue.Contains("text") then
+		    Return ORMField.TypeList.TEXT
+		  elseif pValue.Contains("longtext") then
+		    Return ORMField.TypeList.LongTEXT
+		  else
+		    Return ORMField.TypeList.VARCHAR
+		  end if
 		End Function
 	#tag EndMethod
 
@@ -2131,29 +2191,48 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableCheck(pDatabase as Database) As Boolean
-		  dim rows as RowSet = pDatabase.TableColumns(TableName)
-		  
+		  dim rows as RowSet 
 		  SchemaCurrent = new Xojo.Core.Dictionary
 		  
-		  If rows <> Nil Then
-		    if rows.RowCount>0 then
-		      For Each row As DatabaseRow In rows
-		        dim col as new ORMField
-		        col.Type = FieldType(row.Column("FieldType").IntegerValue)
-		        col.PrimaryKey = row.Column("IsPrimary").BooleanValue
-		        col.NotNull = row.Column("NotNull").BooleanValue
-		        if pDatabase isa MySQLCommunityServer then
-		          col.Length = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
-		        else
-		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
-		        end if
-		        SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
-		      Next
-		      rows.Close
-		    else
-		      SchemaToCreateTable = true
+		  if (pDatabase isa MySQLCommunityServer) then
+		    rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
+		    If rows <> Nil Then
+		      if rows.RowCount>0 then
+		        For Each row As DatabaseRow In rows
+		          dim col as new ORMField
+		          col.Type = FieldType(row.Column("Type").StringValue)
+		          col.PrimaryKey = row.Column("Key").BooleanValue
+		          col.NotNull = row.Column("Null").BooleanValue
+		          col.Length = FieldLength(row.Column("Type").StringValue)
+		          col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		          col.Extra = FieldExtra(row.Column("Extra").StringValue)
+		          SchemaCurrent.value(row.Column("Field").StringValue) = col
+		        Next
+		        rows.Close
+		      else
+		        SchemaToCreateTable = true
+		      End If
 		    End If
-		  End If
+		  else
+		    rows = pDatabase.TableColumns(TableName)
+		    If rows <> Nil Then
+		      if rows.RowCount>0 then
+		        For Each row As DatabaseRow In rows
+		          dim col as new ORMField
+		          col.Type = FieldType(row.Column("FieldType").IntegerValue)
+		          col.PrimaryKey = row.Column("IsPrimary").BooleanValue
+		          col.NotNull = row.Column("NotNull").BooleanValue
+		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		          SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
+		        Next
+		        rows.Close
+		      else
+		        SchemaToCreateTable = true
+		      End If
+		    End If
+		  end if
+		  
+		  
 		  
 		  SchemaToAdd = new Xojo.Core.Dictionary
 		  SchemaToAlter = new Xojo.Core.Dictionary
@@ -2247,9 +2326,9 @@ Inherits QueryBuilder
 		    end if
 		    
 		    sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		    if pDatabase isa SQLiteDatabase then
-		      if field.PrimaryKey then  sql = sql + " PRIMARY KEY"
-		    end if
+		    'if pDatabase isa SQLiteDatabase then
+		    'if field.PrimaryKey then  sql = sql + " PRIMARY KEY"
+		    'end if
 		    sql = sql +"," 
 		    
 		    if field.PrimaryKey then
@@ -2354,10 +2433,13 @@ Inherits QueryBuilder
 		            For i As Integer = 0 To rr.LastColumnIndex
 		              dim colVal as string
 		              if rr.ColumnAt(i)<>nil then
-		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then colval = rr.ColumnAt(i).BooleanValue.SQLValue.StringValue
-		                colval =  "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
+		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then 
+		                  colval = rr.ColumnAt(i).BooleanValue.SQLValue.StringValue + ","
+		                else
+		                  colval =  "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
+		                end if
 		              else
-		                colVal = "NULL"
+		                colVal = "NULL" + ","
 		              end if
 		              insertSQL = insertSQL + colval
 		            Next

@@ -90,6 +90,7 @@ Protected Class ORMField
 	#tag Method, Flags = &h0
 		Function Length() As Text
 		  if mLength="" then return ""
+		  if mType = TypeList.BOOLEAN or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOG or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
 		  return "("+mLength+")"
 		End Function
 	#tag EndMethod
@@ -141,10 +142,14 @@ Protected Class ORMField
 		      Return "INT"
 		    case TypeList.BLOB
 		      Return "BLOB"
+		    case TypeList.LONGBLOG
+		      Return "LONGBLOG"
 		    case TypeList.BOOLEAN
-		      Return "TINYINT"
+		      Return "TINYINT(1)"
 		    case TypeList.DATETIME
 		      Return "DATETIME"
+		    case TypeList.DATE
+		      Return "DATE"
 		    case Typelist.TIMESTAMP
 		      Return "TIMESTAMP"
 		    case TypeList.DECIMAL
@@ -217,7 +222,8 @@ Protected Class ORMField
 		  DATETIME
 		  TIMESTAMP
 		  LONGTEXT
-		LONGBLOG
+		  LONGBLOG
+		DATE
 	#tag EndEnum
 
 
@@ -269,18 +275,6 @@ Protected Class ORMField
 			InitialValue="False"
 			Type="Boolean"
 			EditorType=""
-		#tag EndViewProperty
-		#tag ViewProperty
-			Name="mExtra"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="ExtraList"
-			EditorType="Enum"
-			#tag EnumValues
-				"0 - AutoIncremente"
-				"1 - CurrentTimeStamp"
-			#tag EndEnumValues
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Unique"
