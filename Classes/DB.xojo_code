@@ -511,7 +511,7 @@ Protected Module DB
 		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
 		    Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un Xojo.core.date
-		      Return pDatabaseFieldValue.DateValue.SQLDateTime.ToText
+		      if pDatabaseFieldValue<>"" then Return pDatabaseFieldValue.DateValue.SQLDateTime.ToText
 		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
 		    Case 2, 3, 19
