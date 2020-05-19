@@ -1042,7 +1042,7 @@ Inherits QueryBuilder
 		  if pValue.Contains("(") then
 		    dim debut, fin as integer
 		    debut = pValue.IndexOf("(")
-		    dim newValue as Text = pValue.Middle(debut).DefineEncoding(Encodings.UTF8).ToText
+		    dim newValue as Text = pValue.Middle(debut+1).DefineEncoding(Encodings.UTF8).ToText
 		    fin = newValue.IndexOf(")")
 		    dim finalvalue as Text = newValue.left(fin).ToText
 		    
@@ -1118,16 +1118,20 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.BOOLEAN
 		  elseif pValue.Contains("varchar") then
 		    Return ORMField.TypeList.VARCHAR
+		  elseif pValue.Contains("smallint") then
+		    Return ORMField.TypeList.SMALLINT
 		  elseif pValue.Contains("int") then
 		    Return ORMField.TypeList.INTEGER
 		  elseif pValue.Contains("decimal") then
 		    Return ORMField.TypeList.DECIMAL
 		  elseif pValue.Contains("char") then
 		    Return ORMField.TypeList.VARCHAR
+		  elseif pValue.Contains("longblob") then
+		    Return ORMField.TypeList.LONGBLOB
 		  elseif pValue.Contains("blob") then
 		    Return ORMField.TypeList.BLOB
 		  elseif pValue.Contains("longblob") then
-		    Return ORMField.TypeList.LONGBLOG
+		    Return ORMField.TypeList.LONGBLOB
 		  elseif pValue.Contains("timestamp") then
 		    Return ORMField.TypeList.TIMESTAMP
 		  elseif pValue.Contains("datetime") then
@@ -1540,6 +1544,27 @@ Inherits QueryBuilder
 		    rCol = rCol + "`"+cCol.Key+ "`, "
 		  next
 		  rcol = rCol.left(rcol.Length -2)
+		  
+		  for i as integer = 0 to SchemaMadantoryData.LastRowIndex
+		    dim strrr() as TEXT = SchemaMadantoryData(i)
+		    
+		    dim sql as string = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
+		    
+		    for each st as string in strrr
+		      if st="NULL" or st = "CURRENT_TIMESTAMP" then
+		        sql = sql +""+st+", "
+		      else
+		        sql = sql +"'"+st+"', "
+		      end if
+		    next
+		    sql = sql.Left(sql.Length-2) + ");"
+		    try
+		      pDatabase.ExecuteSQL(sql)
+		    catch Err as DatabaseException
+		      System.DebugLog me.TableName + "- " + sql + " : " + err.Reason
+		    end try
+		  next
+		  
 		  
 		  for i as integer = 0 to SchemaDefaultDatas.LastRowIndex
 		    dim strrr() as TEXT = SchemaDefaultDatas(i)
@@ -2196,16 +2221,28 @@ Inherits QueryBuilder
 		  
 		  if (pDatabase isa MySQLCommunityServer) then
 		    rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
+		    dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
+		    " stat.table_name = tco.table_name and stat.index_name = tco.constraint_name where stat.non_unique = 0 and stat.table_schema not in ('information_schema', 'sys', 'performance_schema', 'mysql') and constraint_type = 'UNIQUE' and stat.table_name = '"+TableName+"' group by stat.table_name, stat.column_name")
+		    dim dU as new Xojo.Core.Dictionary
+		    if rowsU <> Nil then
+		      if rowsU.RowCount>0 then
+		        For Each rowU As DatabaseRow In rowsU
+		          dU.Value( rowU.Column("column_name").StringValue) = true
+		        Next
+		      end if
+		    end if
+		    
 		    If rows <> Nil Then
 		      if rows.RowCount>0 then
 		        For Each row As DatabaseRow In rows
 		          dim col as new ORMField
 		          col.Type = FieldType(row.Column("Type").StringValue)
-		          col.PrimaryKey = row.Column("Key").BooleanValue
-		          col.NotNull = row.Column("Null").BooleanValue
+		          col.PrimaryKey = row.Column("Key").StringValue = "PRI"
+		          col.NotNull = row.Column("Null").StringValue = "NO"
 		          col.Length = FieldLength(row.Column("Type").StringValue)
 		          col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8).ToText
 		          col.Extra = FieldExtra(row.Column("Extra").StringValue)
+		          col.Unique = dU.Lookup(row.Column("Field").StringValue, false)
 		          SchemaCurrent.value(row.Column("Field").StringValue) = col
 		        Next
 		        rows.Close
@@ -2214,7 +2251,28 @@ Inherits QueryBuilder
 		      End If
 		    End If
 		  else
+		    // Get table columns
 		    rows = pDatabase.TableColumns(TableName)
+		    // Gest Table keys
+		    dim rowsU as rowset = pDatabase.SelectSQL("PRAGMA index_list("+TableName+");")
+		    dim dU as new Xojo.Core.Dictionary
+		    if rowsU <> Nil then
+		      if rowsU.RowCount>0 then
+		        For Each rowU As DatabaseRow In rowsU
+		          if rowU.Column("origin").StringValue = "u" then
+		            dim rowsUCol as rowset = pDatabase.SelectSQL("PRAGMA index_info("+rowU.Column("name").StringValue+");")
+		            if rowsUCol <> Nil then
+		              if rowsUCol.RowCount>0 then
+		                For Each rowUCol As DatabaseRow In rowsUCol
+		                  dU.Value( rowUCol.Column("name").StringValue) = true
+		                Next
+		              end if
+		            end if
+		          end if
+		        Next
+		      end if
+		    end if
+		    
 		    If rows <> Nil Then
 		      if rows.RowCount>0 then
 		        For Each row As DatabaseRow In rows
@@ -2223,7 +2281,9 @@ Inherits QueryBuilder
 		          col.PrimaryKey = row.Column("IsPrimary").BooleanValue
 		          col.NotNull = row.Column("NotNull").BooleanValue
 		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		          col.Unique = dU.Lookup(row.Column("ColumnName").StringValue, false)
 		          SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
+		          
 		        Next
 		        rows.Close
 		      else
@@ -2244,7 +2304,7 @@ Inherits QueryBuilder
 		      dim cCurrent as ORMField = SchemaCurrent.value(dField.Key)
 		      dim cReal as ORMField = dField.Value
 		      
-		      if cCurrent.Type(pDatabase)<>cReal.type(pDatabase) then
+		      if cCurrent.Type(pDatabase)<>cReal.type(pDatabase) or cCurrent.Unique<>cReal.Unique or cCurrent.PrimaryKey<>cReal.PrimaryKey or cCurrent.NotNull<>cReal.NotNull  then
 		        SchemaToAlter.Value(dField.Key) = cReal
 		      end if
 		    end if
@@ -2307,13 +2367,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableCreate(pDatabase as Database) As Boolean
+		Function TableCreate(pDatabase as Database, pSuffix as TEXT = "") As Boolean
 		  Dim sql As Text
 		  dim HasPrimaryKeys as boolean = false
 		  dim HasUniqueKeys as Boolean = false
 		  Dim mPrimaryKeys as Text = "PRIMARY KEY ("
 		  Dim mUniqueKeys as Text = "UNIQUE ("
-		  sql = "CREATE TABLE `"+me.TableName+"` ( "
+		  sql = "CREATE TABLE `"+me.TableName+pSuffix+"` ( "
 		  for each dField as Xojo.Core.DictionaryEntry in Schema
 		    dim field as ORMField = dField.Value
 		    sql = sql + Text.EndOfLine + "`"+ dField.Key + "`" 
@@ -2329,7 +2389,7 @@ Inherits QueryBuilder
 		    'if pDatabase isa SQLiteDatabase then
 		    'if field.PrimaryKey then  sql = sql + " PRIMARY KEY"
 		    'end if
-		    sql = sql +"," 
+		    sql = sql + " " + field.Extra(pdatabase) +"," 
 		    
 		    if field.PrimaryKey then
 		      HasPrimaryKeys = HasPrimaryKeys OR true
@@ -2373,7 +2433,7 @@ Inherits QueryBuilder
 		      sql = sql + "`"+ dField.Key + "` " 
 		      sql = sql + field.Type(pDatabase) +field.Length
 		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		      sql = sql +";"
+		      sql = sql + " " + field.Extra(pdatabase)  +";"
 		      pDatabase.ExecuteSQL(sql)
 		    next
 		    
@@ -2388,7 +2448,7 @@ Inherits QueryBuilder
 		      sql = sql + "`"+ dField.Key + "` " 
 		      sql = sql + field.Type(pDatabase) +field.Length
 		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		      sql = sql +";"
+		      sql = sql + " " + field.Extra(pdatabase)  +";"
 		      try
 		        pDatabase.ExecuteSQL(sql)
 		      catch error as DatabaseException
@@ -2402,6 +2462,9 @@ Inherits QueryBuilder
 		    if SchemaToCreateTable then
 		      Return TableCreate(pDatabase)
 		    else
+		      pDatabase.ExecuteSQL("PRAGMA legacy_alter_table=OFF;")
+		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = OFF;")
+		      
 		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
 		        Dim sql As Text
 		        
@@ -2423,16 +2486,24 @@ Inherits QueryBuilder
 		        next
 		        selectSQL = selectSQL + collSelect.Left(collSelect.Length -2)
 		        
-		        selectSQL = selectSQL + " FROM `" + me.TableName+"`"
+		        selectSQL = selectSQL + " FROM `" + me.TableName+"`;"
 		        dim rr as RowSet = pDatabase.SelectSQL(selectSQL)
 		        if rr.RowCount>0 then
-		          dim insertSQL as String =  "INSERT INTO `"+me.TableName+"` ("+collSelect.Left(collSelect.Length -2)+") VALUES "
+		          
+		          dim insertSQL as String
+		          if pDatabase isa MySQLCommunityServer then
+		            insertSQL = "INSERT IGNORE INTO `"+me.TableName+"_TMP`  ("+collSelect.Left(collSelect.Length -2)+") VALUES "
+		          else
+		            insertSQL = "INSERT OR IGNORE INTO `"+me.TableName+"_TMP`  ("+collSelect.Left(collSelect.Length -2)+") VALUES "
+		          end if
+		          
+		          
 		          
 		          While Not rr.AfterLastRow
 		            insertSQL = insertSQL + "("
 		            For i As Integer = 0 To rr.LastColumnIndex
 		              dim colVal as string
-		              if rr.ColumnAt(i)<>nil then
+		              if rr.ColumnAt(i).Value<>nil then
 		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then 
 		                  colval = rr.ColumnAt(i).BooleanValue.SQLValue.StringValue + ","
 		                else
@@ -2449,23 +2520,27 @@ Inherits QueryBuilder
 		            rr.MoveToNextRow
 		          Wend
 		          rr.Close
-		          insertSQL = insertSQL.Left(insertSQL.Length -1)
+		          insertSQL = insertSQL.Left(insertSQL.Length -1)+";"
 		          
-		          pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"` RENAME TO '"+me.TableName+"_TMP';")
-		          if TableCreate(pDatabase) then
+		          if TableCreate(pDatabase, "_TMP") then
 		            Try
 		              pDatabase.ExecuteSQL(insertSQL)
+		              pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"';")
+		              pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
+		              
 		              
 		            Catch error As DatabaseException
 		              Return false
 		            End Try
-		            pDatabase.ExecuteSQL("PRAGMA foreign_keys = OFF;")
-		            pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"_TMP';")
+		            
 		            'pDatabase.ExecuteSQL("COMMIT;")
-		            pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON;")
 		          end if
+		          
 		        end if
+		        
 		      end if
+		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON;")
+		      
 		    end if
 		    
 		  end if
@@ -2895,7 +2970,7 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		FinishLoaded As Boolean = False
+		FinishLoaded As Boolean = false
 	#tag EndProperty
 
 	#tag Property, Flags = &h1

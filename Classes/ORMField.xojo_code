@@ -90,7 +90,7 @@ Protected Class ORMField
 	#tag Method, Flags = &h0
 		Function Length() As Text
 		  if mLength="" then return ""
-		  if mType = TypeList.BOOLEAN or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOG or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
+		  if mType = TypeList.BOOLEAN or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
 		  return "("+mLength+")"
 		End Function
 	#tag EndMethod
@@ -140,10 +140,12 @@ Protected Class ORMField
 		      Return "TEXT"
 		    case TypeList.INTEGER
 		      Return "INT"
+		    Case TypeList.SMALLINT
+		      Return "SMALLINT"
 		    case TypeList.BLOB
 		      Return "BLOB"
-		    case TypeList.LONGBLOG
-		      Return "LONGBLOG"
+		    case TypeList.LONGBLOB
+		      Return "LONGBLOB"
 		    case TypeList.BOOLEAN
 		      Return "TINYINT(1)"
 		    case TypeList.DATETIME
@@ -161,9 +163,9 @@ Protected Class ORMField
 		    select case mType
 		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR
 		      Return "TEXT"
-		    case TypeList.INTEGER
+		    case TypeList.INTEGER, typelist.SMALLINT
 		      Return "INTEGER"
-		    case TypeList.BLOB
+		    case TypeList.BLOB, TypeList.LONGBLOB
 		      Return "BLOB"
 		    case TypeList.BOOLEAN
 		      Return "BOOLEAN"
@@ -222,8 +224,9 @@ Protected Class ORMField
 		  DATETIME
 		  TIMESTAMP
 		  LONGTEXT
-		  LONGBLOG
-		DATE
+		  LONGBLOB
+		  DATE
+		SMALLINT
 	#tag EndEnum
 
 
