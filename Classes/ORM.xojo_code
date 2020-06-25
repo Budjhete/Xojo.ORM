@@ -2216,11 +2216,18 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableCheck(pDatabase as Database) As Boolean
+		  #Pragma BreakOnExceptions False
+		  
 		  dim rows as RowSet 
 		  SchemaCurrent = new Xojo.Core.Dictionary
 		  
 		  if (pDatabase isa MySQLCommunityServer) then
-		    rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
+		    try
+		      rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
+		    Catch e as DatabaseException
+		      System.DebugLog "Db " + TableName + " not exist"
+		      SchemaToCreateTable = true
+		    end try
 		    dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
 		    " stat.table_name = tco.table_name and stat.index_name = tco.constraint_name where stat.non_unique = 0 and stat.table_schema not in ('information_schema', 'sys', 'performance_schema', 'mysql') and constraint_type = 'UNIQUE' and stat.table_name = '"+TableName+"' group by stat.table_name, stat.column_name")
 		    dim dU as new Xojo.Core.Dictionary
@@ -2376,10 +2383,10 @@ Inherits QueryBuilder
 		  sql = "CREATE TABLE `"+me.TableName+pSuffix+"` ( "
 		  for each dField as Xojo.Core.DictionaryEntry in Schema
 		    dim field as ORMField = dField.Value
-		    sql = sql + Text.EndOfLine + "`"+ dField.Key + "`" 
+		    sql = sql + Text.EndOfLine + "`"+ dField.Key + "` " 
 		    sql = sql + field.Type(pDatabase)
 		    if pDatabase isa MySQLCommunityServer then
-		      sql = sql +" " +field.Length
+		      sql = sql +field.Length
 		    else
 		      if field.Type = ORMField.TypeList.DECIMAL then sql = sql +" " +field.Length
 		      
@@ -2423,40 +2430,42 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function TableUpdate(pDatabase as Database) As Boolean
 		  if pDatabase isa MySQLCommunityServer then
-		    
-		    for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
-		      Dim sql As Text
-		      
-		      sql = "ALTER TABLE `"+me.TableName+"` ADD "
-		      
-		      dim field as ORMField = dField.Value
-		      sql = sql + "`"+ dField.Key + "` " 
-		      sql = sql + field.Type(pDatabase) +field.Length
-		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		      sql = sql + " " + field.Extra(pdatabase)  +";"
-		      pDatabase.ExecuteSQL(sql)
-		    next
-		    
-		    for each dField as Xojo.Core.DictionaryEntry in SchemaToAlter
-		      Dim sql As Text
-		      
-		      
-		      sql = "ALTER TABLE `"+me.TableName+"` CHANGE "
-		      
-		      dim field as ORMField = dField.Value
-		      sql = sql + "`"+ dField.Key + "` " 
-		      sql = sql + "`"+ dField.Key + "` " 
-		      sql = sql + field.Type(pDatabase) +field.Length
-		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		      sql = sql + " " + field.Extra(pdatabase)  +";"
-		      try
+		    if SchemaToCreateTable then
+		      Return TableCreate(pDatabase)
+		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
+		        Dim sql As Text
+		        
+		        sql = "ALTER TABLE `"+me.TableName+"` ADD "
+		        
+		        dim field as ORMField = dField.Value
+		        sql = sql + "`"+ dField.Key + "` " 
+		        sql = sql + field.Type(pDatabase) +field.Length
+		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		        sql = sql + " " + field.Extra(pdatabase)  +";"
 		        pDatabase.ExecuteSQL(sql)
-		      catch error as DatabaseException
-		        Return false
-		      end try
-		    next
-		    
-		    
+		      next
+		      
+		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAlter
+		        Dim sql As Text
+		        
+		        
+		        sql = "ALTER TABLE `"+me.TableName+"` CHANGE "
+		        
+		        dim field as ORMField = dField.Value
+		        sql = sql + "`"+ dField.Key + "` " 
+		        sql = sql + "`"+ dField.Key + "` " 
+		        sql = sql + field.Type(pDatabase) +field.Length
+		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		        sql = sql + " " + field.Extra(pdatabase)  +";"
+		        try
+		          pDatabase.ExecuteSQL(sql)
+		        catch error as DatabaseException
+		          Return false
+		        end try
+		      next
+		      
+		      
+		    end if
 		    
 		  else
 		    if SchemaToCreateTable then
