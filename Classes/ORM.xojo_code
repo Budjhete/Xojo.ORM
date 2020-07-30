@@ -507,6 +507,11 @@ Inherits QueryBuilder
 		  
 		  if LoadFromJSON then
 		    mData = pCriterias
+		    if mData.Value(me.Pk)>0 then
+		      RaiseEvent Found
+		    else
+		      RaiseEvent NoFound
+		    end if
 		  else
 		    Call Me.Where(pCriterias)
 		  end if
@@ -1291,9 +1296,14 @@ Inherits QueryBuilder
 		      
 		      pRecordSet.Close
 		      
+		      if pFiringFoundEvent then RaiseEvent Found
+		      
+		    else
+		      if pFiringFoundEvent then RaiseEvent NoFound
+		      
 		    End If
 		    
-		    if pFiringFoundEvent then RaiseEvent Found
+		    
 		    
 		  End If
 		  
@@ -1356,14 +1366,35 @@ Inherits QueryBuilder
 		      
 		      pRecordSet.Close
 		      
+		      RaiseEvent Found
+		      
+		    else
+		      
+		      RaiseEvent NoFound
 		    End If
 		    
-		    RaiseEvent Found
+		    
 		    
 		  End If
 		  
 		  Return Me
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function FindAll(pDatabase as Database, pOtherColumn() as Auto) As RecordSet
+		  Dim pColumns() As Auto
+		  
+		  pColumns.Append(TableName + "." + PrimaryKey)
+		  
+		  For Each nColumn as Auto in pOtherColumn
+		    pColumns.Append(nColumn)
+		  Next
+		  
+		  Return Append(new SelectQueryExpression(pColumns)). _
+		  From(Me.TableName). _
+		  Execute(pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -1396,6 +1427,12 @@ Inherits QueryBuilder
 		  Return Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase, pExpiration)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function FindFull(pDatabase As Database) As ORM
+		  return self.Find(pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -1733,11 +1770,11 @@ Inherits QueryBuilder
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Me.Data.Keys
 		    if pColumn = "logo" then
-		      System.DebugLog "logo"
+		      //System.DebugLog "logo"
 		    end if
-		    System.DebugLog pColumn
+		    //System.DebugLog pColumn
 		    dim v as Auto = Me.Data(pColumn.DefineEncoding(Encodings.UTF8).ToText)
-		    System.DebugLog "type : " + v.TypeText
+		    //System.DebugLog "type : " + v.TypeText
 		    Select Case v.Type
 		    case 6
 		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v.AutoDoubleValue
