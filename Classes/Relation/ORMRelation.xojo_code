@@ -13,7 +13,7 @@ Protected Interface ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		Sub Add(pORM as ORM, pSocket as KanjoSocket)
 		  
 		End Sub
 	#tag EndMethod
