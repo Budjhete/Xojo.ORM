@@ -138,7 +138,7 @@ Inherits QueryBuilder
 		    
 		    dim pD as new xojo.core.Dictionary
 		    If mData.HasKey("estActif") Then
-		      dim BouActive as Boolean = mData.Value("estActif")
+		      dim BouActive as Boolean = mData.Value("estActif").AutoBooleanValue
 		      pd.Value("estActif") = not BouActive
 		    End If
 		    
@@ -2432,6 +2432,7 @@ Inherits QueryBuilder
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
 		      Return TableCreate(pDatabase)
+		    else
 		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
 		        Dim sql As Text
 		        
