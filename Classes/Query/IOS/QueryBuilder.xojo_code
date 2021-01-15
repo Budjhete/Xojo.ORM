@@ -1,6 +1,6 @@
 #tag Class
 Protected Class QueryBuilder
-Inherits iOSControl
+Inherits iOSEventInfo
 Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function AndHaving(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
@@ -621,11 +621,19 @@ Implements QueryExpression
 
 
 	#tag Hook, Flags = &h0
+		Event Close()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Executed(pRecordSet As iOSSQLiteRecordSet)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
 		Event Executing() As Boolean
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
+		Event Open()
 	#tag EndHook
 
 
@@ -641,31 +649,43 @@ Implements QueryExpression
 	#tag ViewBehavior
 		#tag ViewProperty
 			Name="AccessibilityHint"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Text"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="AccessibilityLabel"
+			Visible=false
 			Group="Behavior"
+			InitialValue=""
 			Type="Text"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Height"
 			Visible=true
 			Group="Position"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Visible"
 			Visible=true
 			Group="Behavior"
+			InitialValue=""
 			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Width"
 			Visible=true
 			Group="Position"
+			InitialValue=""
 			Type="Double"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Index"
@@ -673,6 +693,7 @@ Implements QueryExpression
 			Group="ID"
 			InitialValue="-2147483648"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Left"
@@ -680,18 +701,23 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Name"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Super"
 			Visible=true
 			Group="ID"
+			InitialValue=""
 			Type="String"
+			EditorType=""
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Top"
@@ -699,6 +725,7 @@ Implements QueryExpression
 			Group="Position"
 			InitialValue="0"
 			Type="Integer"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

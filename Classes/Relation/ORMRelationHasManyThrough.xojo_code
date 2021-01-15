@@ -18,8 +18,10 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
-		  
+		Sub Add(pORM as ORM, pSocket as KanjoSocket)
+		  'DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
+		  'Values(pORM.Pk, mORM.Pk)._
+		  'Execute(pDatabase, pCommit)
 		End Sub
 	#tag EndMethod
 
