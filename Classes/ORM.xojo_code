@@ -1283,9 +1283,14 @@ Inherits QueryBuilder
 		      
 		      pRecordSet.Close
 		      
+		      if pFiringFoundEvent then RaiseEvent Found
+		      
+		    else
+		      if pFiringFoundEvent then RaiseEvent NoFound
+		      
 		    End If
 		    
-		    if pFiringFoundEvent then RaiseEvent Found
+		    
 		    
 		  End If
 		  
@@ -1348,14 +1353,35 @@ Inherits QueryBuilder
 		      
 		      pRecordSet.Close
 		      
+		      RaiseEvent Found
+		      
+		    else
+		      
+		      RaiseEvent NoFound
 		    End If
 		    
-		    RaiseEvent Found
+		    
 		    
 		  End If
 		  
 		  Return Me
 		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function FindAll(pDatabase as Database, pOtherColumn() as Auto) As RecordSet
+		  Dim pColumns() As Auto
+		  
+		  pColumns.Append(TableName + "." + PrimaryKey)
+		  
+		  For Each nColumn as Auto in pOtherColumn
+		    pColumns.Append(nColumn)
+		  Next
+		  
+		  Return Append(new SelectQueryExpression(pColumns)). _
+		  From(Me.TableName). _
+		  Execute(pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -1388,6 +1414,12 @@ Inherits QueryBuilder
 		  Return Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase, pExpiration)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function FindFull(pDatabase As Database) As ORM
+		  return self.Find(pDatabase)
 		End Function
 	#tag EndMethod
 
@@ -1615,7 +1647,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub InsertBaseData(pDatabase as Database)
 		  #Pragma BreakOnExceptions False
 		  
@@ -1807,6 +1839,24 @@ Inherits QueryBuilder
 		  Return True
 		  
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+		Sub LoadJSON(pCriterias as Xojo.Core.Dictionary)
+		  Using Xojo.Core
+		  
+		  mData = New Dictionary
+		  mChanged = New Dictionary
+		  mAdded = New Dictionary
+		  mRemoved = New Dictionary
+		  
+		  mData = pCriterias
+		  if mData.Lookup(me.PrimaryKey, 0)>0 then
+		    RaiseEvent Found
+		  else
+		    RaiseEvent NoFound
+		  end if
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -2220,6 +2270,77 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function Replace(pConnexion As KanjoSocket) As Boolean
+		  '// Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  '
+		  'If Loaded Then
+		  'Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  'End
+		  '
+		  'If Not RaiseEvent Creating Then
+		  '
+		  'pDatabase.Begin
+		  '
+		  '// Take a merge of mData and mChanged
+		  'Dim pRaw As Dictionary = Me.Data
+		  '
+		  '// pData contains at least all primary keys
+		  'Dim pData As Dictionary = Me.Pks
+		  '
+		  '// Take only columns defined in the model
+		  'For Each pColumn As Auto In Me.TableColumns(pDatabase)
+		  'If pRaw.HasKey(pColumn) Then
+		  'pData.Value(pColumn) = pRaw.Value(pColumn)
+		  'End If
+		  'Next
+		  '
+		  'DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		  '
+		  '// Merge mChanged into mData
+		  'For Each pKey As Auto In mChanged.Keys()
+		  'mData.Value(pKey) = mChanged.Value(pKey)
+		  'Next
+		  '
+		  '// Clear changes, they are saved in mData
+		  'Call Me.mChanged.Clear
+		  '
+		  '// todo: check if the primary key is auto increment
+		  'If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		  '// Biggest primary key
+		  'Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		  'From(Me.TableName). _
+		  'OrderBy(Me.PrimaryKey, "DESC"). _
+		  'Execute(pDatabase).Field(Me.PrimaryKey).Value
+		  '
+		  'End If
+		  '
+		  '// Execute pendings relationships
+		  'For Each dRelation As Xojo.Core.DictionaryEntry In mRemoved
+		  'Dim pRelation as ORMRelation = dRelation.value
+		  'Call pRelation.Remove(Me, pDatabase, False)
+		  'Next
+		  '
+		  'For Each dRelation as Xojo.Core.DictionaryEntry In mAdded
+		  'dim pRelation As ORMRelation = dRelation.Value
+		  'Call pRelation.Add(Me, pDatabase, False)
+		  'Next
+		  '
+		  '// Clear pending relationships
+		  'mAdded.Clear
+		  '// FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		  'mRemoved.Clear
+		  '
+		  'pDatabase.Commit
+		  '
+		  'RaiseEvent Created
+		  '
+		  'End If
+		  '
+		  'Return Me
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Reset() As ORM
 		  mChanged.Clear
@@ -2270,6 +2391,26 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function Save(pConnexion As KanjoSocket) As Boolean
+		  dim bSaved as boolean = false
+		  If Not RaiseEvent Saving Then
+		    
+		    If Loaded() Then
+		      bSaved = Update(pConnexion)
+		    Elseif mReplaced then
+		      bSaved = Replace(pConnexion)
+		    else
+		      bSaved = Create(pConnexion)
+		    End
+		    
+		    RaiseEvent Saved
+		    Return bSaved
+		  End If
+		  Return bSaved
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Set(ParamArray pValues As Pair) As ORM
 		  Using Xojo.Core
@@ -2294,7 +2435,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableCheck(pDatabase as Database) As Boolean
 		  #Pragma BreakOnExceptions False
 		  
@@ -2410,6 +2551,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function TableColumns() As Text()
+		  Dim pColumns() As Text
+		  
+		  BuildSchema()
+		  
+		  for each entr as Xojo.Core.DictionaryEntry in me.Schema
+		    pColumns.Append(entr.Key.AutoTextValue)
+		  next
+		  
+		  Return pColumns
+		  
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableColumns(pDatabase As Database) As Text()
 		  Dim pColumns() As Text
 		  
@@ -2453,7 +2610,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableCreate(pDatabase as Database, pSuffix as TEXT = "") As Boolean
 		  Dim sql As Text
 		  dim HasPrimaryKeys as boolean = false
@@ -2507,12 +2664,11 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableUpdate(pDatabase as Database) As Boolean
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
 		      Return TableCreate(pDatabase)
-		    else
 		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
 		        Dim sql As Text
 		        
@@ -2864,6 +3020,72 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Update(pConnexion As KanjoSocket) As Boolean
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  If Not me.Loaded then
+		    Raise new ORMException("Cannot update " + me.TableName + " model because it is not loaded.")
+		  End If
+		  
+		  If Not RaiseEvent Updating() Then
+		    
+		    
+		    Dim pChanged As New Dictionary
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Xojo.Core.DictionaryEntry In me.ColumnsList
+		      If me.mChanged.HasKey(pColumn.Key) Then
+		        pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Key)
+		      End If
+		    Next
+		    
+		    if pChanged.Count >0 then
+		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pChanged)
+		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.POST, pConnexion.mURL+me.Pk.AutoTextValue))
+		      pConnexion.BodyRequest = ""
+		    End If
+		    
+		    // Merge mData with mChanged
+		    For Each dKey as Xojo.Core.DictionaryEntry In me.mChanged
+		      dim pKey As Auto = dKey.Key
+		      me.mData.Value(pKey) = me.mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear mChanged, they are merged in mData
+		    me.mChanged.Clear
+		    
+		    // Execute pendings relationships
+		    For Each dRemoved as Xojo.Core.DictionaryEntry In me.mRemoved
+		      dim pRelation As ORMRelation = dRemoved.Value
+		      
+		      Call pRelation.Remove(me, pConnexion)
+		    Next
+		    
+		    For Each dAdded as Xojo.Core.DictionaryEntry In me.mAdded
+		      Dim pRelation As ORMRelation = dAdded.Value
+		      Call pRelation.Add(me, pConnexion)
+		    Next
+		    
+		    // Clear pending relationships
+		    //mAdded.Clear()
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
+		    //mRemoved.Clear()
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    
+		    RaiseEvent Updated()
+		    return true
+		  End If
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub UpdateCache(pDatabase as Database, pDebut as Xojo.Core.date, pFin as Xojo.Core.Date)
 		  Raise New ORMException("UpdateCache not implemented in this model")
@@ -2997,6 +3219,10 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event NoFound()
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Open()
 	#tag EndHook
 
@@ -3054,10 +3280,6 @@ Inherits QueryBuilder
 		Ne sert qu'à vérifier les relations Has Many Through
 	#tag EndNote
 
-
-	#tag Property, Flags = &h0
-		ColumnsList As Xojo.Core.Dictionary
-	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = false
