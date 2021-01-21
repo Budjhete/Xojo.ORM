@@ -507,7 +507,7 @@ Inherits QueryBuilder
 		  
 		  if LoadFromJSON then
 		    mData = pCriterias
-		    if mData.Value(me.Pk)>0 then
+		    if mData.Value(me.PrimaryKey)>0 then
 		      RaiseEvent Found
 		    else
 		      RaiseEvent NoFound
@@ -830,18 +830,18 @@ Inherits QueryBuilder
 		    Dim pRaw As Dictionary = me.Data
 		    
 		    // pData contains at least all primary keys
-		    Dim pData As Dictionary = me.Pks
+		    'Dim pData As Dictionary = me.Pks
+		    '
+		    '// Take only columns defined in the model
+		    'For Each pColumn As Xojo.Core.DictionaryEntry In me.ColumnsList
+		    '
+		    'If pRaw.HasKey(pColumn.Key) Then
+		    'pData.Value(pColumn.Key) = pRaw.Value(pColumn.Key)
+		    'End If
+		    'Next
 		    
-		    // Take only columns defined in the model
-		    For Each pColumn As Xojo.Core.DictionaryEntry In me.ColumnsList
-		      
-		      If pRaw.HasKey(pColumn.Key) Then
-		        pData.Value(pColumn.Key) = pRaw.Value(pColumn.Key)
-		      End If
-		    Next
-		    
-		    if pData.Count >0 then
-		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pData)
+		    if pRaw.Count >0 then
+		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pRaw)
 		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.PUT, pConnexion.mURL))
 		      pConnexion.BodyRequest = ""
 		    End If

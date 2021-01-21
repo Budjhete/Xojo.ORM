@@ -22,7 +22,7 @@ Protected Class ORMField
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function DefaultValue(pDatabase as Database) As Text
 		  if pDatabase isa MySQLCommunityServer then
 		    if mDefaultValue<>"" then
@@ -69,7 +69,7 @@ Protected Class ORMField
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Extra(pDatabase as Database) As Text
 		  if pDatabase isa MySQLCommunityServer then
 		    select case mExtra
@@ -130,7 +130,7 @@ Protected Class ORMField
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Type(pDatabase as Database) As Text
 		  If pDatabase ISA MySQLCommunityServer Then
 		    select case mType
