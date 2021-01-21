@@ -24,17 +24,7 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Sub Add(pORM as ORM, pSocket as KanjoSocket)
-		  'Dim D as new Dictionary
-		  'd.Value(mForeignColumn) = pORM.Pk
-		  'DB.Update(mORM.TableName). _
-		  'Set(d) ._
-		  'Where(mORM.Pks). _
-		  'Execute(pDatabase, pCommit)
-		  
-		  mORM.Data(mForeignColumn) = pORM.Pk
-		  
-		  call mORM.Save(pSocket)
+		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
 		  
 		End Sub
 	#tag EndMethod
