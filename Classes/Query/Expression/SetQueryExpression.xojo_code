@@ -2,7 +2,7 @@
 Protected Class SetQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  If pLastQueryExpression IsA SetQueryExpression Then
 		    Return ", " + QueryCompiler.Set(mValues)
 		  End if
@@ -12,7 +12,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pValues As Xojo.Core.Dictionary)
+		Sub Constructor(pValues As Dictionary)
 		  mValues = pValues
 		End Sub
 	#tag EndMethod
@@ -27,7 +27,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mValues As Xojo.Core.Dictionary
+		Private mValues As Dictionary
 	#tag EndProperty
 
 

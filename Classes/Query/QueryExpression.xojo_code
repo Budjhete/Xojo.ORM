@@ -1,7 +1,7 @@
 #tag Interface
 Protected Interface QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  
 		End Function
 	#tag EndMethod

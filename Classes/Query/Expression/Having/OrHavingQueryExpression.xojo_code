@@ -2,7 +2,7 @@
 Protected Class OrHavingQueryExpression
 Inherits HavingQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression) As Text
+		Function Compile(pLastQueryExpression As QueryExpression) As String
 		  If pLastQueryExpression IsA HavingOpenQueryExpression Then
 		    Return Predicate()
 		  End If

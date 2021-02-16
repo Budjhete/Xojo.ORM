@@ -12,13 +12,21 @@ Inherits ORMRelationHasMany
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Remove(pORM as ORM, pSocket as KanjoSocket)
+		  // Calling the overridden superclass method.
+		  Super.Remove(pORM, pSocket)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+		Sub Remove(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  // Calling the overridden superclass method.
 		  // Note that this may need modifications if there are multiple  choices.
 		  // Possible calls:
 		  // Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean) -- From ORMRelationHasMany
-		  // Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean) -- From ORMRelationHasMany
+		  // Remove(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean) -- From ORMRelationHasMany
 		  Super.Remove(pORM, pDatabase, pCommit)
 		  #Pragma Unused pORM
 		  

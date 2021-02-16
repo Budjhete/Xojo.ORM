@@ -2,7 +2,7 @@
 Protected Class SelectQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  If pLastQueryExpression IsA SelectQueryExpression Then
 		    Return ", " + QueryCompiler.Columns(mColumns)
 		  End If
@@ -12,7 +12,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumns() As Auto)
+		Sub Constructor(pColumns() As Variant)
 		  mColumns = pColumns
 		End Sub
 	#tag EndMethod
@@ -25,7 +25,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumns() As Auto
+		Private mColumns() As Variant
 	#tag EndProperty
 
 

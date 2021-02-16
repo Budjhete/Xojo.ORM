@@ -2,13 +2,13 @@
 Protected Class QueryBuilder
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function AndHaving(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
+		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  Return Append(new AndHavingQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function AndWhere(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
+		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  Return Append(new AndWhereQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
@@ -39,8 +39,8 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
-		  Dim pStatements() As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Dim pStatements() As String
 		  Dim pNice As Integer
 		  
 		  // Sort statements
@@ -62,7 +62,7 @@ Implements QueryExpression
 		  Wend
 		  
 		  
-		  Return Text.Join(pStatements, " ")
+		  Return String.FromArray(pStatements, " ")
 		  
 		End Function
 	#tag EndMethod
@@ -100,7 +100,7 @@ Implements QueryExpression
 		  
 		  If Not RaiseEvent Executing Then
 		    
-		    Dim pStatement As Text = Compile
+		    Dim pStatement As String = Compile
 		    
 		    System.DebugLog System.Ticks.StringValue + " " + pStatement
 		    
@@ -123,14 +123,14 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Execute(pDatabase As Database, pExpiration As Xojo.Core.Date = Nil) As RecordSet
+		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RecordSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
-		  Using Xojo.Core
+		  
 		  
 		  If Not RaiseEvent Executing Then
 		    
-		    Dim pStatement As Text = Compile
+		    Dim pStatement As String = Compile
 		    
 		    System.DebugLog System.Ticks.StringValue + " " + pStatement
 		    
@@ -142,7 +142,7 @@ Implements QueryExpression
 		    End If
 		    
 		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
-		    Dim pNow As Date = Xojo.Core.Date.Now
+		    Dim pNow As Date = DateTime.Now
 		    
 		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
 		      
@@ -176,7 +176,7 @@ Implements QueryExpression
 		            pRecordSet = tDatabase.SQLSelect(pStatement)
 		            tDatabase.Close
 		          else
-		            Raise New ORMException(tDatabase.ErrorMessage.totext, pStatement)
+		            Raise New ORMException(tDatabase.ErrorMessage, pStatement)
 		          End If
 		          
 		          
@@ -184,10 +184,10 @@ Implements QueryExpression
 		          if pDatabase.Connect then
 		            pRecordSet = pDatabase.SQLSelect(pStatement)
 		          else
-		            Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement)
+		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		          End If
 		        else
-		          Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement)
+		          Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		        End If
 		        
 		      End If
@@ -213,48 +213,42 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pColonms() As Auto) As QueryBuilder
+		Function Find(pColonms() As Variant) As QueryBuilder
 		  Return Append(new SelectQueryExpression(pColonms))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function From(pQueryBuilder As QueryBuilder, pTableAlias As Text) As QueryBuilder
+		Function From(pQueryBuilder As QueryBuilder, pTableAlias As String) As QueryBuilder
 		  Return Append(new FromQueryExpression(pQueryBuilder, pTableAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function From(pTableName As Text) As QueryBuilder
+		Function From(pTableName As String) As QueryBuilder
 		  Return From(pTableName, pTableName)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function From(pTableName As Text, pTableAlias As Text) As QueryBuilder
+		Function From(pTableName As String, pTableAlias As String) As QueryBuilder
 		  Return Append(new FromQueryExpression(pTableName, pTableAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GroupBy(pColumns() As Auto) As QueryBuilder
+		Function GroupBy(pColumns() As Variant) As QueryBuilder
 		  mQuery.Append(new GroupByQueryExpression(pColumns))
 		  return me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GroupBy(pColumn As Auto) As QueryBuilder
+		Function GroupBy(pColumn As Variant) As QueryBuilder
 		  mQuery.Append( new GroupByQueryExpression(Array(pColumn)) )
 		  
 		  return me
 		  //Return GroupBy(Array(pColumn))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Having(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
-		  Return Append(new HavingQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
 
@@ -273,6 +267,12 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Having(pLeft As Variant) As QueryBuilder
 		  Return Me.Having(pLeft, "=", "TRUE")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Having(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  Return Append(new HavingQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
 
@@ -304,43 +304,43 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As QueryExpression, pTableAlias As Text) As QueryBuilder
+		Function Join(pTableName As QueryExpression, pTableAlias As String) As QueryBuilder
 		  Return Append(new JoinQueryExpression(pTableName, pTableAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As Text) As QueryBuilder
+		Function Join(pTableName As String) As QueryBuilder
 		  Return Join(pTableName, pTableName)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As Text, pTableAlias As Text) As QueryBuilder
+		Function Join(pTableName As String, pTableAlias As String) As QueryBuilder
 		  Return Append(new JoinQueryExpression(pTableName, pTableAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftJoin(pTableName As Auto, pTableAlias As Text) As QueryBuilder
-		  Return Append(new LeftJoinQueryExpression(pTableName, pTableAlias))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function LeftJoin(pTableName As Text) As QueryBuilder
+		Function LeftJoin(pTableName As String) As QueryBuilder
 		  Return LeftJoin(pTableName, pTableName)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftOuterJoin(pTableName As Text) As QueryBuilder
+		Function LeftJoin(pTableName As Variant, pTableAlias As String) As QueryBuilder
+		  Return Append(new LeftJoinQueryExpression(pTableName, pTableAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function LeftOuterJoin(pTableName As String) As QueryBuilder
 		  Return LeftOuterJoin(pTableName, pTableName)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftOuterJoin(pTableName As Text, pTableAlias As Text) As QueryBuilder
+		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As QueryBuilder
 		  mQuery.Append(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
 		  
 		  return Me
@@ -376,13 +376,13 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn As Auto, pOperator As Text, pValue As Auto) As QueryBuilder
+		Function On(pColumn As Variant, pOperator As String, pValue As Variant) As QueryBuilder
 		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn as Auto, pOperator as Text, pValue as Auto, pType as DataType) As QueryBuilder
+		Function On(pColumn as Variant, pOperator as String, pValue as Variant, pType as DataType) As QueryBuilder
 		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue, pType))
 		End Function
 	#tag EndMethod
@@ -400,7 +400,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumns() as Auto, pDirections() as Text, pComparators() as Text) As QueryBuilder
+		Function OrderBy(pColumns() as Variant, pDirections() as String, pComparators() as String) As QueryBuilder
 		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections, pComparators))
 		  
 		  Return Me
@@ -408,7 +408,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumn as Auto, pDirection as Text = "ASC", pComparator as Text = "") As QueryBuilder
+		Function OrderBy(pColumn as Variant, pDirection as String = "ASC", pComparator as String = "") As QueryBuilder
 		  mQuery.Append( new OrderByQueryExpression(Array(pColumn), Array(pDirection), Array(pComparator)) )
 		  
 		  Return Me
@@ -416,7 +416,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrHaving(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
+		Function OrHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Append(new OrHavingQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
@@ -424,7 +424,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrOn(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
+		Function OrOn(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Append(new OrOnQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
@@ -432,7 +432,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrOn(pLeft as Auto, pOperator as Text, pRight as Auto, pType as DataType) As QueryBuilder
+		Function OrOn(pLeft as Variant, pOperator as String, pRight as Variant, pType as DataType) As QueryBuilder
 		  mQuery.Append(new OrOnQueryExpression(pLeft, pOperator, pRight, pType))
 		  
 		  Return Me
@@ -440,7 +440,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrWhere(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
+		Function OrWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Append(new OrWhereQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
@@ -469,8 +469,16 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Set(pValues As Dictionary) As QueryBuilder
+		  mQuery.Append(new SetQueryExpression(pValues))
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Set(ParamArray pValues As Pair) As QueryBuilder
-		  Using Xojo.Core
+		  
 		  Dim pDictionary As New Dictionary
 		  
 		  For Each pValue As Pair In pValues
@@ -478,14 +486,6 @@ Implements QueryExpression
 		  Next
 		  
 		  Return Set(pDictionary)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Set(pValues As Xojo.Core.Dictionary) As QueryBuilder
-		  mQuery.Append(new SetQueryExpression(pValues))
-		  
-		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -502,7 +502,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Auto) As QueryBuilder
+		Function Values(pValues() As Variant) As QueryBuilder
 		  mQuery.Append(new ValuesQueryExpression(pValues))
 		  
 		  Return Me
@@ -510,25 +510,13 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(ParamArray pValues As Auto) As QueryBuilder
+		Function Values(ParamArray pValues As Variant) As QueryBuilder
 		  Return Values(pValues)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pLeft As Auto) As QueryBuilder
-		  Return Me.Where(pLeft, "=", "TRUE")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Where(pLeft As Auto, pOperator As Text, pRight As Auto) As QueryBuilder
-		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Where(pCriterias As Xojo.Core.Dictionary) As QueryBuilder
+		Function Where(pCriterias As Dictionary) As QueryBuilder
 		  // Applies a dictionary of criterias
 		  
 		  For Each pKey As Variant In pCriterias.Keys()
@@ -536,6 +524,18 @@ Implements QueryExpression
 		  Next
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pLeft As Variant) As QueryBuilder
+		  Return Me.Where(pLeft, "=", "TRUE")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
+		  Return Append(new WhereQueryExpression(pLeft, pOperator, pRight))
 		End Function
 	#tag EndMethod
 
@@ -570,7 +570,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h1
-		Protected Shared mCache As Xojo.Core.Dictionary
+		Protected Shared mCache As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1

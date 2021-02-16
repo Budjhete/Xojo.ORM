@@ -1,13 +1,13 @@
 #tag Module
 Protected Module DB
 	#tag Method, Flags = &h0
-		Function Alias(pColumn As Auto, pAlias As Text) As QueryExpression
+		Function Alias(pColumn As Variant, pAlias As String) As QueryExpression
 		  Return DB.Expression(QueryCompiler.Column(pColumn) + " AS " + QueryCompiler.Column(pAlias))
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Alias(pColumn as Auto, pAlias as Text, pType as DataType) As QueryExpression
+		Function Alias(pColumn as Variant, pAlias as String, pType as DataType) As QueryExpression
 		  Return DB.Expression(pColumn + " AS " + QueryCompiler.Column(pAlias))
 		End Function
 	#tag EndMethod
@@ -25,7 +25,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Begin(Extends pDatabase As iOSSQLiteDatabase)
+		Sub Begin(Extends pDatabase As SQLiteDatabase)
 		  // Begin a transaction
 		  
 		  pDatabase.SQLExecute("BEGIN TRANSACTION")
@@ -34,13 +34,13 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Coalesce(pColumn as Auto, pSubtitu as Integer = 0) As QueryExpression
+		Function Coalesce(pColumn as Variant, pSubtitu as Integer = 0) As QueryExpression
 		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToText+" )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Connect(pURL As Text) As Database
+		Function Connect(pURL As String) As Database
 		  // Perform a connection to a database and initialize the character set
 		  //
 		  // Providen url is in the format protocol://username:password@host:port/database
@@ -108,7 +108,7 @@ Protected Module DB
 		      
 		      'pDatabase = new SQLDatabaseMBS
 		      '
-		      'dim port as Text
+		      'dim port as String
 		      'If pMatch.SubExpressionText(5) <> "" Then
 		      'port = pMatch.SubExpressionText(5)
 		      'Else
@@ -196,7 +196,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Connect(pURL As Text) As iOSSQLiteDatabase
+		Function Connect(pURL As String) As SQLiteDatabase
 		  // Perform a connection to a database and initialize the character set
 		  //
 		  // Providen url is in the format protocol://username:password@host:port/database
@@ -205,7 +205,7 @@ Protected Module DB
 		  //
 		  // Nil is returned if the connection cannot be performed.
 		  
-		  Dim pDatabase As iOSSQLiteDatabase
+		  Dim pDatabase As SQLiteDatabase
 		  
 		  Dim pRegEx As New JKRegEx.RegEx
 		  
@@ -231,14 +231,14 @@ Protected Module DB
 		      
 		    Case "sqlite" // <protocol>:///<database>
 		      
-		      pDatabase = New iOSSQLiteDatabase
+		      pDatabase = New SQLiteDatabase
 		      
 		      // Attempt each path type to match the database path
 		      
 		      
-		      iOSSQLiteDatabase(pDatabase).DatabaseFile = new FolderItem(pMatch.SubExpressionString(7))
+		      SQLiteDatabase(pDatabase).DatabaseFile = new FolderItem(pMatch.SubExpressionString(7))
 		      
-		      If iOSSQLiteDatabase(pDatabase).DatabaseFile <> Nil and iOSSQLiteDatabase(pDatabase).DatabaseFile.Exists Then
+		      If SQLiteDatabase(pDatabase).DatabaseFile <> Nil and SQLiteDatabase(pDatabase).DatabaseFile.Exists Then
 		      else
 		        Return Nil
 		      End If
@@ -271,19 +271,19 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Count(pColumn As Auto) As QueryExpression
+		Function Count(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("COUNT( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Count(pColumn As Auto, pAlias As Text) As QueryExpression
+		Function Count(pColumn As Variant, pAlias As String) As QueryExpression
 		  Return DB.Alias(DB.Count(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Delete(pTableName As Text) As QueryBuilder
+		Function Delete(pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(new DeleteQueryExpression(pTableName))
@@ -291,19 +291,19 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Distinct(pColumn As Auto) As QueryExpression
+		Function Distinct(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("DISTINCT ( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Expression(pExpression As Text) As QueryExpression
+		Function Expression(pExpression As String) As QueryExpression
 		  Return new ExpressionQueryExpression(pExpression)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as iOSSQLiteRecordSet, pIndex as Integer, pDB as iOSSQLiteDatabase) As Auto
+		Function Extract(pRecordSet as iOSSQLiteRecordSet, pIndex as Integer, pDB as SQLiteDatabase) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -312,8 +312,8 @@ Protected Module DB
 		  
 		  
 		  
-		  Dim pDatabaseFieldName as Text = pRecordSet.IdxField(pIndex).Name  // base 1
-		  Dim pDatabaseFieldValue as Auto = pRecordSet.IdxField(pIndex).Value  // base 1
+		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
@@ -323,13 +323,13 @@ Protected Module DB
 		  '
 		  'if  then
 		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.TextValue
+		  'MsgBox pColumnType.StringValue
 		  'end if
 		  
 		  
 		  // Set encoding to UTF8 for Text
 		  'If pDatabaseFieldValue.Type = Auto.TypeText Then
-		  'Return pDatabaseFieldValue.TextValue.DefineEncoding(Encodings.UTF8)
+		  'Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		  'End If
 		  
 		  return pDatabaseFieldValue
@@ -338,7 +338,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet As RecordSet, pIndex As Integer) As Auto
+		Function Extract(pRecordSet As RecordSet, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -358,7 +358,7 @@ Protected Module DB
 		  
 		  'if  then
 		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.TextValue
+		  'MsgBox pColumnType.StringValue
 		  'end if
 		  // *******************************
 		  // NOTE :  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor of your MODEL, this part is a patch because the current MysQL plugin made a mess with some kind of data
@@ -385,7 +385,7 @@ Protected Module DB
 		  
 		  If pColumnType = 8 OR pColumnType = 10 Then
 		    if pDatabaseFieldValue<>nil then
-		      Return pDatabaseFieldValue.DateValue.SQLDateTime.ToText
+		      Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
 		    else
 		      return pDatabaseFieldValue
 		    End If
@@ -396,9 +396,9 @@ Protected Module DB
 		  If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
 		    #Pragma BreakOnExceptions False
 		    Try 
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		    Catch Error as RuntimeException
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.ISOLatin1).ToText
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.ISOLatin1)
 		    End Try
 		    
 		  End If
@@ -409,7 +409,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as RecordSet, pIndex as Integer, pDB as Database) As Auto
+		Function Extract(pRecordSet as RecordSet, pIndex as Integer, pDB as Database) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -429,7 +429,7 @@ Protected Module DB
 		  '
 		  'if  then
 		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.TextValue
+		  'MsgBox pColumnType.StringValue
 		  'end if
 		  // *******************************
 		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
@@ -456,7 +456,8 @@ Protected Module DB
 		  
 		  // MySQL and SQLite dont manage dates exactly the same, so we use text instead
 		  If pColumnType = 10 or pColumnType = 8 Then
-		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		    if pDatabaseFieldValue<>nil then Return DateTime.FromString(pDatabaseFieldValue.StringValue)
+		    
 		  End If
 		  
 		  If pColumnType = 11 OR (pColumnType = 11 and pDB isa MySQLCommunityServer) Then
@@ -469,7 +470,7 @@ Protected Module DB
 		  
 		  // Set encoding to UTF8 for Text
 		  If pDatabaseFieldValue.Type = Variant.TypeText  OR pDatabaseFieldValue.Type = Variant.TypeString Then
-		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		  End If
 		  
 		  return pDatabaseFieldValue
@@ -478,7 +479,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as RecordSet, pIndex as Integer, pColumnType as Integer) As Auto
+		Function Extract(pRecordSet as RecordSet, pIndex as Integer, pColumnType as Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -499,28 +500,28 @@ Protected Module DB
 		  
 		  'if  then
 		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.TextValue
+		  'MsgBox pColumnType.StringValue
 		  'end if
 		  if pDatabaseFieldValue <> nil then
 		    
 		    Select Case pColumnType
 		    Case 4, 5, 15, 16, 18
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		    Case 1, 12
 		      Return pDatabaseFieldValue.BooleanValue
 		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
-		    Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un Xojo.core.date
-		      if pDatabaseFieldValue<>"" then Return pDatabaseFieldValue.DateValue.SQLDateTime.ToText
+		    Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un DateTime
+		      if pDatabaseFieldValue<>"" then Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
 		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
 		    Case 2, 3, 19
 		      Return pDatabaseFieldValue.IntegerValue
 		    Case 14
-		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		    Else
 		      If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
-		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8).ToText
+		        Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
 		      else
 		        return pDatabaseFieldValue
 		      End If
@@ -537,7 +538,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(pColumns() As Auto) As QueryBuilder
+		Function Find(pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(New SelectQueryExpression(pColumns))
@@ -545,7 +546,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Find(ParamArray pColumns As Auto) As QueryBuilder
+		Function Find(ParamArray pColumns As Variant) As QueryBuilder
 		  If pColumns.UBound = -1 Then
 		    // Find * when no columns are specified
 		    Return DB.Find(DB.Expression("*"))
@@ -557,13 +558,13 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GroupConcat(pColumn as Auto) As QueryExpression
+		Function GroupConcat(pColumn as Variant) As QueryExpression
 		  Return DB.Expression("GROUP_CONCAT( " + QueryCompiler.Column(pColumn)  + " )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Insert(pTableName As Text, pColumns() As Auto) As QueryBuilder
+		Function Insert(pTableName As String, pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(new InsertQueryExpression(pTableName, pColumns))
@@ -571,7 +572,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Insert(pTableName As Text, ParamArray pColumns As Auto) As QueryBuilder
+		Function Insert(pTableName As String, ParamArray pColumns As Variant) As QueryBuilder
 		  Return Insert(pTableName, pColumns)
 		End Function
 	#tag EndMethod
@@ -616,13 +617,13 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Length(pColumn As Auto) As QueryExpression
+		Function Length(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("LENGTH( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Max(pColumn As Auto) As QueryExpression
+		Function Max(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("COALESCE( " + DB.Expression("MAX( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
 		  
 		  
@@ -630,19 +631,19 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Max(pColumn As Auto, pAlias As Text) As QueryExpression
+		Function Max(pColumn As Variant, pAlias As String) As QueryExpression
 		  Return DB.Alias(DB.Max(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Max(pColumn as Auto, pAlias as Text, pRound as integer) As QueryExpression
+		Function Max(pColumn as Variant, pAlias as Variant, pRound as integer) As QueryExpression
 		  Return DB.Alias(DB.Round(DB.Max(pColumn), pRound), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Min(pColumn As Auto) As QueryExpression
+		Function Min(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("COALESCE( " + DB.Expression("MIN( " + QueryCompiler.Column(pColumn) + " )").Compile + ", 0 )")
 		  
 		  
@@ -650,19 +651,19 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Function Min(pColumn As Auto, pAlias As Text) As QueryExpression
+		Function Min(pColumn As Variant, pAlias As String) As QueryExpression
 		  Return DB.Alias(DB.Min(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Function Min(pColumn as Auto, pAlias as Text, pRound as integer) As QueryExpression
+		Function Min(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
 		  Return DB.Alias(DB.Round(DB.Min(pColumn), pRound), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Replace(pTableName As Text, pColumns() As Auto) As QueryBuilder
+		Function Replace(pTableName As String, pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(new ReplaceQueryExpression(pTableName, pColumns))
@@ -670,75 +671,75 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Replace(pTableName As Text, ParamArray pColumns As Auto) As QueryBuilder
+		Function Replace(pTableName As String, ParamArray pColumns As Variant) As QueryBuilder
 		  Return Replace(pTableName, pColumns)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Round(pColumn as Auto, pSubtitu as Integer = 4) As QueryExpression
+		Function Round(pColumn as Variant, pSubtitu as Integer = 4) As QueryExpression
 		  Return DB.Expression("ROUND( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToText+" )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Set(pValues() As Auto) As QueryExpression
+		Function Set(pValues() As Variant) As QueryExpression
 		  Return new ExpressionQueryExpression("(" + QueryCompiler.Values(pValues) + ")")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Set(ParamArray pValues As Auto) As QueryExpression
+		Function Set(ParamArray pValues As Variant) As QueryExpression
 		  Return Set(pValues)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Substr(pColumn as Auto, pLength as Text) As QueryExpression
+		Function Substr(pColumn as Variant, pLength as String) As QueryExpression
 		  Return DB.Expression("SUBSTR( " + QueryCompiler.Column(pColumn) + ", "+ pLength+" )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Substr(pColumn As Auto, pLength As Text, pAlias As Text) As QueryExpression
+		Function Substr(pColumn As Variant, pLength As String, pAlias As String) As QueryExpression
 		  // Create a SUM expression with an alias
 		  Return DB.Alias(DB.Substr(pColumn, pLength), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Sum(pColumn As Auto) As QueryExpression
+		Function Sum(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("SUM( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Sum(pColumn As Auto, pAlias As Text) As QueryExpression
+		Function Sum(pColumn As Variant, pAlias As String) As QueryExpression
 		  // Create a SUM expression with an alias
 		  Return DB.Alias(DB.Sum(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Total(pColumn As Auto) As QueryExpression
+		Function Total(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("COALESCE( " + DB.Sum(pColumn).Compile + ", 0 )")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Total(pColumn As Auto, pAlias As Text) As QueryExpression
+		Function Total(pColumn As Variant, pAlias As String) As QueryExpression
 		  Return DB.Alias(DB.Total(pColumn), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Total(pColumn as Auto, pAlias as Text, pRound as integer) As QueryExpression
+		Function Total(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
 		  Return DB.Alias(DB.Round(DB.Total(pColumn), pRound), pAlias)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Update(pTableName As Text) As QueryBuilder
+		Function Update(pTableName As String) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  Return pQueryBuilder.Append(new UpdateQueryExpression(pTableName))
@@ -746,7 +747,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Value(pValue As Auto) As QueryExpression
+		Function Value(pValue As Variant) As QueryExpression
 		  Return DB.Expression(QueryCompiler.Value(pValue))
 		End Function
 	#tag EndMethod

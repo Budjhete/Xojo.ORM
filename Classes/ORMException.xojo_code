@@ -2,13 +2,13 @@
 Protected Class ORMException
 Inherits RuntimeException
 	#tag Method, Flags = &h1000
-		Sub Constructor(pMessage As Text)
+		Sub Constructor(pMessage As String)
 		  Constructor(pMessage, "")
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(pMessage As Text, pStatement As Text, pCode As Integer = 0)
+		Sub Constructor(pMessage As String, pStatement As String, pCode As Integer = 0)
 		  // Constructor for SQL error
 		  
 		  #if TargetIOS then
@@ -27,7 +27,7 @@ Inherits RuntimeException
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Statement As Text
+		Statement As String
 	#tag EndProperty
 
 

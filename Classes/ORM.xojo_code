@@ -17,10 +17,10 @@ Inherits QueryBuilder
 
 
 	#tag Method, Flags = &h0
-		Function Add() As Xojo.Core.Dictionary
-		  Dim pAdded As New Xojo.Core.Dictionary
+		Function Add() As Dictionary
+		  Dim pAdded As New Dictionary
 		  
-		  For Each AddedEntry As Xojo.Core.DictionaryEntry In mAdded
+		  For Each AddedEntry As DictionaryEntry In mAdded
 		    pAdded.Value(AddedEntry.Key) = AddedEntry.Value
 		  Next
 		  
@@ -47,7 +47,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pForeignColumn As Text, pORMs() As ORM) As ORM
+		Function Add(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
 		    Call Me.Add(New ORMRelationHasMany(pForeignColumn, pORM))
 		  Next
@@ -57,13 +57,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pForeignColumn As Text, ParamArray pORMs As ORM) As ORM
+		Function Add(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
 		  Return Me.Add(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, pORMs() As ORM) As ORM
+		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
 		    Call Add(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pORM))
 		  Next
@@ -73,13 +73,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Add(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, ParamArray pORMs As ORM) As ORM
+		Function Add(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pORMs As ORM) As ORM
 		  Return Me.Add(pPivotTableName, pForeignColumn, pFarColumn, pORMs)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function AddHard(pForeignColumn As Text, pORMs() As ORM) As ORM
+		Function AddHard(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
 		    Call Me.Add(New ORMRelationHasManyHard(pForeignColumn, pORM))
 		  Next
@@ -89,13 +89,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function AddHard(pForeignColumn As Text, ParamArray pORMs As ORM) As ORM
+		Function AddHard(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
 		  Return Me.AddHard(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function AndHaving(pLeft As Auto, pOperator As Text, pRight As Auto) As ORM
+		Function AndHaving(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndHaving(pLeft, pOperator, pRight)
 		  
 		  Return Me
@@ -103,7 +103,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function AndWhere(pLeft As Auto, pOperator As Text, pRight As Auto) As ORM
+		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndWhere(pLeft, pOperator, pRight)
 		  
 		  Return Me
@@ -136,9 +136,9 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Updating() Then
 		    pDatabase.Begin
 		    
-		    dim pD as new xojo.core.Dictionary
+		    dim pD as new Dictionary
 		    If mData.HasKey("estActif") Then
-		      dim BouActive as Boolean = mData.Value("estActif").AutoBooleanValue
+		      dim BouActive as Boolean = mData.Value("estActif").BooleanValue
 		      pd.Value("estActif") = not BouActive
 		    End If
 		    
@@ -147,7 +147,7 @@ Inherits QueryBuilder
 		    End If
 		    
 		    // Merge mData with mChanged
-		    For Each pKey As Auto In mChanged.Keys
+		    For Each pKey As Variant In mChanged.Keys
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
@@ -162,7 +162,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function BelongsTo(pORM As ORM, pForeignKey As Text) As ORM
+		Function BelongsTo(pORM As ORM, pForeignKey As String) As ORM
 		  // Return the related model in belongs to relationship
 		  // @todo support multiple primary keys
 		  
@@ -171,7 +171,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Bind(pTableName As Text, pForeignColumn As Text) As ORM
+		Function Bind(pTableName As String, pForeignColumn As String) As ORM
 		  // Join operation for BelongsTo related models.
 		  // @todo support for multiple primary keys
 		  
@@ -181,14 +181,14 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Changed() As Boolean
-		  'For Each pKey As Text In mChanged.Keys
+		  'For Each pKey as String In mChanged.Keys
 		  'System.DebugLog "ORM change : " + pKey
 		  'Next
-		  'For Each pKey As Text In mAdded.Keys
+		  'For Each pKey as String In mAdded.Keys
 		  'System.DebugLog "ORM added : " + pKey
 		  'Next
 		  'Try  // FIXME #8033
-		  ''For Each pKey As Text In mRemoved.Keys
+		  ''For Each pKey as String In mRemoved.Keys
 		  ''System.DebugLog "ORM removed : " + pKey
 		  ''Next
 		  'Catch e As TypeMismatchException
@@ -201,7 +201,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Changed(pColumn as Text) As Boolean
+		Function Changed(pColumn as String) As Boolean
 		  Return mChanged.HasKey(pColumn)
 		End Function
 	#tag EndMethod
@@ -213,15 +213,15 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Clearing Then
 		    
 		    mChanged = nil
-		    mChanged = new Xojo.Core.Dictionary
+		    mChanged = new Dictionary
 		    'mChanged.Clear
 		    
 		    mAdded = nil
-		    mAdded = new Xojo.Core.Dictionary
+		    mAdded = new Dictionary
 		    'mAdded.Clear
 		    
 		    mRemoved = nil
-		    mRemoved = new Xojo.Core.Dictionary
+		    mRemoved = new Dictionary
 		    'mRemoved.Clear
 		    
 		    RaiseEvent Cleared
@@ -239,19 +239,19 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Clearing Then
 		    
 		    mData = nil
-		    mData = new Xojo.Core.Dictionary
+		    mData = new Dictionary
 		    'mData.Clear
 		    
 		    mChanged = nil
-		    mChanged = new Xojo.Core.Dictionary
+		    mChanged = new Dictionary
 		    'mChanged.Clear
 		    
 		    mRemoved = nil
-		    mRemoved = new Xojo.Core.Dictionary
+		    mRemoved = new Dictionary
 		    'mRemoved.Clear
 		    
 		    mAdded = nil
-		    mAdded = new Xojo.Core.Dictionary
+		    mAdded = new Dictionary
 		    'mAdded.clear
 		    
 		    RaiseEvent Cleared
@@ -267,21 +267,42 @@ Inherits QueryBuilder
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
 		  
-		  Dim pDictionary As New Xojo.Core.Dictionary
+		  Dim pDictionary As New Dictionary
 		  
 		  Me.Constructor(pDictionary)
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Constructor(pCriterias as Dictionary, LoadFromJSON as Boolean = False)
+		  // Basic ORM constructor
+		  
+		  Super.Constructor
+		  
+		  mData = New Dictionary
+		  mChanged = New Dictionary
+		  mAdded = New Dictionary
+		  mRemoved = New Dictionary
+		  
+		  if LoadFromJSON then
+		    mData = pCriterias
+		    if mData.Value(me.PrimaryKey)>0 then
+		      RaiseEvent Found
+		    else
+		      RaiseEvent NoFound
+		    end if
+		  else
+		    Call Me.Where(pCriterias)
+		  end if
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Constructor(pPk As Auto, pDatabase As Database)
-		  // Initialize an ORM with a primary key and the call Find
+		Sub Constructor(pPks As Dictionary, pDatabase As Database)
+		  // Initialize an ORM with primary keys and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
-		  Dim d as new Xojo.Core.Dictionary
-		  d.Value(Me.PrimaryKey) = pPk
-		  
-		  Me.Constructor(d)
+		  Me.Constructor(pPks)
 		  
 		  Call Me.Find(pDatabase)
 		  
@@ -289,7 +310,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pPks As Dictionary, pDatabase As iOSSQLiteDatabase)
+		Sub Constructor(pPks As Dictionary, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with primary keys and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
@@ -305,7 +326,7 @@ Inherits QueryBuilder
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
-		  Dim d as new Xojo.Core.Dictionary
+		  Dim d as new Dictionary
 		  d.Value(Me.PrimaryKey) = pPk
 		  Me.Constructor(d)
 		  
@@ -315,7 +336,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pPk As integer, pDatabase As iOSSQLiteDatabase)
+		Sub Constructor(pPk As integer, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
@@ -340,8 +361,20 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
+		Sub Constructor(pRecordSet as iOSSQLiteRecordSet, pColumnType as Dictionary)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.FieldCount
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
+		  Next
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet as iOSSQLiteRecordSet, pDB as iOSSQLiteDatabase)
+		Sub Constructor(pRecordSet as iOSSQLiteRecordSet, pDB as SQLiteDatabase)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor
@@ -351,18 +384,6 @@ Inherits QueryBuilder
 		  Next
 		  
 		  
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
-		Sub Constructor(pRecordSet as iOSSQLiteRecordSet, pColumnType as Xojo.Core.Dictionary)
-		  // Initialize the ORM with values from a RecordSet
-		  
-		  Me.Constructor
-		  
-		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
-		  Next
 		End Sub
 	#tag EndMethod
 
@@ -379,7 +400,7 @@ Inherits QueryBuilder
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
 		  
-		  Dim pDictionary As New Xojo.Core.Dictionary
+		  Dim pDictionary As New Dictionary
 		  
 		  For Each pCriteria As Pair In pCriterias
 		    pDictionary.Value(pCriteria.Left) = pCriteria.Right
@@ -418,36 +439,23 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet as RecordSet, pColumnType as Xojo.Core.Dictionary)
+		Sub Constructor(pRecordSet as RecordSet, pColumnType as Dictionary)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).AutoIntegerValue )
+		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
 		  Next
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
-		Sub Constructor(pLeft as Text, pRight as Auto)
-		  // ORM constructor with a ParamArray of initial criteria
-		  // Also used for the empty constructor
-		  
-		  Dim pDictionary As New Xojo.Core.Dictionary
-		  
-		  pDictionary.Value(pLeft) = pRight
-		  
-		  Me.Constructor(pDictionary)
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pPrimaryKey as Text, pKeyValue as integer)
+		Sub Constructor(pPrimaryKey as String, pKeyValue as integer)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
 		  
-		  Dim pDictionary As New Xojo.Core.Dictionary
+		  Dim pDictionary As New Dictionary
 		  
 		  pDictionary.Value(pPrimaryKey) = pKeyValue
 		  
@@ -456,7 +464,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pPk As Text, pDatabase As iOSSQLiteDatabase)
+		Sub Constructor(pPk As String, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
@@ -468,11 +476,11 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pPrimaryKey as Text, pKeyValue as Text)
+		Sub Constructor(pPrimaryKey as String, pKeyValue as String)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
 		  
-		  Dim pDictionary As New Xojo.Core.Dictionary
+		  Dim pDictionary As New Dictionary
 		  
 		  pDictionary.Value(pPrimaryKey) = pKeyValue
 		  
@@ -480,37 +488,28 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pCriterias as Xojo.Core.Dictionary, LoadFromJSON as Boolean = False)
-		  Using Xojo.Core
-		  // Basic ORM constructor
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
+		Sub Constructor(pLeft as String, pRight as Variant)
+		  // ORM constructor with a ParamArray of initial criteria
+		  // Also used for the empty constructor
 		  
-		  Super.Constructor
+		  Dim pDictionary As New Dictionary
 		  
-		  mData = New Dictionary
-		  mChanged = New Dictionary
-		  mAdded = New Dictionary
-		  mRemoved = New Dictionary
+		  pDictionary.Value(pLeft) = pRight
 		  
-		  if LoadFromJSON then
-		    mData = pCriterias
-		    if mData.Value(me.PrimaryKey)>0 then
-		      RaiseEvent Found
-		    else
-		      RaiseEvent NoFound
-		    end if
-		  else
-		    Call Me.Where(pCriterias)
-		  end if
+		  Me.Constructor(pDictionary)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Constructor(pPks As Xojo.Core.Dictionary, pDatabase As Database)
-		  // Initialize an ORM with primary keys and the call Find
+		Sub Constructor(pPk As Variant, pDatabase As Database)
+		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
-		  Me.Constructor(pPks)
+		  Dim d as new Dictionary
+		  d.Value(Me.PrimaryKey) = pPk
+		  
+		  Me.Constructor(d)
 		  
 		  Call Me.Find(pDatabase)
 		  
@@ -527,19 +526,19 @@ Inherits QueryBuilder
 		    pORM.mQuery.Append(pQueryExpression)
 		  Next
 		  
-		  For Each entry As Xojo.Core.DictionaryEntry In mData
+		  For Each entry As DictionaryEntry In mData
 		    pORM.mData.Value(entry.Key) = entry.Value
 		  Next
 		  
-		  For Each ChangeEntry As Xojo.Core.DictionaryEntry In mChanged
+		  For Each ChangeEntry As DictionaryEntry In mChanged
 		    pORM.mChanged.Value(ChangeEntry.key) = ChangeEntry.Value
 		  Next
 		  
-		  For Each AddedEntry As Xojo.Core.DictionaryEntry In mAdded
+		  For Each AddedEntry As DictionaryEntry In mAdded
 		    pORM.mAdded.Value(AddedEntry.key) = AddedEntry.Value
 		  Next
 		  
-		  For Each RemovedEntry As Xojo.Core.DictionaryEntry In mRemoved
+		  For Each RemovedEntry As DictionaryEntry In mRemoved
 		    pORM.mRemoved.Value(RemovedEntry.key) = RemovedEntry.Value
 		  Next
 		  
@@ -554,19 +553,19 @@ Inherits QueryBuilder
 		    me.mQuery.Append(pQueryExpression)
 		  Next
 		  
-		  For Each pDataEntry As Xojo.Core.DictionaryEntry In cORM.mData
+		  For Each pDataEntry As DictionaryEntry In cORM.mData
 		    me.mData.Value(pDataEntry.Key) = pDataEntry.Value
 		  Next
 		  
-		  For Each pColumnEntry As Xojo.Core.DictionaryEntry In cORM.mChanged
+		  For Each pColumnEntry As DictionaryEntry In cORM.mChanged
 		    me.mChanged.Value(pColumnEntry.Key) = pColumnEntry.Value
 		  Next
 		  
-		  For Each pAddedEntry As Xojo.Core.DictionaryEntry In cORM.mAdded
+		  For Each pAddedEntry As DictionaryEntry In cORM.mAdded
 		    me.mAdded.Value(pAddedEntry.Key) = pAddedEntry.Value
 		  Next
 		  
-		  For Each pRemovedEntry As Xojo.Core.DictionaryEntry In cORM.mRemoved
+		  For Each pRemovedEntry As DictionaryEntry In cORM.mRemoved
 		    me.mRemoved.Value(pRemovedEntry.Key) = pRemovedEntry.Value
 		  Next
 		End Sub
@@ -574,7 +573,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CountAll(pDatabase As Database) As Integer
-		  Dim pColumns() As Auto
+		  Dim pColumns() As Variant
 		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
 		  
 		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Field("count").IntegerValue
@@ -600,23 +599,23 @@ Inherits QueryBuilder
 		    
 		    
 		    // Take a merge of mData and mChanged
-		    Dim pRaw As Xojo.Core.Dictionary = Me.Data
+		    Dim pRaw As Dictionary = Me.Data
 		    System.DebugLog "ORM.create pRaw = data"
 		    
 		    
 		    // pData contains at least all primary keys
-		    Dim pData As Xojo.Core.Dictionary = Me.Pks
+		    Dim pData As Dictionary = Me.Pks
 		    
 		    'System.DebugLog "ORM.create pData = Pks"
 		    
 		    System.DebugLog "ORM.create take colums defined in model"
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
-		      System.DebugLog "ORM.create pColum = " + pColumn.AutoTextValue
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.AutoTextValue+" = " + pRaw.Value(pColumn).AutoTextValue
+		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
@@ -626,7 +625,7 @@ Inherits QueryBuilder
 		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
 		    // Merge mChanged into mData
-		    For Each pKey As Auto In mChanged.Keys()
+		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
@@ -634,7 +633,7 @@ Inherits QueryBuilder
 		    // Clear changes, they are saved in mData
 		    //Call Me.mChanged.Clear
 		    me.mChanged = nil
-		    me.mChanged = new Xojo.Core.Dictionary
+		    me.mChanged = new Dictionary
 		    
 		    System.DebugLog "ORM.Create.mChanged cleared"
 		    
@@ -671,7 +670,7 @@ Inherits QueryBuilder
 		    // Clear pending relationships
 		    //mAdded.Clear
 		    me.mAdded = nil
-		    me.mAdded = new Xojo.Core.Dictionary
+		    me.mAdded = new Dictionary
 		    
 		    System.DebugLog "ORM.Create.mAdded cleared"
 		    
@@ -681,7 +680,7 @@ Inherits QueryBuilder
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    //mRemoved.Clear
 		    me.mRemoved = nil
-		    me.mRemoved = new Xojo.Core.Dictionary
+		    me.mRemoved = new Dictionary
 		    
 		    System.DebugLog "ORM.Create.mRemoved cleared"
 		    
@@ -696,8 +695,83 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Create(pConnexion As KanjoSocket) As Boolean
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  'System.DebugLog "ORM.create isloaded ?"
+		  If me.Loaded Then
+		    Raise new ORMException("Cannot create " + me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = me.Data
+		    
+		    // pData contains at least all primary keys
+		    'Dim pData As Dictionary = me.Pks
+		    '
+		    '// Take only columns defined in the model
+		    'For Each pColumn As DictionaryEntry In me.ColumnsList
+		    '
+		    'If pRaw.HasKey(pColumn.Key) Then
+		    'pData.Value(pColumn.Key) = pRaw.Value(pColumn.Key)
+		    'End If
+		    'Next
+		    
+		    if pRaw.Count >0 then
+		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pRaw)
+		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.PUT, pConnexion.mURL))
+		      pConnexion.BodyRequest = ""
+		    End If
+		    
+		    
+		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
+		    // Clear changes, they are saved in mData
+		    //Call Me.mChanged.Clear
+		    me.mChanged = nil
+		    me.mChanged = new Dictionary
+		    
+		    'todo: check if the primary key is auto increment
+		    'If pORM.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    '
+		    '// Biggest primary key
+		    'pORM.mData.Value(pORM.PrimaryKey) = DB.Find(pORM.PrimaryKey). _
+		    'From(pORM.TableName). _
+		    'OrderBy(pORM.PrimaryKey, "DESC"). _
+		    'Execute(pDatabase).Field(pORM.PrimaryKey).Value
+		    '
+		    'End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In me.mRemoved.Values
+		      Call pRelation.Remove(me, pConnexion)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In me.mAdded.Values
+		      Call pRelation.Add(me, pConnexion)
+		    Next
+		    
+		    // Clear pending relationships
+		    //mAdded.Clear
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    //mRemoved.Clear
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    RaiseEvent Created
+		  End If
+		  
+		  'Return Me
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Create(pDatabase As iOSSQLiteDatabase) As ORM
+		Function Create(pDatabase As SQLiteDatabase) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  'System.DebugLog "ORM.create isloaded ?"
 		  If Loaded Then
@@ -726,11 +800,11 @@ Inherits QueryBuilder
 		    System.DebugLog "ORM.create take colums defined in model"
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
-		      System.DebugLog "ORM.create pColum = " + pColumn.AutoTextValue
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.AutoTextValue+" = " + pRaw.Value(pColumn).AutoTextValue
+		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumnStringxtValue
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
@@ -740,7 +814,7 @@ Inherits QueryBuilder
 		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
 		    // Merge mChanged into mData
-		    For Each pKey As Auto In mChanged.Keys()
+		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
@@ -803,94 +877,19 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Create(pConnexion As KanjoSocket) As Boolean
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  'System.DebugLog "ORM.create isloaded ?"
-		  If me.Loaded Then
-		    Raise new ORMException("Cannot create " + me.TableName + " model because it is already loaded.")
-		  End
-		  
-		  If Not RaiseEvent Creating Then
-		    
-		    // Take a merge of mData and mChanged
-		    Dim pRaw As Dictionary = me.Data
-		    
-		    // pData contains at least all primary keys
-		    'Dim pData As Dictionary = me.Pks
-		    '
-		    '// Take only columns defined in the model
-		    'For Each pColumn As Xojo.Core.DictionaryEntry In me.ColumnsList
-		    '
-		    'If pRaw.HasKey(pColumn.Key) Then
-		    'pData.Value(pColumn.Key) = pRaw.Value(pColumn.Key)
-		    'End If
-		    'Next
-		    
-		    if pRaw.Count >0 then
-		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pRaw)
-		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.PUT, pConnexion.mURL))
-		      pConnexion.BodyRequest = ""
-		    End If
-		    
-		    
-		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
-		    // Clear changes, they are saved in mData
-		    //Call Me.mChanged.Clear
-		    me.mChanged = nil
-		    me.mChanged = new Dictionary
-		    
-		    'todo: check if the primary key is auto increment
-		    'If pORM.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
-		    '
-		    '// Biggest primary key
-		    'pORM.mData.Value(pORM.PrimaryKey) = DB.Find(pORM.PrimaryKey). _
-		    'From(pORM.TableName). _
-		    'OrderBy(pORM.PrimaryKey, "DESC"). _
-		    'Execute(pDatabase).Field(pORM.PrimaryKey).Value
-		    '
-		    'End If
-		    
-		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In me.mRemoved.Values
-		      Call pRelation.Remove(me, pConnexion)
-		    Next
-		    
-		    For Each pRelation As ORMRelation In me.mAdded.Values
-		      Call pRelation.Add(me, pConnexion)
-		    Next
-		    
-		    // Clear pending relationships
-		    //mAdded.Clear
-		    me.mAdded = nil
-		    me.mAdded = new Dictionary
-		    
-		    
-		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    //mRemoved.Clear
-		    me.mRemoved = nil
-		    me.mRemoved = new Dictionary
-		    
-		    RaiseEvent Created
-		  End If
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function CreateTable(pDatabase as Database) As Boolean
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
-		    Dim sql As Text
+		    Dim sql As String
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
-		    Dim mPrimaryKeys as Text = "PRIMARY KEY ("
-		    Dim mUniqueKeys as Text = "UNIQUE ("
+		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
+		    Dim mUniqueKeys as String = "UNIQUE ("
 		    sql = "CREATE TABLE `"+me.TableName+"` ( "
-		    for each dField as Xojo.Core.DictionaryEntry in Schema
+		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
-		      sql = sql + EndOfLine_ + "`"+ dField.Key + "` " 
+		      sql = sql + EndOfLine + "`"+ dField.Key + "` " 
 		      sql = sql + field.Type(pDatabase) +field.Length
 		      sql = sql + " " + field.NotNull
 		      if field.Type(pDatabase) <> "DECIMAL" then sql = sql + " " + field.DefaultValue(pDatabase)
@@ -910,8 +909,8 @@ Inherits QueryBuilder
 		      
 		    next
 		    sql = sql.left(sql.Length -1)
-		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine_ +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
-		    if HasUniqueKeys then sql = sql + ", "+EndOfLine_ +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
+		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
 		    
 		    sql = sql +");"
 		    pDatabase.ExecuteSQL(sql)
@@ -922,15 +921,15 @@ Inherits QueryBuilder
 		    
 		  else
 		    'Try
-		    Dim sql As Text
+		    Dim sql As String
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
-		    Dim mPrimaryKeys as Text = "PRIMARY KEY ("
-		    Dim mUniqueKeys as Text = "UNIQUE ("
+		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
+		    Dim mUniqueKeys as String = "UNIQUE ("
 		    sql = "CREATE TABLE `"+me.TableName+"` ( "
-		    for each dField as Xojo.Core.DictionaryEntry in Schema
+		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
-		      sql = sql + EndOfLine_ + "`"+ dField.Key + "` " 
+		      sql = sql + EndOfLine + "`"+ dField.Key + "` " 
 		      sql = sql + field.Type(pDatabase)
 		      if field.Type(pDatabase) = "DECIMAL" then
 		        sql = sql +field.Length
@@ -953,8 +952,8 @@ Inherits QueryBuilder
 		      
 		    next
 		    sql = sql.left(sql.Length -1)
-		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine_ +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
-		    if HasUniqueKeys then sql = sql + ", "+EndOfLine_ +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
+		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
 		    
 		    sql = sql +");"
 		    pDatabase.ExecuteSQL(sql)
@@ -968,8 +967,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Function Data() As Xojo.Core.Dictionary
-		  Using Xojo.Core
+		Function Data() As Dictionary
 		  Dim pData As Dictionary = Initial()
 		  
 		  // Merge mChanged over mData
@@ -983,7 +981,17 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Data(pColumn As Text) As Auto
+		Function Data(pData as Dictionary) As ORM
+		  For Each pDataEntry As DictionaryEntry In pData
+		    Call Data(pDataEntry.Key, pDataEntry.Value)
+		  Next
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Data(pColumn As String) As Variant
 		  // Getter for data
 		  If mChanged.HasKey(pColumn) Then
 		    Return mChanged.Value(pColumn)
@@ -994,13 +1002,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Data(pColumn As Text, Assigns pValue As Auto)
+		Sub Data(pColumn As String, Assigns pValue As Variant)
 		  Call Data(pColumn, pValue)
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Data(pColumn As Text, pValue As Auto) As ORM
+		Function Data(pColumn As String, pValue As Variant) As ORM
 		  If Not RaiseEvent Changing(pColumn) Then
 		    
 		    // If it is different than the original data, it has changed
@@ -1013,16 +1021,6 @@ Inherits QueryBuilder
 		    RaiseEvent Changed(pColumn)
 		    
 		  End If
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Data(pData as Xojo.Core.Dictionary) As ORM
-		  For Each pDataEntry As Xojo.Core.DictionaryEntry In pData
-		    Call Data(pDataEntry.Key, pDataEntry.Value)
-		  Next
 		  
 		  Return Me
 		End Function
@@ -1066,41 +1064,41 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Dump() As Text
+		Function Dump() As String
 		  // Dump ORM content for logs
-		  Using Xojo.Core
-		  Dim pDump As Text = "Dumping " + QueryCompiler.Value(Me.Pk) + "@" + QueryCompiler.TableName(Me.TableName)
+		  
+		  Dim pDump As string = "Dumping " + QueryCompiler.Value(Me.Pk) + "@" + QueryCompiler.TableName(Me.TableName)
 		  
 		  // If Me.Changed Then
-		  Dim pChanged() As Text
+		  Dim pChanged() As string
 		  
 		  For Each DataEntry As DictionaryEntry In Me.Data
 		    
 		    pChanged.Append(QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key)))
 		    
-		    If Me.Initial(DataEntry.Key.AutoTextValue) <> Me.Data(DataEntry.Key.AutoTextValue) Then
-		      pChanged(pChanged.Ubound) = pChanged(pChanged.Ubound) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.AutoTextValue))
+		    If Me.Initial(DataEntry.Key.StringValue) <> Me.Data(DataEntry.Key.StringValue) Then
+		      pChanged(pChanged.Ubound) = pChanged(pChanged.Ubound) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
 		    End If
 		    
 		  Next
 		  
-		  pDump = pDump + "Changed: " + Text.Join(pChanged, ", ") + EndOfLine_
+		  pDump = pDump + "Changed: " + String.FromArray(pChanged, ", ") + EndOfLine
 		  
-		  Dim pAdd As Text
+		  Dim pAdd As String
 		  
 		  For Each AddEntry As DictionaryEntry In Me.Add
 		    pAdd = pAdd + " " + ORMRelation(AddEntry.key).Dump
 		  Next
 		  
-		  pDump = pDump + "Added: " + pAdd + EndOfLine_
+		  pDump = pDump + "Added: " + pAdd + EndOfLine
 		  
-		  Dim pRemove As Text
+		  Dim pRemove As String
 		  
 		  For Each RemoveEntry As DictionaryEntry In Me.Remove
 		    pRemove = pRemove + " " + ORMRelation(RemoveEntry.Key).Dump
 		  Next
 		  
-		  pDump = pDump + "Removed: " + pRemove + EndOfLine_
+		  pDump = pDump + "Removed: " + pRemove + EndOfLine
 		  
 		  Return pDump
 		End Function
@@ -1118,13 +1116,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function FieldLength(pValue as String) As Text
+		Function FieldLength(pValue as String) As String
 		  if pValue.Contains("(") then
 		    dim debut, fin as integer
 		    debut = pValue.IndexOf("(")
-		    dim newValue as Text = pValue.Middle(debut+1).DefineEncoding(Encodings.UTF8).ToText
+		    dim newValue as String = pValue.Middle(debut+1).DefineEncoding(Encodings.UTF8)
 		    fin = newValue.IndexOf(")")
-		    dim finalvalue as Text = newValue.left(fin).ToText
+		    dim finalvalue as String = newValue.left(fin)
 		    
 		    return finalvalue
 		  else
@@ -1218,7 +1216,7 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.DATETIME
 		  elseif pValue.Contains("date") then
 		    Return ORMField.TypeList.DATE
-		  elseif pValue.Contains("text") then
+		  elseif pValue.Contains("String") then
 		    Return ORMField.TypeList.TEXT
 		  elseif pValue.Contains("longtext") then
 		    Return ORMField.TypeList.LongTEXT
@@ -1229,18 +1227,18 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as Database, pExpiration as Xojo.Core.Date = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
-		  Using Xojo.Core
+		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
+		  
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
 		  If Not RaiseEvent Finding Then
 		    
-		    Dim pColumns() As Auto
+		    Dim pColumns() As Variant
 		    
 		    // Prepend table to prevent collision with join
-		    For Each pColumn As Text In Me.TableColumns(pDatabase)
+		    For Each pColumn As String In Me.TableColumns(pDatabase)
 		      pColumns.Append(TableName + "." + pColumn)
 		    Next
 		    
@@ -1255,7 +1253,7 @@ Inherits QueryBuilder
 		    dim pColumnType as new Dictionary
 		    
 		    while not pRecordSetType.EOF
-		      pColumnType.Value(pRecordSetType.Field("ColumnName").TextValue) = pRecordSetType.Field("FieldType").IntegerValue
+		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
 		      pRecordSetType.MoveNext
 		    wend
 		    // Clear any existing data
@@ -1266,10 +1264,10 @@ Inherits QueryBuilder
 		      
 		      For pIndex As Integer = 1 To pRecordSet.FieldCount
 		        
-		        Dim pColumn As Text = pRecordSet.IdxField(pIndex).Name.DefineEncoding(Encodings.UTF8).ToText
+		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name.DefineEncoding(Encodings.UTF8)
 		        
 		        if pColumnType <> nil then
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).AutoIntegerValue)
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
 		        else
 		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase)
 		        end if
@@ -1300,17 +1298,17 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as IOSSQLiteDatabase, pExpiration as Date = Nil, pColumnsType() as DB.DataType = Nil) As ORM
+		Function Find(pDatabase as SQLiteDatabase, pExpiration as Date = Nil, pColumnsType() as DB.DataType = Nil) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
 		  
 		  If Not RaiseEvent Finding Then
 		    
-		    Dim pColumns() As Auto
+		    Dim pColumns() As Variant
 		    
 		    // Prepend table to prevent collision with join
-		    For Each pColumn As Text In Me.TableColumns(pDatabase)
+		    For Each pColumn As String In Me.TableColumns(pDatabase)
 		      pColumns.Append(TableName + "." + pColumn)
 		    Next
 		    
@@ -1325,7 +1323,7 @@ Inherits QueryBuilder
 		    dim pColumnType as new Dictionary
 		    
 		    while not pRecordSetType.EOF
-		      pColumnType.Value(pRecordSetType.Field("ColumnName").TextValue) = pRecordSetType.Field("FieldType").IntegerValue
+		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
 		      pRecordSetType.MoveNext
 		    wend
 		    // Clear any existing data
@@ -1336,7 +1334,7 @@ Inherits QueryBuilder
 		      
 		      For pIndex As Integer = 1 To pRecordSet.FieldCount
 		        
-		        Dim pColumn As Text = pRecordSet.IdxField(pIndex).Name
+		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
 		        
 		        if pColumnType <> nil then
 		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase) //DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
@@ -1370,30 +1368,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase as Database, pOtherColumn() as Auto) As RecordSet
-		  Dim pColumns() As Auto
+		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RecordSet
+		  Dim pColumns() As Variant
 		  
-		  pColumns.Append(TableName + "." + PrimaryKey)
-		  
-		  For Each nColumn as Auto in pOtherColumn
-		    pColumns.Append(nColumn)
-		  Next
-		  
-		  Return Append(new SelectQueryExpression(pColumns)). _
-		  From(Me.TableName). _
-		  Execute(pDatabase)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase as Database, pExpiration as Xojo.Core.Date = Nil, pOtherColumn() as Auto = nil) As RecordSet
-		  Dim pColumns() As Auto
-		  
-		  For Each pColumn As Auto In TableColumns(pDatabase)
+		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    pColumns.Append(TableName + "." + pColumn)
 		  Next
 		  
-		  For Each nColumn as Auto in pOtherColumn
+		  For Each nColumn as Variant in pOtherColumn
 		    pColumns.Append(nColumn)
 		  Next
 		  
@@ -1403,11 +1385,27 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase As iOSSQLiteDatabase, pExpiration As Date = Nil) As iOSSQLiteRecordSet
-		  Dim pColumns() As Auto
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function FindAll(pDatabase as Database, pOtherColumn() as Variant) As RecordSet
+		  Dim pColumns() As Variant
 		  
-		  For Each pColumn As Auto In TableColumns(pDatabase)
+		  pColumns.Append(TableName + "." + PrimaryKey)
+		  
+		  For Each nColumn as Variant in pOtherColumn
+		    pColumns.Append(nColumn)
+		  Next
+		  
+		  Return Append(new SelectQueryExpression(pColumns)). _
+		  From(Me.TableName). _
+		  Execute(pDatabase)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function FindAll(pDatabase As SQLiteDatabase, pExpiration As Date = Nil) As iOSSQLiteRecordSet
+		  Dim pColumns() As Variant
+		  
+		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    pColumns.Append(TableName + "." + pColumn)
 		  Next
 		  
@@ -1424,7 +1422,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GroupBy(pColumns() As Auto) As ORM
+		Function GroupBy(pColumns() As Variant) As ORM
 		  Call Super.GroupBy(pColumns)
 		  
 		  Return Me
@@ -1432,7 +1430,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function GroupBy(ParamArray pColumns As Auto) As ORM
+		Function GroupBy(ParamArray pColumns As Variant) As ORM
 		  Call Super.GroupBy(pColumns)
 		  
 		  Return Me
@@ -1440,7 +1438,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pForeignColumn As Text, pORM As ORM, pDatabase As Database) As Boolean
+		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pORM.TableName)._
 		  Where(pORM.Pks). _
@@ -1451,7 +1449,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pPivotTableName As Text, pForeignColumn As Text) As QueryBuilder
+		Function Has(pPivotTableName As String, pForeignColumn As String) As QueryBuilder
 		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
@@ -1460,7 +1458,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pPivotTableName As Text, pForeignColumn As Text, pDatabase As Database) As Boolean
+		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
 		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
@@ -1471,7 +1469,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, pORM As ORM, pDatabase As Database) As Boolean
+		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
@@ -1483,13 +1481,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns() As Text) As ORM
+		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns() As String) As ORM
 		  Return Me.HasMany(pORM, pForeignColumns)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasMany(pORM As ORM, pForeignColumns() As Text) As ORM
+		Protected Function HasMany(pORM As ORM, pForeignColumns() As String) As ORM
 		  // pForeignColumns must be specified in the same order as PrimaryKeys
 		  
 		  For pIndex As Integer = 0 To Me.PrimaryKeys.Ubound
@@ -1501,7 +1499,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text) As ORM
+		Protected Function HasManyThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
 		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
 		  From(pPivotTableName). _
 		  Where(pForeignColumn, "=", Me.Pk) ._
@@ -1510,19 +1508,19 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasOne(pORM As ORM, pForeignColumns() As Text) As ORM
+		Protected Function HasOne(pORM As ORM, pForeignColumns() As String) As ORM
 		  Return HasMany(pORM, pForeignColumns())
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasOne(pORM As ORM, pForeignColumn As Text) As ORM
+		Protected Function HasOne(pORM As ORM, pForeignColumn As String) As ORM
 		  Return HasMany(pORM, pForeignColumn)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasOne(pORM as ORM, pForeignColumn as Text, pKeyIndex as integer) As ORM
+		Protected Function HasOne(pORM as ORM, pForeignColumn as String, pKeyIndex as integer) As ORM
 		  // pForeignColumns must be specified in the same order as PrimaryKeys
 		  
 		  Call pORM.Where(pForeignColumn, "=", Me.Pks.Value(Me.PrimaryKeys(pKeyIndex)))
@@ -1532,7 +1530,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasOneThrough(pORM As ORM, pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text) As ORM
+		Protected Function HasOneThrough(pORM As ORM, pPivotTableName As String, pForeignColumn As String, pFarColumn As String) As ORM
 		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
 		  From(pPivotTableName). _
 		  Where(pForeignColumn, "=", Me.Pk)_
@@ -1542,7 +1540,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Function HasOneThrough(pORM as ORM, pPivotTableName as Text, pForeignColumn as Text, pFarColumn as Text, pForeignValue as Auto) As ORM
+		Protected Function HasOneThrough(pORM as ORM, pPivotTableName as String, pForeignColumn as String, pFarColumn as String, pForeignValue as Variant) As ORM
 		  Return pORM.Where(pORM.PrimaryKey, "IN", DB.Find(pFarColumn). _
 		  From(pPivotTableName). _
 		  Where(pForeignColumn, "=", pForeignValue)_
@@ -1552,16 +1550,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Having(pColumn As Auto, pOperator As Text, pValue As Auto) As ORM
-		  Call Super.Having(pColumn, pOperator, pValue)
+		Function Having(pCriterias As Dictionary) As ORM
+		  Call Super.Having(pCriterias)
 		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Having(pCriterias As Xojo.Core.Dictionary) As ORM
-		  Call Super.Having(pCriterias)
+		Function Having(pColumn As Variant, pOperator As String, pValue As Variant) As ORM
+		  Call Super.Having(pColumn, pOperator, pValue)
 		  
 		  Return Me
 		End Function
@@ -1585,7 +1583,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Attributes( Deprecated )  Function Inflate(pORM As ORM) As ORM
-		  Using Xojo.Core
+		  
 		  // @deprecated
 		  
 		  // Inflate this ORM on another ORM
@@ -1628,8 +1626,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Initial() As Xojo.Core.Dictionary
-		  Using Xojo.Core
+		Function Initial() As Dictionary
 		  Dim pData As New Dictionary
 		  
 		  // Use a copy of mData to avoid external changes
@@ -1642,7 +1639,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Initial(pColumn As Text) As Auto
+		Function Initial(pColumn As String) As Variant
 		  Return mData.Lookup(pColumn, Nil)
 		End Function
 	#tag EndMethod
@@ -1652,13 +1649,13 @@ Inherits QueryBuilder
 		  #Pragma BreakOnExceptions False
 		  
 		  dim rCol as string
-		  for each cCol as Xojo.Core.DictionaryEntry in Schema
+		  for each cCol as DictionaryEntry in Schema
 		    rCol = rCol + "`"+cCol.Key+ "`, "
 		  next
 		  rcol = rCol.left(rcol.Length -2)
 		  
 		  for i as integer = 0 to SchemaMadantoryData.LastRowIndex
-		    dim strrr() as TEXT = SchemaMadantoryData(i)
+		    dim strrr() as String = SchemaMadantoryData(i)
 		    
 		    dim sql as string = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
 		    
@@ -1679,7 +1676,7 @@ Inherits QueryBuilder
 		  
 		  
 		  for i as integer = 0 to SchemaDefaultDatas.LastRowIndex
-		    dim strrr() as TEXT = SchemaDefaultDatas(i)
+		    dim strrr() as String = SchemaDefaultDatas(i)
 		    
 		    dim sql as string = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
 		    
@@ -1701,7 +1698,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As QueryExpression, pTableAlias As Text) As ORM
+		Function Join(pTableName As QueryExpression, pTableAlias As String) As ORM
 		  Call Super.Join(pTableName, pTableAlias)
 		  
 		  Return Me
@@ -1709,7 +1706,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As Text) As ORM
+		Function Join(pTableName As String) As ORM
 		  Call Super.Join(pTableName)
 		  
 		  Return Me
@@ -1717,7 +1714,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Join(pTableName As Text, pTableAlias As Text) As ORM
+		Function Join(pTableName As String, pTableAlias As String) As ORM
 		  Call Super.Join(pTableName, pTableAlias)
 		  
 		  Return Me
@@ -1725,16 +1722,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function JSONValue() As Xojo.Core.Dictionary
-		  Using Xojo.Core
+		Function JSONValue() As Dictionary
+		  
 		  // Shallow export
 		  
-		  Dim pJSONItem As New Xojo.Core.Dictionary
+		  Dim pJSONItem As New Dictionary
 		  
 		  // Adds each column as an Attribute
 		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
 		    System.DebugLog pDataKeyColumn.key
-		    dim v as Auto = pDataKeyColumn.Value
+		    dim v as Variant = pDataKeyColumn.Value
 		    'System.DebugLog "type : " + v.Type.StringValue
 		    if v.Type = 6 then
 		      pJSONItem.Value(pDataKeyColumn.Key) = v.AutoDoubleValue
@@ -1749,10 +1746,10 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function JSONValue() As Xojo.Core.Dictionary
+		Function JSONValue() As Dictionary
 		  // Shallow export
 		  
-		  Dim pJSONItem As New Xojo.Core.Dictionary
+		  Dim pJSONItem As New Dictionary
 		  
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Me.Data.Keys
@@ -1760,15 +1757,15 @@ Inherits QueryBuilder
 		      System.DebugLog "logo"
 		    end if
 		    System.DebugLog pColumn
-		    dim v as Auto = Me.Data(pColumn.DefineEncoding(Encodings.UTF8).ToText)
-		    System.DebugLog "type : " + v.TypeText
+		    dim v as Variant = Me.Data(pColumn.DefineEncoding(Encodings.UTF8).ToText)
+		    System.DebugLog "type : " + v.TypeText.ToString
 		    Select Case v.Type
 		    case 6
-		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v.AutoDoubleValue
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v.DoubleValue
 		    case 8, 37
-		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v.AutoTextValue
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v.StringValue
 		    else
-		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8).ToText) = v
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v
 		    End Select
 		    'System.DebugLog pJSONItem.ToText
 		  Next
@@ -1778,7 +1775,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = false
-		Function JSONValue(pDatabase As Database) As Xojo.Core.Dictionary
+		Function JSONValue(pDatabase As Database) As Dictionary
 		  // Deep export
 		  
 		  // You must override this method to provide a custom export for your model
@@ -1788,7 +1785,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftJoin(pTableName As Text) As ORM
+		Function LeftJoin(pTableName As String) As ORM
 		  Call Super.LeftJoin(pTableName)
 		  
 		  Return Me
@@ -1796,7 +1793,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftJoin(pTableName As Text, pTableAlias As Text) As ORM
+		Function LeftJoin(pTableName As String, pTableAlias As String) As ORM
 		  Call Super.LeftJoin(pTableName, pTableAlias)
 		  
 		  Return Me
@@ -1804,7 +1801,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftOuterJoin(pTableName As Text) As ORM
+		Function LeftOuterJoin(pTableName As String) As ORM
 		  Call Super.LeftOuterJoin(pTableName)
 		  
 		  Return Me
@@ -1812,7 +1809,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function LeftOuterJoin(pTableName As Text, pTableAlias As Text) As ORM
+		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As ORM
 		  Call Super.LeftOuterJoin(pTableName, pTableAlias)
 		  
 		  Return Me
@@ -1830,7 +1827,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function Loaded() As Boolean
 		  // Model must have a primary key and that primary key must not be Nil
-		  For Each pPrimaryKey As Text In Me.PrimaryKeys
+		  For Each pPrimaryKey As String In Me.PrimaryKeys
 		    If Me.Initial(pPrimaryKey) = Nil Then
 		      Return False
 		    End If
@@ -1842,9 +1839,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Sub LoadJSON(pCriterias as Xojo.Core.Dictionary)
-		  Using Xojo.Core
-		  
+		Sub LoadJSON(pCriterias as Dictionary)
 		  mData = New Dictionary
 		  mChanged = New Dictionary
 		  mAdded = New Dictionary
@@ -1868,7 +1863,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn As Auto, pOperator As Text, pValue As Auto) As ORM
+		Function On(pColumn As Variant, pOperator As String, pValue As Variant) As ORM
 		  Call Super.On(pColumn, pOperator, pValue)
 		  
 		  Return Me
@@ -1876,7 +1871,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn as Auto, pOperator as Text, pValue as Auto, pType as DataType) As ORM
+		Function On(pColumn as Variant, pOperator as String, pValue as Variant, pType as DataType) As ORM
 		  Call Super.On(pColumn, pOperator, pValue, pType)
 		  
 		  Return Me
@@ -1916,7 +1911,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumns() as Auto, pDirections() as Text, pComparators() as Text) As ORM
+		Function OrderBy(pColumns() as Variant, pDirections() as String, pComparators() as String) As ORM
 		  Call Super.OrderBy(pColumns, pDirections, pComparators)
 		  
 		  Return Me
@@ -1924,7 +1919,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrderBy(pColumn as Auto, pDirection as Text = "ASC", pComparator as Text = "") As ORM
+		Function OrderBy(pColumn as Variant, pDirection as String = "ASC", pComparator as String = "") As ORM
 		  Call Super.OrderBy(pColumn, pDirection, pComparator)
 		  
 		  Return Me
@@ -1932,7 +1927,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrHaving(pColumn As Text, pOperator As Text, pValue As Auto) As ORM
+		Function OrHaving(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.OrHaving(pColumn, pOperator, pValue)
 		  
 		  Return Me
@@ -1940,7 +1935,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrOn(pColumn As Text, pOperator As Text, pValue As Auto) As ORM
+		Function OrOn(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.OrOn(pColumn, pOperator, pValue)
 		  
 		  Return Me
@@ -1948,7 +1943,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrOn(pColumn as Text, pOperator as Text, pValue as Auto, pType as DataType) As ORM
+		Function OrOn(pColumn as String, pOperator as String, pValue as Variant, pType as DataType) As ORM
 		  Call Super.OrOn(pColumn, pOperator, pValue, pType)
 		  
 		  Return Me
@@ -1956,7 +1951,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrWhere(pColumn As Text, pOperator As Text, pValue As Auto) As ORM
+		Function OrWhere(pColumn As String, pOperator As String, pValue As Variant) As ORM
 		  Call Super.OrWhere(pColumn, pOperator, pValue)
 		  
 		  Return Me
@@ -1973,25 +1968,23 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Pk() As Auto
+		Function Pk() As Variant
 		  // Initial primary key value
 		  Return Me.Initial(Me.PrimaryKey)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Pk(Assigns pValue As Auto)
+		Sub Pk(Assigns pValue As Variant)
 		  Me.Data(Me.PrimaryKey) = pValue
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Pks() As Xojo.Core.Dictionary
-		  Using Xojo.Core
-		  
+		Function Pks() As Dictionary
 		  Dim pDictionary As New Dictionary
 		  
-		  For Each pPrimaryKey As Text In Me.PrimaryKeys
+		  For Each pPrimaryKey As String In Me.PrimaryKeys
 		    pDictionary.Value(pPrimaryKey) = Me.Initial(pPrimaryKey)
 		  Next
 		  
@@ -2000,21 +1993,21 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function PrimaryKey() As Text
+		Function PrimaryKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "id"
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function PrimaryKeys() As Text()
+		Function PrimaryKeys() As String()
 		  Return Array(Me.PrimaryKey)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function PrimaryKeys(pIndex As Integer) As Text
-		  Dim pPrimaryKeys() As Text = Me.PrimaryKeys
+		Function PrimaryKeys(pIndex As Integer) As String
+		  Dim pPrimaryKeys() As String = Me.PrimaryKeys
 		  
 		  Return pPrimaryKeys(pIndex)
 		End Function
@@ -2030,7 +2023,7 @@ Inherits QueryBuilder
 		Function Reload(pDatabase As Database) As ORM
 		  // Save primary key, the model will be unloaded
 		  
-		  Dim pk As Auto = Pk()
+		  Dim pk As Variant = Pk()
 		  
 		  Call Unload()
 		  
@@ -2040,9 +2033,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove() As Xojo.Core.Dictionary
-		  Using Xojo.Core
-		  
+		Function Remove() As Dictionary
 		  Dim pRemoved As New Dictionary
 		  
 		  // Use a copy of mData to avoid external changes
@@ -2073,7 +2064,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pForeignColumn As Text, pORMs() As ORM) As ORM
+		Function Remove(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
 		    Call Me.Remove(New ORMRelationHasMany(pForeignColumn, pORM))
 		  Next
@@ -2083,14 +2074,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pForeignColumn As Text, ParamArray pORMs As ORM) As ORM
+		Function Remove(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
 		  Return Me.Remove(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, pFarKeys() As Auto) As ORM
-		  For Each pFarKey As Auto In pFarKeys
+		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pFarKeys() As Variant) As ORM
+		  For Each pFarKey As Variant In pFarKeys
 		    Call Remove(New ORMRelationHasManyThrough(pPivotTableName, pForeignColumn, pFarColumn, pFarKey))
 		  Next
 		  
@@ -2099,13 +2090,13 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Remove(pPivotTableName As Text, pForeignColumn As Text, pFarColumn As Text, ParamArray pFarKeys As Auto) As ORM
+		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pFarKeys As Variant) As ORM
 		  Return Remove(pPivotTableName, pForeignColumn, pFarColumn, pFarKeys)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function RemoveHard(pForeignColumn As Text, pORMs() As ORM) As ORM
+		Function RemoveHard(pForeignColumn As String, pORMs() As ORM) As ORM
 		  For Each pORM As ORM In pORMs
 		    Call Me.Remove(New ORMRelationHasManyHard(pForeignColumn, pORM))
 		  Next
@@ -2115,7 +2106,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function RemoveHard(pForeignColumn As Text, ParamArray pORMs As ORM) As ORM
+		Function RemoveHard(pForeignColumn As String, ParamArray pORMs As ORM) As ORM
 		  Return Me.RemoveHard(pForeignColumn, pORMs)
 		End Function
 	#tag EndMethod
@@ -2123,7 +2114,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Replace(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  Using Xojo.Core
+		  
 		  
 		  If Loaded Then
 		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
@@ -2134,13 +2125,13 @@ Inherits QueryBuilder
 		    pDatabase.Begin
 		    
 		    // Take a merge of mData and mChanged
-		    Dim pRaw As Xojo.Core.Dictionary = Me.Data
+		    Dim pRaw As Dictionary = Me.Data
 		    
 		    // pData contains at least all primary keys
-		    Dim pData As Xojo.Core.Dictionary = Me.Pks
+		    Dim pData As Dictionary = Me.Pks
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If pRaw.HasKey(pColumn) Then
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
@@ -2149,7 +2140,7 @@ Inherits QueryBuilder
 		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
 		    // Merge mChanged into mData
-		    For Each pKey As Auto In mChanged.Keys()
+		    For Each pKey As Variant In mChanged.Keys()
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
@@ -2199,78 +2190,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Replace(pDatabase As iOSSQLiteDatabase) As ORM
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  
-		  If Loaded Then
-		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
-		  End
-		  
-		  If Not RaiseEvent Creating Then
-		    
-		    pDatabase.Begin
-		    
-		    // Take a merge of mData and mChanged
-		    Dim pRaw As Dictionary = Me.Data
-		    
-		    // pData contains at least all primary keys
-		    Dim pData As Dictionary = Me.Pks
-		    
-		    // Take only columns defined in the model
-		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
-		      If pRaw.HasKey(pColumn) Then
-		        pData.Value(pColumn) = pRaw.Value(pColumn)
-		      End If
-		    Next
-		    
-		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
-		    
-		    // Merge mChanged into mData
-		    For Each pKey As Auto In mChanged.Keys()
-		      mData.Value(pKey) = mChanged.Value(pKey)
-		    Next
-		    
-		    // Clear changes, they are saved in mData
-		    Call Me.mChanged.Clear
-		    
-		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
-		      // Biggest primary key
-		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		      From(Me.TableName). _
-		      OrderBy(Me.PrimaryKey, "DESC"). _
-		      Execute(pDatabase).Field(Me.PrimaryKey).Value
-		      
-		    End If
-		    
-		    // Execute pendings relationships
-		    For Each dRelation As Xojo.Core.DictionaryEntry In mRemoved
-		      Dim pRelation as ORMRelation = dRelation.value
-		      Call pRelation.Remove(Me, pDatabase, False)
-		    Next
-		    
-		    For Each dRelation as Xojo.Core.DictionaryEntry In mAdded
-		      dim pRelation As ORMRelation = dRelation.Value
-		      Call pRelation.Add(Me, pDatabase, False)
-		    Next
-		    
-		    // Clear pending relationships
-		    mAdded.Clear
-		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear
-		    
-		    pDatabase.Commit
-		    
-		    RaiseEvent Created
-		    
-		  End If
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Replace(pConnexion As KanjoSocket) As Boolean
 		  '// Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  '
@@ -2289,7 +2209,7 @@ Inherits QueryBuilder
 		  'Dim pData As Dictionary = Me.Pks
 		  '
 		  '// Take only columns defined in the model
-		  'For Each pColumn As Auto In Me.TableColumns(pDatabase)
+		  'For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		  'If pRaw.HasKey(pColumn) Then
 		  'pData.Value(pColumn) = pRaw.Value(pColumn)
 		  'End If
@@ -2298,7 +2218,7 @@ Inherits QueryBuilder
 		  'DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		  '
 		  '// Merge mChanged into mData
-		  'For Each pKey As Auto In mChanged.Keys()
+		  'For Each pKey As Variant In mChanged.Keys()
 		  'mData.Value(pKey) = mChanged.Value(pKey)
 		  'Next
 		  '
@@ -2316,12 +2236,12 @@ Inherits QueryBuilder
 		  'End If
 		  '
 		  '// Execute pendings relationships
-		  'For Each dRelation As Xojo.Core.DictionaryEntry In mRemoved
+		  'For Each dRelation As DictionaryEntry In mRemoved
 		  'Dim pRelation as ORMRelation = dRelation.value
 		  'Call pRelation.Remove(Me, pDatabase, False)
 		  'Next
 		  '
-		  'For Each dRelation as Xojo.Core.DictionaryEntry In mAdded
+		  'For Each dRelation as DictionaryEntry In mAdded
 		  'dim pRelation As ORMRelation = dRelation.Value
 		  'Call pRelation.Add(Me, pDatabase, False)
 		  'Next
@@ -2338,6 +2258,77 @@ Inherits QueryBuilder
 		  'End If
 		  '
 		  'Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function Replace(pDatabase As SQLiteDatabase) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  If Loaded Then
+		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    pDatabase.Begin
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear changes, they are saved in mData
+		    Call Me.mChanged.Clear
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      // Biggest primary key
+		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		      From(Me.TableName). _
+		      OrderBy(Me.PrimaryKey, "DESC"). _
+		      Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each dRelation As DictionaryEntry In mRemoved
+		      Dim pRelation as ORMRelation = dRelation.value
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each dRelation as DictionaryEntry In mAdded
+		      dim pRelation As ORMRelation = dRelation.Value
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    // Clear pending relationships
+		    mAdded.Clear
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    mRemoved.Clear
+		    
+		    pDatabase.Commit
+		    
+		    RaiseEvent Created
+		    
+		  End If
+		  
+		  Return Me
 		End Function
 	#tag EndMethod
 
@@ -2372,26 +2363,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Save(pDatabase As iOSSQLiteDatabase) As ORM
-		  If Not RaiseEvent Saving Then
-		    
-		    If Loaded() Then
-		      Call Update(pDatabase)
-		    Elseif mReplaced then
-		      Call Replace(pDatabase)
-		    else
-		      Call Create(pDatabase)
-		    End
-		    
-		    RaiseEvent Saved
-		    
-		  End If
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Save(pConnexion As KanjoSocket) As Boolean
 		  dim bSaved as boolean = false
 		  If Not RaiseEvent Saving Then
@@ -2411,9 +2383,36 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function Save(pDatabase As SQLiteDatabase) As ORM
+		  If Not RaiseEvent Saving Then
+		    
+		    If Loaded() Then
+		      Call Update(pDatabase)
+		    Elseif mReplaced then
+		      Call Replace(pDatabase)
+		    else
+		      Call Create(pDatabase)
+		    End
+		    
+		    RaiseEvent Saved
+		    
+		  End If
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Set(pValues As Dictionary) As ORM
+		  Call Super.Set(pValues)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Set(ParamArray pValues As Pair) As ORM
-		  Using Xojo.Core
+		  
 		  
 		  Dim pDictionary As New Dictionary
 		  
@@ -2427,20 +2426,12 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
-		Function Set(pValues As Xojo.Core.Dictionary) As ORM
-		  Call Super.Set(pValues)
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableCheck(pDatabase as Database) As Boolean
 		  #Pragma BreakOnExceptions False
 		  
 		  dim rows as RowSet 
-		  SchemaCurrent = new Xojo.Core.Dictionary
+		  SchemaCurrent = new Dictionary
 		  
 		  if (pDatabase isa MySQLCommunityServer) then
 		    try
@@ -2451,7 +2442,7 @@ Inherits QueryBuilder
 		    end try
 		    dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
 		    " stat.table_name = tco.table_name and stat.index_name = tco.constraint_name where stat.non_unique = 0 and stat.table_schema not in ('information_schema', 'sys', 'performance_schema', 'mysql') and constraint_type = 'UNIQUE' and stat.table_name = '"+TableName+"' group by stat.table_name, stat.column_name")
-		    dim dU as new Xojo.Core.Dictionary
+		    dim dU as new Dictionary
 		    if rowsU <> Nil then
 		      if rowsU.RowCount>0 then
 		        For Each rowU As DatabaseRow In rowsU
@@ -2468,7 +2459,7 @@ Inherits QueryBuilder
 		          col.PrimaryKey = row.Column("Key").StringValue = "PRI"
 		          col.NotNull = row.Column("Null").StringValue = "NO"
 		          col.Length = FieldLength(row.Column("Type").StringValue)
-		          col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		          col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8)
 		          col.Extra = FieldExtra(row.Column("Extra").StringValue)
 		          col.Unique = dU.Lookup(row.Column("Field").StringValue, false)
 		          SchemaCurrent.value(row.Column("Field").StringValue) = col
@@ -2483,7 +2474,7 @@ Inherits QueryBuilder
 		    rows = pDatabase.TableColumns(TableName)
 		    // Gest Table keys
 		    dim rowsU as rowset = pDatabase.SelectSQL("PRAGMA index_list("+TableName+");")
-		    dim dU as new Xojo.Core.Dictionary
+		    dim dU as new Dictionary
 		    if rowsU <> Nil then
 		      if rowsU.RowCount>0 then
 		        For Each rowU As DatabaseRow In rowsU
@@ -2508,7 +2499,7 @@ Inherits QueryBuilder
 		          col.Type = FieldType(row.Column("FieldType").IntegerValue)
 		          col.PrimaryKey = row.Column("IsPrimary").BooleanValue
 		          col.NotNull = row.Column("NotNull").BooleanValue
-		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8).ToText
+		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8)
 		          col.Unique = dU.Lookup(row.Column("ColumnName").StringValue, false)
 		          SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
 		          
@@ -2522,10 +2513,10 @@ Inherits QueryBuilder
 		  
 		  
 		  
-		  SchemaToAdd = new Xojo.Core.Dictionary
-		  SchemaToAlter = new Xojo.Core.Dictionary
+		  SchemaToAdd = new Dictionary
+		  SchemaToAlter = new Dictionary
 		  
-		  for each dField as Xojo.Core.DictionaryEntry in Schema
+		  for each dField as DictionaryEntry in Schema
 		    if NOT SchemaCurrent.HasKey(dField.key) then
 		      SchemaToAdd.value(dField.key) = dField.Value
 		    else
@@ -2538,9 +2529,9 @@ Inherits QueryBuilder
 		    end if
 		  next
 		  
-		  SchemaToRemoveColumn = new Xojo.Core.Dictionary
+		  SchemaToRemoveColumn = new Dictionary
 		  
-		  for each dField as Xojo.Core.DictionaryEntry in SchemaCurrent
+		  for each dField as DictionaryEntry in SchemaCurrent
 		    if NOT Schema.HasKey(dField.key) then
 		      SchemaToRemoveColumn.value(dField.key) = dField.Value
 		    end if
@@ -2550,14 +2541,14 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function TableColumns() As Text()
-		  Dim pColumns() As Text
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Function TableColumns() As String()
+		  Dim pColumns() As String
 		  
 		  BuildSchema()
 		  
-		  for each entr as Xojo.Core.DictionaryEntry in me.Schema
-		    pColumns.Append(entr.Key.AutoTextValue)
+		  for each entr as DictionaryEntry in me.Schema
+		    pColumns.Append(entr.Key.StringValue)
 		  next
 		  
 		  Return pColumns
@@ -2567,8 +2558,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function TableColumns(pDatabase As Database) As Text()
-		  Dim pColumns() As Text
+		Function TableColumns(pDatabase As Database) As String()
+		  Dim pColumns() As String
 		  
 		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(Me.TableName)
 		  
@@ -2588,8 +2579,8 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function TableColumns(pDatabase As iOSSQLiteDatabase) As Text()
-		  Dim pColumns() As Text
+		Function TableColumns(pDatabase As SQLiteDatabase) As String()
+		  Dim pColumns() As String
 		  
 		  Dim pRecordSet As iOSSQLiteRecordSet = pDatabase.SQLSelect("SELECT * FROM "+me.TableName+" LIMIT 1")
 		  
@@ -2600,7 +2591,7 @@ Inherits QueryBuilder
 		  
 		  While Not pRecordSet.EOF
 		    '.DefineEncoding(Encodings.UTF8))
-		    pColumns.Append(pRecordSet.Field("ColumnName").TextValue)
+		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
 		    pRecordSet.MoveNext
 		  Wend
 		  
@@ -2611,14 +2602,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function TableCreate(pDatabase as Database, pSuffix as TEXT = "") As Boolean
-		  Dim sql As Text
+		Function TableCreate(pDatabase as Database, pSuffix as String = "") As Boolean
+		  Dim sql As String
 		  dim HasPrimaryKeys as boolean = false
 		  dim HasUniqueKeys as Boolean = false
-		  Dim mPrimaryKeys as Text = "PRIMARY KEY ("
-		  Dim mUniqueKeys as Text = "UNIQUE ("
+		  Dim mPrimaryKeys as String = "PRIMARY KEY ("
+		  Dim mUniqueKeys as String = "UNIQUE ("
 		  sql = "CREATE TABLE `"+me.TableName+pSuffix+"` ( "
-		  for each dField as Xojo.Core.DictionaryEntry in Schema
+		  for each dField as DictionaryEntry in Schema
 		    dim field as ORMField = dField.Value
 		    sql = sql + Text.EndOfLine + "`"+ dField.Key + "` " 
 		    sql = sql + field.Type(pDatabase)
@@ -2659,7 +2650,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableName() As Text
+		Function TableName() As String
 		  Raise New ORMException("TableName must be implemented or be called from its implementation.")
 		End Function
 	#tag EndMethod
@@ -2669,8 +2660,8 @@ Inherits QueryBuilder
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
 		      Return TableCreate(pDatabase)
-		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
-		        Dim sql As Text
+		      for each dField as DictionaryEntry in SchemaToAdd
+		        Dim sql As String
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` ADD "
 		        
@@ -2682,8 +2673,8 @@ Inherits QueryBuilder
 		        pDatabase.ExecuteSQL(sql)
 		      next
 		      
-		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAlter
-		        Dim sql As Text
+		      for each dField as DictionaryEntry in SchemaToAlter
+		        Dim sql As String
 		        
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` CHANGE "
@@ -2711,8 +2702,8 @@ Inherits QueryBuilder
 		      pDatabase.ExecuteSQL("PRAGMA legacy_alter_table=OFF;")
 		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = OFF;")
 		      
-		      for each dField as Xojo.Core.DictionaryEntry in SchemaToAdd
-		        Dim sql As Text
+		      for each dField as DictionaryEntry in SchemaToAdd
+		        Dim sql As String
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` ADD "
 		        
@@ -2727,7 +2718,7 @@ Inherits QueryBuilder
 		      If SchemaToAlter.Count > 0 then
 		        dim selectSQL as string = "SELECT "
 		        dim collSelect as string
-		        for each dSelect as Xojo.Core.DictionaryEntry in  Schema
+		        for each dSelect as DictionaryEntry in  Schema
 		          collSelect = collSelect +"`"+ dSelect.key + "`, "
 		        next
 		        selectSQL = selectSQL + collSelect.Left(collSelect.Length -2)
@@ -2798,7 +2789,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TimeStampKey() As Text
+		Function TimeStampKey() As String
 		  // Retourne la colonne de la clé primaire
 		  Return "timestamp"
 		End Function
@@ -2810,7 +2801,7 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Unloading Then
 		    
-		    For Each pPrimaryKey As Text In PrimaryKeys
+		    For Each pPrimaryKey As String In PrimaryKeys
 		      If mData.HasKey(pPrimaryKey) Then
 		        mData.Remove(pPrimaryKey)
 		      End If
@@ -2830,7 +2821,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function UnloadAll() As ORM
 		  // Empties all data, but not changes
-		  Using Xojo.Core
+		  
 		  
 		  If Not RaiseEvent UnloadingAll Then
 		    
@@ -2852,7 +2843,7 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent UnloadingAll Then
 		    
-		    For Each pPrimaryKey As Text In PrimaryKeys
+		    For Each pPrimaryKey As String In PrimaryKeys
 		      If mData.HasKey(pPrimaryKey) Then
 		        mData.Remove(pPrimaryKey)
 		      End If
@@ -2868,19 +2859,19 @@ Inherits QueryBuilder
 		    Next
 		    
 		    mData = nil
-		    mData = new Xojo.Core.Dictionary
+		    mData = new Dictionary
 		    'mData.Clear
 		    
 		    mChanged = nil
-		    mChanged = new Xojo.Core.Dictionary
+		    mChanged = new Dictionary
 		    'mChanged.Clear
 		    
 		    mRemoved = nil
-		    mRemoved = new Xojo.Core.Dictionary
+		    mRemoved = new Dictionary
 		    'mRemoved.Clear
 		    
 		    mAdded = nil
-		    mAdded = new Xojo.Core.Dictionary
+		    mAdded = new Dictionary
 		    'mAdded.clear
 		    
 		    RaiseEvent UnloadedAll
@@ -2894,7 +2885,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Update(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  Using Xojo.Core
+		  
 		  
 		  If Not Me.Loaded then
 		    Raise new ORMException("Cannot update " + Me.TableName + " model because it is not loaded.")
@@ -2907,7 +2898,7 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn) Then
 		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
 		      End If
@@ -2918,7 +2909,7 @@ Inherits QueryBuilder
 		    End If
 		    
 		    // Merge mData with mChanged
-		    For Each pKey As Auto In mChanged.Keys
+		    For Each pKey As Variant In mChanged.Keys
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
@@ -2954,8 +2945,74 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Update(pConnexion As KanjoSocket) As Boolean
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  If Not me.Loaded then
+		    Raise new ORMException("Cannot update " + me.TableName + " model because it is not loaded.")
+		  End If
+		  
+		  If Not RaiseEvent Updating() Then
+		    
+		    
+		    Dim pChanged As New Dictionary
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As DictionaryEntry In me.ColumnsList
+		      If me.mChanged.HasKey(pColumn.Key) Then
+		        pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Key)
+		      End If
+		    Next
+		    
+		    if pChanged.Count >0 then
+		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pChanged)
+		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.POST, pConnexion.mURL+me.Pk.StringValue))
+		      pConnexion.BodyRequest = ""
+		    End If
+		    
+		    // Merge mData with mChanged
+		    For Each dKey as DictionaryEntry In me.mChanged
+		      dim pKey As Variant = dKey.Key
+		      me.mData.Value(pKey) = me.mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear mChanged, they are merged in mData
+		    me.mChanged.Clear
+		    
+		    // Execute pendings relationships
+		    For Each dRemoved as DictionaryEntry In me.mRemoved
+		      dim pRelation As ORMRelation = dRemoved.Value
+		      
+		      Call pRelation.Remove(me, pConnexion)
+		    Next
+		    
+		    For Each dAdded as DictionaryEntry In me.mAdded
+		      Dim pRelation As ORMRelation = dAdded.Value
+		      Call pRelation.Add(me, pConnexion)
+		    Next
+		    
+		    // Clear pending relationships
+		    //mAdded.Clear()
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
+		    //mRemoved.Clear()
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    
+		    RaiseEvent Updated()
+		    return true
+		  End If
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Update(pDatabase As iOSSQLiteDatabase) As ORM
+		Function Update(pDatabase As SQLiteDatabase) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  If Not Me.Loaded then
@@ -2969,7 +3026,7 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Auto In Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn) Then
 		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
 		      End If
@@ -2980,8 +3037,8 @@ Inherits QueryBuilder
 		    End If
 		    
 		    // Merge mData with mChanged
-		    For Each dKey as Xojo.Core.DictionaryEntry In mChanged
-		      dim pKey As Auto = dKey.Key
+		    For Each dKey as DictionaryEntry In mChanged
+		      dim pKey As Variant = dKey.Key
 		      mData.Value(pKey) = mChanged.Value(pKey)
 		    Next
 		    
@@ -2989,13 +3046,13 @@ Inherits QueryBuilder
 		    mChanged.Clear
 		    
 		    // Execute pendings relationships
-		    For Each dRemoved as Xojo.Core.DictionaryEntry In mRemoved
+		    For Each dRemoved as DictionaryEntry In mRemoved
 		      dim pRelation As ORMRelation = dRemoved.Value
 		      
 		      Call pRelation.Remove(Me, pDatabase, False)
 		    Next
 		    
-		    For Each dAdded as Xojo.Core.DictionaryEntry In mAdded
+		    For Each dAdded as DictionaryEntry In mAdded
 		      Dim pRelation As ORMRelation = dAdded.Value
 		      Call pRelation.Add(Me, pDatabase, False)
 		    Next
@@ -3020,80 +3077,14 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Function Update(pConnexion As KanjoSocket) As Boolean
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  
-		  If Not me.Loaded then
-		    Raise new ORMException("Cannot update " + me.TableName + " model because it is not loaded.")
-		  End If
-		  
-		  If Not RaiseEvent Updating() Then
-		    
-		    
-		    Dim pChanged As New Dictionary
-		    
-		    // Take only columns defined in the model
-		    For Each pColumn As Xojo.Core.DictionaryEntry In me.ColumnsList
-		      If me.mChanged.HasKey(pColumn.Key) Then
-		        pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Key)
-		      End If
-		    Next
-		    
-		    if pChanged.Count >0 then
-		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pChanged)
-		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.POST, pConnexion.mURL+me.Pk.AutoTextValue))
-		      pConnexion.BodyRequest = ""
-		    End If
-		    
-		    // Merge mData with mChanged
-		    For Each dKey as Xojo.Core.DictionaryEntry In me.mChanged
-		      dim pKey As Auto = dKey.Key
-		      me.mData.Value(pKey) = me.mChanged.Value(pKey)
-		    Next
-		    
-		    // Clear mChanged, they are merged in mData
-		    me.mChanged.Clear
-		    
-		    // Execute pendings relationships
-		    For Each dRemoved as Xojo.Core.DictionaryEntry In me.mRemoved
-		      dim pRelation As ORMRelation = dRemoved.Value
-		      
-		      Call pRelation.Remove(me, pConnexion)
-		    Next
-		    
-		    For Each dAdded as Xojo.Core.DictionaryEntry In me.mAdded
-		      Dim pRelation As ORMRelation = dAdded.Value
-		      Call pRelation.Add(me, pConnexion)
-		    Next
-		    
-		    // Clear pending relationships
-		    //mAdded.Clear()
-		    me.mAdded = nil
-		    me.mAdded = new Dictionary
-		    
-		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
-		    //mRemoved.Clear()
-		    me.mRemoved = nil
-		    me.mRemoved = new Dictionary
-		    
-		    
-		    RaiseEvent Updated()
-		    return true
-		  End If
-		  
-		  Return false
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub UpdateCache(pDatabase as Database, pDebut as Xojo.Core.date, pFin as Xojo.Core.Date)
+		Sub UpdateCache(pDatabase as Database, pDebut as DateTime, pFin as DateTime)
 		  Raise New ORMException("UpdateCache not implemented in this model")
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(ParamArray pValues() As Auto) As ORM
+		Function Values(ParamArray pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
 		  Return Me
@@ -3101,7 +3092,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Auto) As ORM
+		Function Values(pValues() As Variant) As ORM
 		  Call Super.Values(pValues)
 		  
 		  Return Me
@@ -3109,16 +3100,16 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Where(pLeft As Auto, pOperator As Text, pRight As Auto) As ORM
-		  Call Super.Where(pLeft, pOperator, pRight)
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Where(pCriterias As Xojo.Core.Dictionary) As ORM
+		Function Where(pCriterias As Dictionary) As ORM
 		  Call Super.Where(pCriterias)
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Where(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
+		  Call Super.Where(pLeft, pOperator, pRight)
 		  
 		  Return Me
 		End Function
@@ -3147,8 +3138,8 @@ Inherits QueryBuilder
 		  Dim pXmlNode As XmlNode = pXmlDocument.CreateElement(Me.TableName)
 		  
 		  // Adds each column as an Attribute
-		  For Each DataEntry As Xojo.Core.DictionaryEntry In Me.Data
-		    pXmlNode.SetAttribute(DataEntry.Key.AutoTextValue, DataEntry.Value.AutoTextValue)
+		  For Each DataEntry As DictionaryEntry In Me.Data
+		    pXmlNode.SetAttribute(DataEntry.Key.StringValue, DataEntry.Value.StringValue)
 		  Next
 		  
 		  Return pXmlNode
@@ -3175,11 +3166,11 @@ Inherits QueryBuilder
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Changed(pColumn As Text)
+		Event Changed(pColumn As String)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Changing(pColumn As Text) As Boolean
+		Event Changing(pColumn As String) As Boolean
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
@@ -3282,23 +3273,27 @@ Inherits QueryBuilder
 
 
 	#tag Property, Flags = &h0
+		ColumnsList As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = false
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mAdded As Xojo.Core.Dictionary
+		Protected mAdded As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mChanged As Xojo.Core.Dictionary
+		Protected mChanged As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mData As Xojo.Core.Dictionary
+		Protected mData As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1
-		Protected mRemoved As Xojo.Core.Dictionary
+		Protected mRemoved As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -3306,27 +3301,27 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		Schema As Xojo.Core.Dictionary
+		Schema As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaCurrent As Xojo.Core.Dictionary
+		SchemaCurrent As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaDefaultDatas() As Auto
+		SchemaDefaultDatas() As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaMadantoryData() As auto
+		SchemaMadantoryData() As Variant
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaToAdd As Xojo.Core.Dictionary
+		SchemaToAdd As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaToAlter As Xojo.Core.Dictionary
+		SchemaToAlter As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -3334,7 +3329,7 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaToRemoveColumn As Xojo.Core.Dictionary
+		SchemaToRemoveColumn As Dictionary
 	#tag EndProperty
 
 

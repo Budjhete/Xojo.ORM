@@ -2,7 +2,7 @@
 Protected Class JoinQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  #Pragma Unused pLastQueryExpression
 		  if mTableName.Type = 10 or mTableName.Type = 9 then
 		    if mTableName isa QueryExpression then
@@ -16,7 +16,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pTableName As Auto, pTableAlias As Text)
+		Sub Constructor(pTableName As Variant, pTableAlias As String)
 		  mTableName = pTableName
 		  mTableAlias = pTableAlias
 		End Sub
@@ -30,11 +30,11 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mTableAlias As Text
+		Private mTableAlias As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mTableName As Auto
+		Private mTableName As Variant
 	#tag EndProperty
 
 

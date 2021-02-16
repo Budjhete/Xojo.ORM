@@ -2,7 +2,7 @@
 Protected Class OrOnQueryExpression
 Inherits OnQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  If pLastQueryExpression IsA OnOpenQueryExpression Then
 		    Return Predicate()
 		  End If

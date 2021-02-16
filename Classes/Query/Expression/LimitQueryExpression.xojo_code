@@ -2,11 +2,11 @@
 Protected Class LimitQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  #Pragma Unused pLastQueryExpression
-		  dim Offset as Text
-		  if mOffset > 0 then Offset = mOffset.ToText + ", "
-		  Return "LIMIT " + Offset + mLimit.ToText
+		  dim Offset as String
+		  if mOffset > 0 then Offset = mOffset.ToString + ", "
+		  Return "LIMIT " + Offset + mLimit.ToString
 		End Function
 	#tag EndMethod
 

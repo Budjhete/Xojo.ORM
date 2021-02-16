@@ -2,7 +2,7 @@
 Protected Class ValuesQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  // Multiple insertions
 		  If pLastQueryExpression IsA ValuesQueryExpression Then
 		    Return ", ( " + QueryCompiler.Values(mValues) + " )"
@@ -15,7 +15,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pValues() As Auto)
+		Sub Constructor(pValues() As Variant)
 		  mValues = pValues
 		End Sub
 	#tag EndMethod
@@ -29,7 +29,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mValues() As Auto
+		Private mValues() As Variant
 	#tag EndProperty
 
 

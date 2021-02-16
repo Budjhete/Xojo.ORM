@@ -2,7 +2,7 @@
 Protected Class CrossJoinQueryExpression
 Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  #Pragma Unused pLastQueryExpression
 		  
 		  Return "CROSS " + Super.Compile()

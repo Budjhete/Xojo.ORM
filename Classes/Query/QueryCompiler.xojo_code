@@ -1,13 +1,13 @@
 #tag Module
 Protected Module QueryCompiler
 	#tag Method, Flags = &h0
-		Function Alias(pAlias As Text) As Text
+		Function Alias(pAlias As String) As String
 		  Return "`" + pAlias + "`"
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Column(pColumn As Auto) As Text
+		Function Column(pColumn As Variant) As String
 		  if pColumn = Nil then Return "NULL"
 		  
 		  if pColumn.Type = 9 or pColumn.Type = 10 then  // 9 = Object // 10 = Class
@@ -26,7 +26,7 @@ Protected Module QueryCompiler
 		  end if
 		  
 		  // Compile column
-		  Dim pParts() As Text = pColumn.AutoTextValue.Split(".")
+		  Dim pParts() As String = pColumn.StringValue.Split(".")
 		  
 		  For i As Integer = 0 To pParts.Ubound
 		    
@@ -34,7 +34,7 @@ Protected Module QueryCompiler
 		    Case "*"
 		      // Do not escape the column
 		    Else
-		      if pParts(i).IsNumeric then
+		      if IsNumeric(pParts(i)) then
 		        pParts(i) = pParts(i)
 		      else
 		        pParts(i) = "`" + pParts(i)+ "`"
@@ -43,25 +43,25 @@ Protected Module QueryCompiler
 		    
 		  Next
 		  
-		  Return Text.Join(pParts, ".")
+		  Return String.FromArray(pParts, ".")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Columns(pColumns() As Auto) As Text
+		Function Columns(pColumns() As Variant) As String
 		  // Compile values
-		  Dim pCompiledColumns() As Text
+		  Dim pCompiledColumns() As String
 		  
 		  For i As Integer = 0 To pColumns.Ubound
 		    pCompiledColumns.Append(QueryCompiler.Column(pColumns(i)))
 		  Next
 		  
-		  Return Text.Join(pCompiledColumns, ", ")
+		  Return String.FromArray(pCompiledColumns, ", ")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Operator(pLeft As Auto, pOperator As Text, pRight As Auto) As Text
+		Function Operator(pLeft As Variant, pOperator As String, pRight As Variant) As String
 		  #Pragma Unused pLeft
 		  #Pragma Unused pRight
 		  
@@ -70,17 +70,11 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Set(pColumn As Auto, pValue As Auto) As Text
-		  Return QueryCompiler.Column(pColumn) + " = " + QueryCompiler.Value(pValue)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0
-		Function Set(pValues As Xojo.Core.Dictionary) As Text
+		Function Set(pValues As Dictionary) As String
 		  // Compile values
-		  Using Xojo.Core
 		  
-		  Dim pCompiledValues() As Text
+		  
+		  Dim pCompiledValues() As String
 		  
 		  For Each pColumn As DictionaryEntry In pValues
 		    
@@ -88,7 +82,7 @@ Protected Module QueryCompiler
 		    
 		  Next
 		  
-		  Return Text.Join(pCompiledValues, ", ")
+		  Return String.FromArray(pCompiledValues, ", ")
 		  
 		  
 		  
@@ -96,19 +90,25 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableName(pTableName As Text) As Text
+		Function Set(pColumn As Variant, pValue As Variant) As String
+		  Return QueryCompiler.Column(pColumn) + " = " + QueryCompiler.Value(pValue)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function TableName(pTableName As String) As String
 		  Return "`" + pTableName + "`"
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function TableName(pTableName As Text, pAlias As Text) As Text
+		Function TableName(pTableName As String, pAlias As String) As String
 		  Return "`" + pTableName + "` AS `" + pAlias + "`"
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Value(pValue As Auto) As Text
+		Function Value(pValue As Variant) As String
 		  If pValue.IsArray Then
 		    
 		    select case pValue.ArrayElementType
@@ -116,8 +116,8 @@ Protected Module QueryCompiler
 		      dim i() as integer = pValue
 		      Return "( " + QueryCompiler.Values(i) + " )"
 		      
-		    else  // maybe a Text
-		      dim s() as Text = pValue
+		    else  // maybe a String
+		      dim s() as String = pValue
 		      Return "( " + QueryCompiler.Values(s) + " )"
 		    end select
 		  End If
@@ -134,10 +134,10 @@ Protected Module QueryCompiler
 		      Return QueryExpression(pValue).Compile
 		      
 		    Case IsA Date // Date
-		      Return QueryCompiler.Value(pValue.AutoDateValue.SQLDateTime)
+		      Return QueryCompiler.Value(pValue.DateTimeValue .SQLDateTime)
 		      
-		    Case IsA Xojo.Core.Date // Date
-		      Return QueryCompiler.Value(pValue.AutoDateValue.SQLDateTime)
+		    Case IsA DateTime // Date
+		      Return QueryCompiler.Value(pValue.DateTimeValue .SQLDateTime)
 		      
 		    Case Nil // NULL
 		      Return "NULL"
@@ -149,15 +149,15 @@ Protected Module QueryCompiler
 		  Select Case Xojo.Introspection.GetType(pValue)
 		    
 		  Case GetTypeInfo(Integer), GetTypeInfo(Double), GetTypeInfo(Currency)
-		    'if pValue.Type = Auto.TypeDouble then
+		    'if pValue.Type = Variant.TypeDouble then
 		    'Dim locale As New Xojo.Core.Locale("en-US")
-		    'Return pValue.DoubleValue.ToText(locale, "0.000000000000") // return e-12
+		    'Return pValue.DoubleValue.ToString(locale, "0.000000000000") // return e-12
 		    'end if
-		    Return pValue.AutoTextValue
+		    Return pValue.StringValue
 		    
 		  Case GetTypeInfo(Boolean)
 		    
-		    If pValue.AutoBooleanValue Then
+		    If pValue.BooleanValue Then
 		      Return "1"
 		    Else
 		      Return "0"
@@ -167,11 +167,11 @@ Protected Module QueryCompiler
 		  
 		  // Remove bad characters
 		  #if TargetMacOS then
-		    pValue = pValue.AutoTextValue.ReplaceAll( text.FromUnicodeCodepoint(0), "")
+		    pValue = pValue.StringValue.ReplaceAll(Text.FromUnicodeCodepoint(0), "")
 		  #endif
 		  
 		  // Quote quotes
-		  pValue = pValue.AutoTextValue.ReplaceAll("'", "''")
+		  pValue = pValue.StringValue.ReplaceAll("'", "''")
 		  
 		  Return "'" + pValue + "'"
 		  
@@ -179,48 +179,48 @@ Protected Module QueryCompiler
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Auto) As Text
+		Function Values(pValues() As Integer) As String
 		  // Compile values
-		  Dim pCompiledValues() As Text
+		  Dim pCompiledValues() As String
 		  
 		  For i As Integer = 0 To pValues.Ubound
-		    dim v as Auto = pValues(i)
+		    dim v as Variant = pValues(i)
 		    pCompiledValues.Append(QueryCompiler.Value(v))
 		  Next
 		  
-		  Return Text.Join(pCompiledValues, ", ")
+		  Return String.FromArray(pCompiledValues, ", ")
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Integer) As Text
+		Function Values(pValues() As String) As String
 		  // Compile values
-		  Dim pCompiledValues() As Text
+		  Dim pCompiledValues() As String
 		  
 		  For i As Integer = 0 To pValues.Ubound
-		    dim v as Auto = pValues(i)
+		    dim v as Variant = pValues(i)
 		    pCompiledValues.Append(QueryCompiler.Value(v))
 		  Next
 		  
-		  Return Text.Join(pCompiledValues, ", ")
+		  Return String.FromArray(pCompiledValues, ", ")
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Text) As Text
+		Function Values(pValues() As Variant) As String
 		  // Compile values
-		  Dim pCompiledValues() As Text
+		  Dim pCompiledValues() As string
 		  
 		  For i As Integer = 0 To pValues.Ubound
-		    dim v as Auto = pValues(i)
+		    dim v as Variant = pValues(i)
 		    pCompiledValues.Append(QueryCompiler.Value(v))
 		  Next
 		  
-		  Return Text.Join(pCompiledValues, ", ")
+		  Return String.FromArray(pCompiledValues, ", ")
 		  
 		  
 		End Function

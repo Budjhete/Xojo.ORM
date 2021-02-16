@@ -7,7 +7,7 @@ Protected Class ORMField
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pType as TypeList, pLenght as text, pNotNull as Boolean, pDefaultValue as text, pUnique as Boolean, pPrimary as Boolean)
+		Sub Constructor(pType as TypeList, pLenght as String, pNotNull as Boolean, pDefaultValue as String, pUnique as Boolean, pPrimary as Boolean)
 		  mType = pType
 		  mLength = pLenght
 		  mNotNull = pNotNull
@@ -17,16 +17,16 @@ Protected Class ORMField
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub DefaultValue(Assigns pDefault as Text)
+		Sub DefaultValue(Assigns pDefault as String)
 		  mDefaultValue = pDefault
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function DefaultValue(pDatabase as Database) As Text
+		Function DefaultValue(pDatabase as Database) As String
 		  if pDatabase isa MySQLCommunityServer then
 		    if mDefaultValue<>"" then
-		      dim dv as Text
+		      dim dv as String
 		      select case mDefaultValue
 		      case "NULL", "NIL"
 		        dv = "NULL"
@@ -44,7 +44,7 @@ Protected Class ORMField
 		    
 		    
 		    if mDefaultValue<>"" then
-		      dim dv as Text
+		      dim dv as String
 		      select case mDefaultValue
 		      case "NULL", "NIL"
 		        dv = "NULL"
@@ -70,7 +70,7 @@ Protected Class ORMField
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extra(pDatabase as Database) As Text
+		Function Extra(pDatabase as Database) As String
 		  if pDatabase isa MySQLCommunityServer then
 		    select case mExtra
 		    case ExtraList.AutoIncremente
@@ -88,7 +88,7 @@ Protected Class ORMField
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Length() As Text
+		Function Length() As String
 		  if mLength="" then return ""
 		  if mType = TypeList.BOOLEAN or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
 		  return "("+mLength+")"
@@ -96,13 +96,13 @@ Protected Class ORMField
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Length(Assigns pLength as Text)
+		Sub Length(Assigns pLength as String)
 		  mLength = pLength
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function NotNull() As Text
+		Function NotNull() As String
 		  if mNotNull then
 		    Return "NOT NULL"
 		  else
@@ -131,7 +131,7 @@ Protected Class ORMField
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Type(pDatabase as Database) As Text
+		Function Type(pDatabase as Database) As String
 		  If pDatabase ISA MySQLCommunityServer Then
 		    select case mType
 		    case TypeList.VARCHAR
@@ -180,7 +180,7 @@ Protected Class ORMField
 
 
 	#tag Property, Flags = &h21
-		Private mDefaultValue As Text
+		Private mDefaultValue As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -188,7 +188,7 @@ Protected Class ORMField
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mLength As Text
+		Private mLength As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

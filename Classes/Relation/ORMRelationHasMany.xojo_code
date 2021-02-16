@@ -11,8 +11,14 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) )
+		Sub Add(pORM as ORM, pSocket as KanjoSocket)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Add(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+		Sub Add(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  Dim D as new Dictionary
 		  d.Value(mForeignColumn) = pORM.Pk
 		  DB.Update(mORM.TableName). _
@@ -23,14 +29,8 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
-		Sub Constructor(pForeignColumn As Text, pORM As ORM)
+		Sub Constructor(pForeignColumn As String, pORM As ORM)
 		  mForeignColumn = pForeignColumn
 		  
 		  mORM = pORM
@@ -38,12 +38,12 @@ Implements ORMRelation
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Dump() As Text
-		  Return mORM.TableName + ":" + mORM.Pk.AutoTextValue
+		Function Dump() As String
+		  Return mORM.TableName + ":" + mORM.Pk.StringValue
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only
 		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  DB.Update(mORM.TableName). _
 		  Set(mForeignColumn : Nil) ._
@@ -55,8 +55,14 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) )
+		Sub Remove(pORM as ORM, pSocket as KanjoSocket)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+		Sub Remove(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  Dim d as Dictionary
 		  d.Value(mForeignColumn) = Nil
 		  DB.Update(mORM.TableName).Set(d).Where(mORM.Pks).AndWhere(mForeignColumn, "=", pORM.Pk).Execute(pDatabase, pCommit)
@@ -65,15 +71,9 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Sub Remove(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
-		  
-		End Sub
-	#tag EndMethod
-
 
 	#tag Property, Flags = &h1
-		Protected mForeignColumn As Text
+		Protected mForeignColumn As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h1

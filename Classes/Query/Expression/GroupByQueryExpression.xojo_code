@@ -2,8 +2,8 @@
 Protected Class GroupByQueryExpression
 Implements QueryExpression
 	#tag Method, Flags = &h0
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As Text
-		  Dim pCompiledColumns() As Text
+		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
+		  Dim pCompiledColumns() As String
 		  
 		  // Compile each column
 		  For i As Integer = 0 To mColumns.UBound
@@ -12,15 +12,15 @@ Implements QueryExpression
 		  
 		  If pLastQueryExpression IsA GroupByQueryExpression Then
 		    // @TODO fixer l'espace avant la virgule
-		    Return ", " + Text.Join(pCompiledColumns, ", ")
+		    Return ", " + String.FromArray(pCompiledColumns, ", ")
 		  End If
 		  
-		  Return "GROUP BY " + Text.Join(pCompiledColumns, ", ")
+		  Return "GROUP BY " + String.FromArray(pCompiledColumns, ", ")
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pColumns() As Auto)
+		Sub Constructor(pColumns() As Variant)
 		  mColumns = pColumns
 		End Sub
 	#tag EndMethod
@@ -33,7 +33,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mColumns() As Auto
+		Private mColumns() As Variant
 	#tag EndProperty
 
 

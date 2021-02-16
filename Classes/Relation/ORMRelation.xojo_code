@@ -1,43 +1,43 @@
 #tag Interface
 Protected Interface ORMRelation
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Sub Add(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Add(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Sub Add(pORM as ORM, pSocket as KanjoSocket)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Add(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		Sub Add(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Dump() As Text
+		Function Dump() As String
 		  
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Remove(pORM As ORM, pDatabase As iOSSQLiteDatabase, pCommit As Boolean)
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) )
+		Sub Remove(pORM as ORM, pSocket as KanjoSocket)
 		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Remove(pORM as ORM, pSocket as Xojo.Net.TCPSocket)
+		Sub Remove(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  
 		End Sub
 	#tag EndMethod
