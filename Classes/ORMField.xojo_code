@@ -63,6 +63,12 @@ Protected Class ORMField
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function Extra() As ExtraList
+		  Return mExtra
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub Extra(Assigns pExtra as ExtraList)
 		  mExtra = pExtra

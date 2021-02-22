@@ -924,9 +924,12 @@ Inherits QueryBuilder
 		    Dim sql As String
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
+		    dim CanHavePrimaryKeys as Boolean = true
 		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
 		    Dim mUniqueKeys as String = "UNIQUE ("
+		    
 		    sql = "CREATE TABLE `"+me.TableName+"` ( "
+		    
 		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
 		      sql = sql + EndOfLine + "`"+ dField.Key + "` " 
@@ -935,12 +938,21 @@ Inherits QueryBuilder
 		        sql = sql +field.Length
 		      end if
 		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		      sql = sql + " " + field.Extra(pDatabase)
-		      sql = sql + ","
+		      
+		      
+		      if field.Extra = ORMField.ExtraList.AutoIncremente then 
+		        if field.PrimaryKey then sql = sql + " PRIMARY KEY AUTOINCREMENT"
+		        CanHavePrimaryKeys = false
+		      end if
+		      
 		      if field.PrimaryKey then
 		        HasPrimaryKeys = HasPrimaryKeys OR true
 		        mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
 		      end if
+		      
+		      sql = sql + " " + field.Extra(pDatabase)
+		      sql = sql + ","
+		      
 		      
 		      if field.Unique then
 		        HasUniqueKeys = HasUniqueKeys OR true
@@ -951,8 +963,9 @@ Inherits QueryBuilder
 		      
 		      
 		    next
+		    
 		    sql = sql.left(sql.Length -1)
-		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
+		    if HasPrimaryKeys and CanHavePrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
 		    
 		    sql = sql +");"
@@ -1284,6 +1297,9 @@ Inherits QueryBuilder
 		      if pFiringFoundEvent then RaiseEvent Found
 		      
 		    else
+		      // clear existing data
+		      call me.Unload.Clear
+		      
 		      if pFiringFoundEvent then RaiseEvent NoFound
 		      
 		    End If
@@ -2015,7 +2031,11 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Sub RaiseEventFound()
-		  RaiseEvent Found
+		  if me.Loaded Then
+		    RaiseEvent Found
+		  else
+		    RaiseEvent NoFound
+		  end if
 		End Sub
 	#tag EndMethod
 
