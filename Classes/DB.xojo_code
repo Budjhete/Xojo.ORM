@@ -17,9 +17,9 @@ Protected Module DB
 		  // Begin a transaction
 		  
 		  If pDatabase IsA MySQLCommunityServer Then
-		    pDatabase.SQLExecute("START TRANSACTION")
+		    pDatabase.ExecuteSQL("START TRANSACTION")
 		  Else
-		    pDatabase.SQLExecute("BEGIN TRANSACTION")
+		    pDatabase.ExecuteSQL("BEGIN TRANSACTION")
 		  End If
 		End Sub
 	#tag EndMethod
@@ -28,7 +28,7 @@ Protected Module DB
 		Sub Begin(Extends pDatabase As SQLiteDatabase)
 		  // Begin a transaction
 		  
-		  pDatabase.SQLExecute("BEGIN TRANSACTION")
+		  pDatabase.ExecuteSQL("BEGIN TRANSACTION")
 		  
 		End Sub
 	#tag EndMethod
@@ -92,8 +92,8 @@ Protected Module DB
 		        
 		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		        
-		        pDatabase.SQLExecute("PRAGMA encoding = 'utf-8'")
-		        pDatabase.SQLExecute("PRAGMA foreign_keys = ON")
+		        pDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
+		        pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
 		        
 		        Return pDatabase
 		        
@@ -124,7 +124,7 @@ Protected Module DB
 		      '
 		      'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		      '
-		      'pDatabase.SQLExecute("SET NAMES 'utf8'")
+		      'pDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		      '
 		      'Return pDatabase
 		      '
@@ -152,8 +152,8 @@ Protected Module DB
 		        
 		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		        
-		        pDatabase.SQLExecute("SET NAMES 'utf8'")
-		        pDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		        pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		        pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		        
 		        Return pDatabase
 		        
@@ -181,7 +181,7 @@ Protected Module DB
 		      '
 		      'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		      '
-		      'pDatabase.SQLExecute("SET NAMES 'utf8'")
+		      'pDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		      '
 		      'Return pDatabase
 		      '
@@ -248,8 +248,8 @@ Protected Module DB
 		        
 		        'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		        
-		        pDatabase.SQLExecute("PRAGMA encoding = 'utf-8'")
-		        pDatabase.SQLExecute("PRAGMA foreign_keys = ON")
+		        pDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
+		        pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
 		        
 		        Return pDatabase
 		        
@@ -598,11 +598,11 @@ Protected Module DB
 		    tDatabase.Connect
 		    
 		    if tDatabase isa MySQLCommunityServer then
-		      tDatabase.SQLExecute("SET NAMES 'utf8'")
-		      tDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		      tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		      tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		    else
-		      tDatabase.SQLExecute("PRAGMA encoding = 'utf-8'")
-		      tDatabase.SQLExecute("PRAGMA foreign_keys = ON")
+		      tDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
+		      tDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
 		    end if
 		    Return tDatabase
 		  Catch error As DatabaseException

@@ -95,7 +95,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
-		  // Execute the QueryBuilder using SQLExecute,
+		  // Execute the QueryBuilder using ExecuteSQL,
 		  // which will not get any result from the database
 		  
 		  If Not RaiseEvent Executing Then
@@ -104,7 +104,7 @@ Implements QueryExpression
 		    
 		    System.DebugLog System.Ticks.StringValue + " " + pStatement
 		    
-		    pDatabase.SQLExecute(pStatement)
+		    pDatabase.ExecuteSQL(pStatement)
 		    
 		    If pDatabase.Error Then
 		      Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement, pDatabase.ErrorCode)
@@ -156,7 +156,7 @@ Implements QueryExpression
 		      // Check for error
 		      If pDatabase.Error Then
 		        if pDatabase.ErrorCode = 1055 then
-		          pDatabase.SQLExecute("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
+		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
 		          pRecordSet = pDatabase.SQLSelect(pStatement)
 		        elseif pDatabase.ErrorCode = 48879 then
 		          Dim tDatabase as Database
