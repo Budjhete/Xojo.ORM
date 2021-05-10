@@ -2680,7 +2680,10 @@ Inherits QueryBuilder
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
 		      Return TableCreate(pDatabase)
+		    else
+		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 0;")
 		      for each dField as DictionaryEntry in SchemaToAdd
+		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Dim sql As String
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` ADD "
@@ -2691,11 +2694,14 @@ Inherits QueryBuilder
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase)  +";"
 		        pDatabase.ExecuteSQL(sql)
+		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		      next
 		      
 		      for each dField as DictionaryEntry in SchemaToAlter
-		        Dim sql As String
 		        
+		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        
+		        Dim sql As String
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` CHANGE "
 		        
@@ -2708,10 +2714,15 @@ Inherits QueryBuilder
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        catch error as DatabaseException
+		          pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		          
 		          Return false
 		        end try
+		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        
 		      next
-		      
+		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		      
 		    end if
 		    
