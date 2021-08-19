@@ -102,12 +102,11 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    'System.DebugLog System.Ticks.StringValue + " " + pStatement
 		    
 		    pDatabase.ExecuteSQL(pStatement)
 		    
 		    If pDatabase.Error Then
-		      Raise New ORMException(pDatabase.ErrorMessage.totext, pStatement, pDatabase.ErrorCode)
+		      Raise New ORMException(pDatabase.ErrorMessage, pStatement, pDatabase.ErrorCode)
 		    End If
 		    
 		    If pCommit Then

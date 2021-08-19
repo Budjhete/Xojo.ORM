@@ -1307,7 +1307,6 @@ Inherits QueryBuilder
 		    
 		    
 		  End If
-		  
 		  Return Me
 		  
 		End Function
@@ -1377,7 +1376,6 @@ Inherits QueryBuilder
 		    
 		    
 		  End If
-		  
 		  Return Me
 		  
 		End Function
@@ -1395,9 +1393,11 @@ Inherits QueryBuilder
 		    pColumns.Append(nColumn)
 		  Next
 		  
-		  Return Append(new SelectQueryExpression(pColumns)). _
+		  dim RR as recordSet = Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase, pExpiration)
+		  
+		  Return rr
 		End Function
 	#tag EndMethod
 
@@ -1411,9 +1411,11 @@ Inherits QueryBuilder
 		    pColumns.Append(nColumn)
 		  Next
 		  
-		  Return Append(new SelectQueryExpression(pColumns)). _
+		  Dim rr as RecordSet = Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase)
+		  
+		  return rr
 		End Function
 	#tag EndMethod
 
@@ -1425,9 +1427,11 @@ Inherits QueryBuilder
 		    pColumns.Append(TableName + "." + pColumn)
 		  Next
 		  
-		  Return Append(new SelectQueryExpression(pColumns)). _
+		  Dim RR as iOSSQLiteRecordSet = Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase, pExpiration)
+		  
+		  return RR
 		End Function
 	#tag EndMethod
 
