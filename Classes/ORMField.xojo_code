@@ -198,7 +198,7 @@ Protected Class ORMField
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
-		Private mNotNull As Boolean = True
+		Private mNotNull As Boolean = false
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
