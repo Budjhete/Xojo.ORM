@@ -2770,7 +2770,7 @@ Inherits QueryBuilder
 		          end if
 		          
 		          
-		          
+		          dim countrecord as integer = rr.RowCount
 		          While Not rr.AfterLastRow
 		            insertSQL = insertSQL + "("
 		            For i As Integer = 0 To rr.LastColumnIndex
@@ -2797,8 +2797,14 @@ Inherits QueryBuilder
 		          if TableCreate(pDatabase, "_TMP") then
 		            Try
 		              pDatabase.ExecuteSQL(insertSQL)
-		              pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"';")
-		              pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
+		              dim rrtest as RowSet = pDatabase.SelectSQL("SELECT 1 FROM `" + me.TableName+"_TMP`;")
+		              if rrtest.RowCount= countrecord then
+		                pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"';")
+		                pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
+		              else
+		                System.DebugLog "kErreur insertion données"
+		                Return false
+		              end if
 		              
 		              
 		            Catch error As DatabaseException

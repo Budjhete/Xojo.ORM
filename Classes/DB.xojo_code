@@ -153,8 +153,11 @@ Protected Module DB
 		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		        
 		        pDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		        pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
-		        
+		        try
+		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		        Catch error As DatabaseException
+		          System.DebugLog "Can't execute sql_mode : " + error.Message
+		        End Try
 		        Return pDatabase
 		        
 		      End If
@@ -597,14 +600,6 @@ Protected Module DB
 		  Try
 		    tDatabase.Connect
 		    
-		    if tDatabase isa MySQLCommunityServer then
-		      tDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		      tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
-		    else
-		      tDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
-		      tDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
-		    end if
-		    Return tDatabase
 		  Catch error As DatabaseException
 		    
 		    MessageBox("Error connecting to Database: " + error.Message)
@@ -612,7 +607,19 @@ Protected Module DB
 		    Return tDatabase
 		  End Try
 		  
+		  if tDatabase isa MySQLCommunityServer then
+		    tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		    try
+		      tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		    Catch error as DatabaseException
+		      System.DebugLog "Can't set SQL_MODE : " + error.Message
+		    end try
+		  else
+		    tDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
+		    tDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
+		  end if
 		  
+		  Return tDatabase
 		End Function
 	#tag EndMethod
 
