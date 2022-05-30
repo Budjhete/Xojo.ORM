@@ -34,6 +34,12 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Coalesce(pColumn() as Variant) As QueryExpression
+		  Return DB.Expression("COALESCE( " + QueryCompiler.Columns(pColumn)  + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Coalesce(pColumn as Variant, pSubtitu as Integer = 0) As QueryExpression
 		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToText+" )")
 		End Function

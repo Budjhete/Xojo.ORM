@@ -2686,6 +2686,18 @@ Inherits QueryBuilder
 		      Return TableCreate(pDatabase)
 		    else
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 0;")
+		      
+		      for each dField as DictionaryEntry in SchemaToRemoveColumn
+		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Dim sql As String
+		        sql = "ALTER TABLE `"+me.TableName+"` DROP COLUMN "
+		        dim field as ORMField = dField.Value
+		        sql = sql + "`"+ dField.Key + "` " 
+		        pDatabase.ExecuteSQL(sql)
+		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		      next dField
+		      
+		      
 		      for each dField as DictionaryEntry in SchemaToAdd
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Dim sql As String
@@ -2696,7 +2708,9 @@ Inherits QueryBuilder
 		        sql = sql + "`"+ dField.Key + "` " 
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		        sql = sql + " " + field.Extra(pdatabase)  +";"
+		        sql = sql + " " + field.Extra(pdatabase) 
+		        if field.PrimaryKey then sql = sql + " PRIMARY KEY"
+		        sql = sql + ";"
 		        pDatabase.ExecuteSQL(sql)
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		      next
