@@ -1266,6 +1266,10 @@ Inherits QueryBuilder
 		    dim pColumnType as new Dictionary
 		    
 		    while not pRecordSetType.EOF
+		      'if pRecordSetType.Field("ColumnName").StringValue = "" then
+		      'System.DebugLog "Iterator has a BUG!"
+		      'exit
+		      'end if
 		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
 		      pRecordSetType.MoveNext
 		    wend
@@ -2584,21 +2588,26 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableColumns(pDatabase As Database) As String()
 		  Dim pColumns() As String
-		  
-		  Dim pRecordSet As RecordSet = pDatabase.FieldSchema(Me.TableName)
-		  
-		  If pRecordSet Is Nil Then
+		  Try
+		    dim cname as string = me.TableName
+		    Dim pRecordSet As RowSet = pDatabase.TableColumns(Me.TableName)
+		    
+		    
+		    
+		    For Each c As DatabaseRow In pRecordSet
+		      'If c.ColumnAt(0).StringValue = "" Then 
+		      'System.DebugLog "Iterator has a BUG!"
+		      'Exit
+		      'End
+		      pColumns.Append(c.Column("ColumnName").StringValue)
+		    Next
+		    
+		    Return pColumns
+		    
+		  Catch error As DatabaseException
 		    Raise New ORMException(Me.TableName + " is not an existing table.")
-		  End If
-		  
-		  While Not pRecordSet.EOF
-		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue.DefineEncoding(Encodings.UTF8).ToText)
-		    pRecordSet.MoveNext
-		  WEnd
-		  
-		  Return pColumns
-		  
-		  
+		    
+		  End Try
 		End Function
 	#tag EndMethod
 
