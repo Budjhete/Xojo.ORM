@@ -3344,6 +3344,10 @@ Inherits QueryBuilder
 		FinishLoaded As Boolean = false
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		isNew As Boolean = True
+	#tag EndProperty
+
 	#tag Property, Flags = &h1
 		Protected mAdded As Dictionary
 	#tag EndProperty
@@ -3460,6 +3464,14 @@ Inherits QueryBuilder
 			Group="Behavior"
 			InitialValue="false"
 			Type="boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="isNew"
+			Visible=false
+			Group="Behavior"
+			InitialValue="True"
+			Type="Boolean"
 			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
