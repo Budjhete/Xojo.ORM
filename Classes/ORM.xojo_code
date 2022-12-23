@@ -2119,6 +2119,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Remove(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, ParamArray pFarKeys As Variant) As ORM
+		  // EXEMPLE : 
+		  //Call MainORM.Remove("SecondTableNameToRemoveDataFrom", "PKColumn1RelativeToMainORMPK", "PKColumn2RelativeToRelativeORM", LoadedRelativeORM)
+		  
 		  Return Remove(pPivotTableName, pForeignColumn, pFarColumn, pFarKeys)
 		End Function
 	#tag EndMethod
