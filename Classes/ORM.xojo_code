@@ -600,7 +600,7 @@ Inherits QueryBuilder
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
-		    System.DebugLog "ORM.create pRaw = data"
+		    'System.DebugLog "ORM.create pRaw = data"
 		    
 		    
 		    // pData contains at least all primary keys
@@ -608,10 +608,10 @@ Inherits QueryBuilder
 		    
 		    'System.DebugLog "ORM.create pData = Pks"
 		    
-		    System.DebugLog "ORM.create take colums defined in model"
+		    'System.DebugLog "ORM.create take colums defined in model"
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
 		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
 		      
 		      If pRaw.HasKey(pColumn) Then
@@ -620,7 +620,7 @@ Inherits QueryBuilder
 		      End If
 		    Next
 		    
-		    System.DebugLog "ORM.create DB.Insert"
+		    'System.DebugLog "ORM.create DB.Insert"
 		    
 		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
@@ -635,7 +635,7 @@ Inherits QueryBuilder
 		    me.mChanged = nil
 		    me.mChanged = new Dictionary
 		    
-		    System.DebugLog "ORM.Create.mChanged cleared"
+		    'System.DebugLog "ORM.Create.mChanged cleared"
 		    
 		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
@@ -672,7 +672,7 @@ Inherits QueryBuilder
 		    me.mAdded = nil
 		    me.mAdded = new Dictionary
 		    
-		    System.DebugLog "ORM.Create.mAdded cleared"
+		    'System.DebugLog "ORM.Create.mAdded cleared"
 		    
 		    
 		    'System.DebugLog "ORM.Create.mRemoved about to clear"
@@ -682,7 +682,7 @@ Inherits QueryBuilder
 		    me.mRemoved = nil
 		    me.mRemoved = new Dictionary
 		    
-		    System.DebugLog "ORM.Create.mRemoved cleared"
+		    'System.DebugLog "ORM.Create.mRemoved cleared"
 		    
 		    
 		    pDatabase.Commit
@@ -1251,8 +1251,9 @@ Inherits QueryBuilder
 		    Dim pColumns() As Variant
 		    
 		    // Prepend table to prevent collision with join
-		    For Each pColumn As String In Me.TableColumns(pDatabase)
-		      pColumns.Append(TableName + "." + pColumn)
+		    dim pColumnType as Dictionary = Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In pColumnType.Keys
+		      pColumns.Append(TableName + "." + pColumn.StringValue)
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
@@ -1261,18 +1262,7 @@ Inherits QueryBuilder
 		    Limit(1). _
 		    Execute(pDatabase, pExpiration)
 		    
-		    dim pRecordSetType as RecordSet = pDatabase.FieldSchema(Me.TableName)
 		    
-		    dim pColumnType as new Dictionary
-		    
-		    while not pRecordSetType.EOF
-		      'if pRecordSetType.Field("ColumnName").StringValue = "" then
-		      'System.DebugLog "Iterator has a BUG!"
-		      'exit
-		      'end if
-		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
-		      pRecordSetType.MoveNext
-		    wend
 		    // Clear any existing data
 		    mData.Clear
 		    
@@ -1327,8 +1317,8 @@ Inherits QueryBuilder
 		    Dim pColumns() As Variant
 		    
 		    // Prepend table to prevent collision with join
-		    For Each pColumn As String In Me.TableColumns(pDatabase)
-		      pColumns.Append(TableName + "." + pColumn)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
+		      pColumns.Append(TableName + "." + pColumn.StringValue)
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
@@ -1389,8 +1379,8 @@ Inherits QueryBuilder
 		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RecordSet
 		  Dim pColumns() As Variant
 		  
-		  For Each pColumn As Variant In TableColumns(pDatabase)
-		    pColumns.Append(TableName + "." + pColumn)
+		  For Each pColumn As Variant In TableColumns(pDatabase).Keys
+		    pColumns.Append(TableName + "." + pColumn.StringValue)
 		  Next
 		  
 		  For Each nColumn as Variant in pOtherColumn
@@ -2572,39 +2562,38 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = false
-		Function TableColumns() As String()
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetDesktop and (Target64Bit))
+		Function TableColumns() As Dictionary
 		  Dim pColumns() As String
 		  
-		  BuildSchema()
+		  'BuildSchema()
 		  
 		  for each entr as DictionaryEntry in me.Schema
 		    pColumns.Append(entr.Key.StringValue)
 		  next
 		  
-		  Return pColumns
+		  Return me.Schema
 		  
 		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function TableColumns(pDatabase As Database) As String()
-		  Dim pColumns() As String
+		Function TableColumns(pDatabase As Database) As Dictionary
+		  if db.DatabaseSchemaCache.Lookup(me.TableName, nil)<>nil then Return db.DatabaseSchemaCache.Value(me.TableName)
+		  
+		  Dim pColumns As new Dictionary
 		  Try
-		    dim cname as string = me.TableName
 		    Dim pRecordSet As RowSet = pDatabase.TableColumns(Me.TableName)
-		    
-		    
 		    
 		    For Each c As DatabaseRow In pRecordSet
 		      'If c.ColumnAt(0).StringValue = "" Then 
 		      'System.DebugLog "Iterator has a BUG!"
 		      'Exit
 		      'End
-		      pColumns.Append(c.Column("ColumnName").StringValue)
+		      pColumns.Value(c.Column("ColumnName").StringValue) = c.Column("FieldType").IntegerValue
 		    Next
-		    
+		    db.DatabaseSchemaCache.Value(me.TableName) = pColumns
 		    Return pColumns
 		    
 		  Catch error As DatabaseException
@@ -2965,9 +2954,9 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      If mChanged.HasKey(pColumn) Then
-		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
+		      If mChanged.HasKey(pColumn.StringValue) Then
+		        pChanged.Value(pColumn.StringValue) = mChanged.Value(pColumn.StringValue)
 		      End If
 		    Next
 		    
@@ -3026,9 +3015,9 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As DictionaryEntry In me.ColumnsList
-		      If me.mChanged.HasKey(pColumn.Key) Then
-		        pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Key)
+		    For Each pColumn As Variant In me.TableColumns.Keys
+		      If me.mChanged.HasKey(pColumn.StringValue) Then
+		        pChanged.Value(pColumn.StringValue) = me.mChanged.Value(pColumn.StringValue)
 		      End If
 		    Next
 		    
@@ -3093,9 +3082,9 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      If mChanged.HasKey(pColumn) Then
-		        pChanged.Value(pColumn) = mChanged.Value(pColumn)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
+		      If mChanged.HasKey(pColumn.StringValue) Then
+		        pChanged.Value(pColumn.StringValue) = mChanged.Value(pColumn.StringValue)
 		      End If
 		    Next
 		    
@@ -3338,10 +3327,6 @@ Inherits QueryBuilder
 		Ne sert qu'à vérifier les relations Has Many Through
 	#tag EndNote
 
-
-	#tag Property, Flags = &h0
-		ColumnsList As Dictionary
-	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = false

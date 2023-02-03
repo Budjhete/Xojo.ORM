@@ -773,6 +773,11 @@ Protected Module DB
 	#tag EndNote
 
 
+	#tag Property, Flags = &h0
+		DatabaseSchemaCache As Dictionary
+	#tag EndProperty
+
+
 	#tag Enum, Name = DataType, Type = Integer, Flags = &h0
 		Expression
 		  TextType
