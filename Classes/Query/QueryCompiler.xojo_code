@@ -10,7 +10,7 @@ Protected Module QueryCompiler
 		Function Column(pColumn As Variant) As String
 		  if pColumn = Nil then Return "NULL"
 		  
-		  if pColumn.Type = 9 or pColumn.Type = 10 then  // 9 = Object // 10 = Class
+		  if pColumn.Type = 9 or pColumn.Type = 10  or pColumn.type = 4096 then  // 9 = Object // 10 = Class
 		    Select Case pColumn
 		      
 		    Case IsA QueryBuilder
