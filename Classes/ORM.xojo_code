@@ -878,7 +878,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function CreateTable(pDatabase as Database) As Boolean
+		Function CreateTable(pDatabase as Database, pSuffix as String = "") As Boolean
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
 		    Dim sql As String
@@ -886,7 +886,7 @@ Inherits QueryBuilder
 		    dim HasUniqueKeys as Boolean = false
 		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
 		    Dim mUniqueKeys as String = "UNIQUE ("
-		    sql = "CREATE TABLE `"+me.TableName+"` ( "
+		    sql = "CREATE TABLE `"+me.TableName+pSuffix+"` ( "
 		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
 		      sql = sql + EndOfLine + "`"+ dField.Key + "` " 
@@ -913,14 +913,15 @@ Inherits QueryBuilder
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
 		    
 		    sql = sql +");"
-		    pDatabase.ExecuteSQL(sql)
-		    
-		    'Catch error As DatabaseExeception
-		    'MessageBox("Database error: " + error.Message)
-		    'End Try
+		    try
+		      pDatabase.ExecuteSQL(sql)
+		      
+		    Catch error As DatabaseException
+		      System.DebugLog "Database error: " + error.Message
+		    End Try
 		    
 		  else
-		    'Try
+		    
 		    Dim sql As String
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
@@ -928,7 +929,7 @@ Inherits QueryBuilder
 		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
 		    Dim mUniqueKeys as String = "UNIQUE ("
 		    
-		    sql = "CREATE TABLE `"+me.TableName+"` ( "
+		    sql = "CREATE TABLE `"+me.TableName+pSuffix+"` ( "
 		    
 		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
@@ -969,11 +970,12 @@ Inherits QueryBuilder
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
 		    
 		    sql = sql +");"
-		    pDatabase.ExecuteSQL(sql)
-		    
-		    'Catch error As DatabaseExeception
-		    'MessageBox("Database error: " + error.Message)
-		    'End Try
+		    Try
+		      pDatabase.ExecuteSQL(sql)
+		      
+		    Catch error As DatabaseException
+		      System.DebugLog "Database error: " + error.Message
+		    End Try
 		    
 		  end if
 		End Function
@@ -2626,8 +2628,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function TableCreate(pDatabase as Database, pSuffix as String = "") As Boolean
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( deprecated = true )  Function TableCreate(pDatabase as Database, pSuffix as String = "") As Boolean
 		  Dim sql As String
 		  dim HasPrimaryKeys as boolean = false
 		  dim HasUniqueKeys as Boolean = false
@@ -2684,21 +2686,46 @@ Inherits QueryBuilder
 		Function TableUpdate(pDatabase as Database) As Boolean
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
-		      Return TableCreate(pDatabase)
+		      Return CreateTable(pDatabase)
 		    else
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 0;")
 		      
+		      dim HasPrimaryKeys as boolean = false
+		      dim HasUniqueKeys as Boolean = false
+		      Dim mPrimaryKeys as String = "ALTER TABLE `"+me.TableName+"` ADD PRIMARY KEY ("
+		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `unique"+System.Random.InRange(0, 1000).ToString+"`("
+		      
+		       // we remove all index and uni ckey
+		      dim rIndexs as RowSet
+		      Try
+		        dim sss as string = "SELECT table_name AS `Table`, index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '"+me.TableName+"' GROUP BY 1,2;"
+		        rIndexs = pDatabase.SelectSQL(sss)
+		        
+		        For Each row As DatabaseRow In rIndexs
+		          pDatabase.ExecuteSQL("ALTER TABLE `" + me.TableName + "` DROP INDEX `"+row.Column("Index").StringValue+"`;")
+		        Next
+		        rIndexs.Close
+		      Catch derror As DatabaseException
+		        System.DebugLog "Error by droping keys on " + me.TableName + " : " + derror.Message
+		      End Try
+		      
+		      // remove unused columns
 		      for each dField as DictionaryEntry in SchemaToRemoveColumn
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Dim sql As String
 		        sql = "ALTER TABLE `"+me.TableName+"` DROP COLUMN "
 		        dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
-		        pDatabase.ExecuteSQL(sql)
+		        try
+		          pDatabase.ExecuteSQL(sql)
+		        Catch Error as DatabaseException
+		          System.DebugLog "drop "+me.TableName+" DB error : " + Error.Message
+		        end try
+		        
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		      next dField
 		      
-		      
+		      // add new columns
 		      for each dField as DictionaryEntry in SchemaToAdd
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Dim sql As String
@@ -2710,12 +2737,28 @@ Inherits QueryBuilder
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase) 
-		        if field.PrimaryKey then sql = sql + " PRIMARY KEY"
+		        
+		        if field.PrimaryKey then
+		          HasPrimaryKeys = HasPrimaryKeys OR true
+		          mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
+		        end if
+		        
+		        if field.Unique then
+		          HasUniqueKeys = HasUniqueKeys OR true
+		          mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
+		        end if
+		        
 		        sql = sql + ";"
-		        pDatabase.ExecuteSQL(sql)
+		        try
+		          pDatabase.ExecuteSQL(sql)
+		        Catch Error as DatabaseException
+		          System.DebugLog "DB ADD "+me.TableName+"  error : " + Error.Message
+		        end try
+		        
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		      next
 		      
+		      // alter table's columns
 		      for each dField as DictionaryEntry in SchemaToAlter
 		        
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
@@ -2730,24 +2773,50 @@ Inherits QueryBuilder
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase)  +";"
+		        
+		        if field.PrimaryKey then
+		          HasPrimaryKeys = HasPrimaryKeys OR true
+		          mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
+		        end if
+		        
+		        if field.Unique then
+		          HasUniqueKeys = HasUniqueKeys OR true
+		          mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
+		        end if
+		        
 		        try
 		          pDatabase.ExecuteSQL(sql)
+		          
 		        catch error as DatabaseException
 		          pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
-		          
+		          System.DebugLog "db alter "+me.TableName+ " : "+ error.Message
 		          Return false
 		        end try
+		        
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		        
 		      next
+		      pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		      try
+		        if HasPrimaryKeys then pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
+		      Catch Error as DatabaseException
+		        System.DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
+		      end try
+		      try
+		        if HasUniqueKeys then pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
+		      Catch Error as DatabaseException
+		        System.DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
+		      end try
+		      
+		      pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		      
 		    end if
 		    
 		  else
 		    if SchemaToCreateTable then
-		      Return TableCreate(pDatabase)
+		      Return CreateTable(pDatabase)
 		    else
 		      pDatabase.ExecuteSQL("PRAGMA legacy_alter_table=OFF;")
 		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = OFF;")
@@ -2762,7 +2831,11 @@ Inherits QueryBuilder
 		        sql = sql + field.Type(pDatabase)
 		        if field.Type = ORMField.TypeList.DECIMAL then  sql = sql + field.Length
 		        sql = sql +";"
-		        pDatabase.ExecuteSQL(sql)
+		        try
+		           pDatabase.ExecuteSQL(sql)
+		        Catch Error as DatabaseException
+		          System.DebugLog "DB error : " + Error.Message
+		        end try
 		      next
 		      
 		      If SchemaToAlter.Count > 0 then
@@ -2809,7 +2882,7 @@ Inherits QueryBuilder
 		          rr.Close
 		          insertSQL = insertSQL.Left(insertSQL.Length -1)+";"
 		          
-		          if TableCreate(pDatabase, "_TMP") then
+		          if CreateTable(pDatabase, "_TMP") then
 		            Try
 		              pDatabase.ExecuteSQL(insertSQL)
 		              dim rrtest as RowSet = pDatabase.SelectSQL("SELECT 1 FROM `" + me.TableName+"_TMP`;")
@@ -2817,7 +2890,7 @@ Inherits QueryBuilder
 		                pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"';")
 		                pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
 		              else
-		                System.DebugLog "kErreur insertion données"
+		                System.DebugLog "kErreur insertion données dans : " +me.TableName
 		                Return false
 		              end if
 		              
