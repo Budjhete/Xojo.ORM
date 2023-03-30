@@ -572,6 +572,10 @@ Implements QueryExpression
 		Protected Shared mCache As Dictionary
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		mLogs As String
+	#tag EndProperty
+
 	#tag Property, Flags = &h1
 		Protected mQuery() As QueryExpression
 	#tag EndProperty

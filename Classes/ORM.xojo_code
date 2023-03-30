@@ -1233,6 +1233,8 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.DATE
 		  elseif pValue.Contains("String") then
 		    Return ORMField.TypeList.TEXT
+		  elseif pValue.Contains("text") then
+		    Return ORMField.TypeList.TEXT
 		  elseif pValue.Contains("longtext") then
 		    Return ORMField.TypeList.LongTEXT
 		  else
@@ -2695,7 +2697,7 @@ Inherits QueryBuilder
 		      Dim mPrimaryKeys as String = "ALTER TABLE `"+me.TableName+"` ADD PRIMARY KEY ("
 		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `unique"+System.Random.InRange(0, 1000).ToString+"`("
 		      
-		       // we remove all index and uni ckey
+		      // we remove all index and uni ckey
 		      dim rIndexs as RowSet
 		      Try
 		        dim sss as string = "SELECT table_name AS `Table`, index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '"+me.TableName+"' GROUP BY 1,2;"
@@ -2707,6 +2709,7 @@ Inherits QueryBuilder
 		        rIndexs.Close
 		      Catch derror As DatabaseException
 		        System.DebugLog "Error by droping keys on " + me.TableName + " : " + derror.Message
+		        mLogs =  mlogs + "Error by droping keys on " + me.TableName + " : " + derror.Message + EndOfLine
 		      End Try
 		      
 		      // remove unused columns
@@ -2716,10 +2719,14 @@ Inherits QueryBuilder
 		        sql = "ALTER TABLE `"+me.TableName+"` DROP COLUMN "
 		        dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
+		        
+		        System.DebugLog sql
+		        
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
 		          System.DebugLog "drop "+me.TableName+" DB error : " + Error.Message
+		          mLogs =  mlogs + "drop "+me.TableName+" DB error : " + Error.Message + EndOfLine
 		        end try
 		        
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
@@ -2736,7 +2743,9 @@ Inherits QueryBuilder
 		        sql = sql + "`"+ dField.Key + "` " 
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
-		        sql = sql + " " + field.Extra(pdatabase) 
+		        if field.Extra = ORMField.ExtraList.AutoIncremente then
+		          sql = sql + " " + field.Extra(pdatabase)  +  " , ADD PRIMARY KEY (`" + dField.Key + "`);"
+		        end if
 		        
 		        if field.PrimaryKey then
 		          HasPrimaryKeys = HasPrimaryKeys OR true
@@ -2749,10 +2758,12 @@ Inherits QueryBuilder
 		        end if
 		        
 		        sql = sql + ";"
+		        System.DebugLog sql
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
 		          System.DebugLog "DB ADD "+me.TableName+"  error : " + Error.Message
+		          mLogs =  mlogs + "DB ADD "+me.TableName+"  error : " + Error.Message + EndOfLine
 		        end try
 		        
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
@@ -2783,6 +2794,7 @@ Inherits QueryBuilder
 		          HasUniqueKeys = HasUniqueKeys OR true
 		          mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
 		        end if
+		        System.DebugLog sql
 		        
 		        try
 		          pDatabase.ExecuteSQL(sql)
@@ -2791,7 +2803,7 @@ Inherits QueryBuilder
 		          pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		          System.DebugLog "db alter "+me.TableName+ " : "+ error.Message
-		          Return false
+		          mLogs =  mlogs + "db alter "+me.TableName+ " : "+ error.Message + EndOfLine
 		        end try
 		        
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
@@ -2799,14 +2811,22 @@ Inherits QueryBuilder
 		      next
 		      pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		      try
-		        if HasPrimaryKeys then pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
+		        if HasPrimaryKeys then
+		          System.DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
+		          pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
+		        end if
 		      Catch Error as DatabaseException
 		        System.DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
+		        mLogs =  mlogs + "PrimaryKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		      end try
 		      try
-		        if HasUniqueKeys then pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
+		        if HasUniqueKeys then
+		          System.DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
+		          pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
+		        end if
 		      Catch Error as DatabaseException
 		        System.DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
+		        mLogs =  mlogs + "UniqueKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		      end try
 		      
 		      pDatabase.ExecuteSQL("UNLOCK TABLES;")
@@ -2832,7 +2852,7 @@ Inherits QueryBuilder
 		        if field.Type = ORMField.TypeList.DECIMAL then  sql = sql + field.Length
 		        sql = sql +";"
 		        try
-		           pDatabase.ExecuteSQL(sql)
+		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
 		          System.DebugLog "DB error : " + Error.Message
 		        end try
@@ -2891,7 +2911,7 @@ Inherits QueryBuilder
 		                pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
 		              else
 		                System.DebugLog "kErreur insertion données dans : " +me.TableName
-		                Return false
+		                mLogs =  mlogs + "kErreur insertion données dans : " +me.TableName + EndOfLine
 		              end if
 		              
 		              
