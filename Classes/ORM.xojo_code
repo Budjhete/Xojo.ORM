@@ -1740,7 +1740,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function JSONValue() As Dictionary
+		Attributes( OS = iOS )  Function JSONValue() As Dictionary
 		  
 		  // Shallow export
 		  
@@ -1775,7 +1775,7 @@ Inherits QueryBuilder
 		      System.DebugLog "logo"
 		    end if
 		    System.DebugLog pColumn
-		    dim v as Variant = Me.Data(pColumn.DefineEncoding(Encodings.UTF8).ToText)
+		    dim v as Variant = Me.Data(pColumn.DefineEncoding(Encodings.UTF8))
 		    System.DebugLog "type : " + v.TypeText.ToString
 		    Select Case v.Type
 		    case 6
@@ -1858,6 +1858,9 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Sub LoadJSON(pCriterias as Dictionary)
+		  // use it to bypass database search
+		  // not swetable to manage changes
+		  
 		  mData = New Dictionary
 		  mChanged = New Dictionary
 		  mAdded = New Dictionary
