@@ -1748,7 +1748,7 @@ Inherits QueryBuilder
 		  
 		  // Adds each column as an Attribute
 		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
-		    System.DebugLog pDataKeyColumn.key
+		    'System.DebugLog pDataKeyColumn.key
 		    dim v as Variant = pDataKeyColumn.Value
 		    'System.DebugLog "type : " + v.Type.StringValue
 		    if v.Type = 6 then
@@ -1756,7 +1756,7 @@ Inherits QueryBuilder
 		    else
 		      pJSONItem.Value(pDataKeyColumn.Key) = v
 		    end if
-		    System.DebugLog pDataKeyColumn.Key + ":" + pDataKeyColumn.Value
+		    'System.DebugLog pDataKeyColumn.Key + ":" + pDataKeyColumn.Value
 		  Next
 		  
 		  Return pJSONItem
@@ -1774,9 +1774,9 @@ Inherits QueryBuilder
 		    if pColumn = "logo" then
 		      System.DebugLog "logo"
 		    end if
-		    System.DebugLog pColumn
+		    'System.DebugLog pColumn
 		    dim v as Variant = Me.Data(pColumn.DefineEncoding(Encodings.UTF8))
-		    System.DebugLog "type : " + v.TypeText.ToString
+		    'System.DebugLog "type : " + v.TypeText.ToString
 		    Select Case v.Type
 		    case 6
 		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v.DoubleValue
@@ -3487,6 +3487,14 @@ Inherits QueryBuilder
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="mLogs"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
 			Visible=false
