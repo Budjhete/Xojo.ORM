@@ -102,15 +102,16 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    
-		    pDatabase.ExecuteSQL(pStatement)
-		    
-		    If pDatabase.Error Then
-		      Raise New ORMException(pDatabase.ErrorMessage, pStatement, pDatabase.ErrorCode)
-		    End If
+		    Try
+		      pDatabase.ExecuteSQL(pStatement)
+		      
+		    Catch dberror As DatabaseException
+		      // DB Connection error
+		      Raise New ORMException(dberror.message, pStatement, dberror.ErrorNumber)
+		    End Try
 		    
 		    If pCommit Then
-		      pDatabase.Commit
+		      pDatabase.CommitTransaction
 		    End If
 		    
 		    Call Reset
@@ -121,7 +122,7 @@ Implements QueryExpression
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RecordSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
@@ -204,6 +205,90 @@ Implements QueryExpression
 		    Call Reset
 		    
 		    RaiseEvent Executed(pRecordSet)
+		    
+		    Return pRecordSet
+		    
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
+		  // Execute the QueryBuilder and return a RecordSet
+		  // You may specify an expiration for caching the response
+		  
+		  
+		  If Not RaiseEvent Executing Then
+		    
+		    Dim pStatement As String = Compile
+		    
+		    
+		    Dim pRecordSet As RowSet
+		    
+		    // Initialize the cache
+		    If mCache Is Nil Then
+		      mCache = New Dictionary
+		    End If
+		    
+		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
+		    Dim pNow As DateTime = DateTime.Now
+		    
+		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
+		      
+		      // Get the result from the cache
+		      pRecordSet = pCache.Value("recordset")
+		      
+		    Else
+		      
+		      Try
+		        pRecordSet = pDatabase.SelectSQL(pStatement)
+		        
+		        // Check for error
+		      Catch errordb As DatabaseException
+		        if errordb.ErrorNumber = 1055 then
+		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
+		          pRecordSet = pDatabase.SelectSQL(pStatement)
+		        elseif errordb.ErrorNumber = 48879 then
+		          Dim tDatabase as Database
+		          
+		          tDatabase = new SQLiteDatabase
+		          SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		          tDatabase.DatabaseName = pDatabase.DatabaseName
+		          
+		          if tDatabase.Connect then
+		            pRecordSet = tDatabase.SelectSQL(pStatement)
+		            tDatabase.Close
+		          else
+		            Raise New ORMException(Errordb.message, pStatement)
+		          End If
+		          
+		          
+		        elseif errordb.ErrorNumber = 2006 then
+		          if pDatabase.Connect then
+		            pRecordSet = pDatabase.SelectSQL(pStatement)
+		          else
+		            Raise New ORMException(Errordb.message, pStatement)
+		          End If
+		        else
+		          Raise New ORMException(Errordb.message, pStatement)
+		        End If
+		        
+		        
+		      End Try
+		      
+		    End If
+		    
+		    // Cache the result
+		    If pExpiration <> Nil Then
+		      dim dExp as New Dictionary()
+		      dExp.Value("expiration") = pExpiration
+		      dExp.Value("recordset") = pRecordSet
+		      mCache.Value(pStatement) = dExp
+		    End If
+		    
+		    Call Reset
+		    
+		    RaiseEvent ExecutedRS(pRecordSet)
 		    
 		    Return pRecordSet
 		    
@@ -560,6 +645,10 @@ Implements QueryExpression
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
+		Event ExecutedRS(pRecordSet As RowSet)
+	#tag EndHook
+
+	#tag Hook, Flags = &h0
 		Event Executing() As Boolean
 	#tag EndHook
 
@@ -621,6 +710,14 @@ Implements QueryExpression
 			InitialValue="0"
 			Type="Integer"
 			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="mLogs"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

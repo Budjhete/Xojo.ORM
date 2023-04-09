@@ -102,7 +102,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndWhere(pLeft, pOperator, pRight)
 		  
@@ -196,7 +196,7 @@ Inherits QueryBuilder
 		  'End Try
 		  
 		  
-		  Return mChanged.Count > 0 Or mAdded.Count > 0 Or mRemoved.Count > 0
+		  Return mChanged.KeyCount > 0 Or mAdded.KeyCount > 0 Or mRemoved.KeyCount > 0
 		End Function
 	#tag EndMethod
 
@@ -373,20 +373,6 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet as iOSSQLiteRecordSet, pDB as SQLiteDatabase)
-		  // Initialize the ORM with values from a RecordSet
-		  
-		  Me.Constructor
-		  
-		  For pIndex As Integer = 1 To pRecordSet.FieldCount
-		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pDB)
-		  Next
-		  
-		  
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h1000
 		Sub Constructor(pORM As ORM)
 		  // Initialize the ORM with the primary key of another ORM
@@ -447,6 +433,20 @@ Inherits QueryBuilder
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
 		  Next
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Sub Constructor(pRecordSet as RowSet, pDB as SQLiteDatabase)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.ColumnCount
+		    mData.Value(pRecordSet.ColumnAt(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pDB)
+		  Next
+		  
+		  
 		End Sub
 	#tag EndMethod
 
@@ -719,10 +719,10 @@ Inherits QueryBuilder
 		    'End If
 		    'Next
 		    
-		    if pRaw.Count >0 then
-		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pRaw)
-		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.PUT, pConnexion.mURL))
-		      pConnexion.BodyRequest = ""
+		    if pRaw.KeyCount >0 then
+		      'pConnexion.BodyRequest = GenerateJSON(pRaw)
+		      'pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.PUT, pConnexion.mURL))
+		      'pConnexion.BodyRequest = ""
 		    End If
 		    
 		    
@@ -800,11 +800,11 @@ Inherits QueryBuilder
 		    System.DebugLog "ORM.create take colums defined in model"
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
+		    For Each pColumn As String In Me.TableColumns(pDatabase)
+		      System.DebugLog "ORM.create pColum = " + pColumn
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumnStringxtValue
+		        System.DebugLog "ORM.create "+pColumn+" = " + pRaw.Value(pColumn)
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
@@ -834,7 +834,7 @@ Inherits QueryBuilder
 		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
 		      From(Me.TableName). _
 		      OrderBy(Me.PrimaryKey, "DESC"). _
-		      Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      Execute(pDatabase).Column(Me.PrimaryKey).Value
 		      
 		    End If
 		    
@@ -867,7 +867,7 @@ Inherits QueryBuilder
 		    System.DebugLog "ORM.Create.mRemoved cleared"
 		    
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    System.DebugLog "ORM.Create Done"
@@ -877,7 +877,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CreateTable(pDatabase as Database, pSuffix as String = "") As Boolean
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
@@ -1311,7 +1311,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as SQLiteDatabase, pExpiration as Date = Nil, pColumnsType() as DB.DataType = Nil) As ORM
+		Function Find(pDatabase as SQLiteDatabase, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
@@ -1321,33 +1321,33 @@ Inherits QueryBuilder
 		    Dim pColumns() As Variant
 		    
 		    // Prepend table to prevent collision with join
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
-		      pColumns.Append(TableName + "." + pColumn.StringValue)
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      pColumns.Append(TableName + "." + pColumn)
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As iOSSQLiteRecordSet = Append(new SelectQueryExpression(pColumns)). _
+		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
 		    From(Me.TableName). _
 		    Limit(1). _
 		    Execute(pDatabase)
 		    
-		    dim pRecordSetType as iOSSQLiteRecordSet = pDatabase.FieldSchema(Me.TableName)
+		    dim pRecordSetType as RowSet = pDatabase.TableColumns(Me.TableName)
 		    
 		    dim pColumnType as new Dictionary
 		    
-		    while not pRecordSetType.EOF
-		      pColumnType.Value(pRecordSetType.Field("ColumnName").StringValue) = pRecordSetType.Field("FieldType").IntegerValue
-		      pRecordSetType.MoveNext
+		    while not pRecordSetType.AfterLastRow
+		      pColumnType.Value(pRecordSetType.Column("ColumnName").StringValue) = pRecordSetType.Column("FieldType").IntegerValue
+		      pRecordSetType.MoveToNextRow
 		    wend
 		    // Clear any existing data
 		    mData.Clear
 		    
 		    // Fetch record set
-		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
+		    If pRecordSet.RowCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
 		      
-		      For pIndex As Integer = 1 To pRecordSet.FieldCount
+		      For pIndex As Integer = 1 To pRecordSet.ColumnCount
 		        
-		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name
+		        Dim pColumn As String = pRecordSet.ColumnAt(pIndex).Name
 		        
 		        if pColumnType <> nil then
 		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase) //DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
@@ -1418,14 +1418,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase As SQLiteDatabase, pExpiration As Date = Nil) As iOSSQLiteRecordSet
+		Function FindAll(pDatabase As SQLiteDatabase, pExpiration As DateTime = Nil) As RowSet
 		  Dim pColumns() As Variant
 		  
 		  For Each pColumn As Variant In TableColumns(pDatabase)
 		    pColumns.Append(TableName + "." + pColumn)
 		  Next
 		  
-		  Dim RR as iOSSQLiteRecordSet = Append(new SelectQueryExpression(pColumns)). _
+		  Dim RR as RowSet = Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase, pExpiration)
 		  
@@ -1739,31 +1739,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Attributes( OS = iOS )  Function JSONValue() As Dictionary
-		  
-		  // Shallow export
-		  
-		  Dim pJSONItem As New Dictionary
-		  
-		  // Adds each column as an Attribute
-		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
-		    System.DebugLog pDataKeyColumn.key
-		    dim v as Variant = pDataKeyColumn.Value
-		    'System.DebugLog "type : " + v.Type.StringValue
-		    if v.Type = 6 then
-		      pJSONItem.Value(pDataKeyColumn.Key) = v.AutoDoubleValue
-		    else
-		      pJSONItem.Value(pDataKeyColumn.Key) = v
-		    end if
-		    System.DebugLog pDataKeyColumn.Key + ":" + pDataKeyColumn.Value
-		  Next
-		  
-		  Return pJSONItem
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Function JSONValue() As Dictionary
 		  // Shallow export
 		  
@@ -2330,7 +2306,7 @@ Inherits QueryBuilder
 		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
 		      From(Me.TableName). _
 		      OrderBy(Me.PrimaryKey, "DESC"). _
-		      Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      Execute(pDatabase).Column(Me.PrimaryKey).Value
 		      
 		    End If
 		    
@@ -2350,7 +2326,7 @@ Inherits QueryBuilder
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    mRemoved.Clear
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    
@@ -2614,17 +2590,17 @@ Inherits QueryBuilder
 		Function TableColumns(pDatabase As SQLiteDatabase) As String()
 		  Dim pColumns() As String
 		  
-		  Dim pRecordSet As iOSSQLiteRecordSet = pDatabase.SQLSelect("SELECT * FROM "+me.TableName+" LIMIT 1")
+		  Dim pRecordSet As RowSet = pDatabase.SelectSQL("SELECT * FROM "+me.TableName+" LIMIT 1")
 		  
 		  If pRecordSet Is Nil Then
 		    Raise New ORMException(Me.TableName + " is not an existing table. Or empty")
 		    
 		  End If
 		  
-		  While Not pRecordSet.EOF
+		  While Not pRecordSet.AfterLastRow
 		    '.DefineEncoding(Encodings.UTF8))
-		    pColumns.Append(pRecordSet.Field("ColumnName").StringValue)
-		    pRecordSet.MoveNext
+		    pColumns.Append(pRecordSet.Column("ColumnName").StringValue)
+		    pRecordSet.MoveToNextRow
 		  Wend
 		  
 		  Return pColumns
@@ -3112,16 +3088,16 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In me.TableColumns.Keys
-		      If me.mChanged.HasKey(pColumn.StringValue) Then
-		        pChanged.Value(pColumn.StringValue) = me.mChanged.Value(pColumn.StringValue)
-		      End If
-		    Next
+		    'For Each pColumn As DictionaryEntry In me.TableColumns()
+		    'If me.mChanged.HasKey(pColumn.Key) Then
+		    'pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Value)
+		    'End If
+		    'Next
 		    
-		    if pChanged.Count >0 then
-		      pConnexion.BodyRequest = xojo.data.GenerateJSON(pChanged)
-		      pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.POST, pConnexion.mURL+me.Pk.StringValue))
-		      pConnexion.BodyRequest = ""
+		    if pChanged.KeyCount >0 then
+		      'pConnexion.BodyRequest = GenerateJSON(pChanged)
+		      'pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.POST, pConnexion.mURL+me.Pk.StringValue))
+		      'pConnexion.BodyRequest = ""
 		    End If
 		    
 		    // Merge mData with mChanged
@@ -3179,13 +3155,13 @@ Inherits QueryBuilder
 		    Dim pChanged As New Dictionary
 		    
 		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
 		      If mChanged.HasKey(pColumn.StringValue) Then
 		        pChanged.Value(pColumn.StringValue) = mChanged.Value(pColumn.StringValue)
 		      End If
 		    Next
 		    
-		    If pChanged.Count > 0 Then
+		    If pChanged.KeyCount > 0 Then
 		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
 		    
@@ -3220,7 +3196,7 @@ Inherits QueryBuilder
 		    mRemoved = nil
 		    mRemoved = new Dictionary
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Updated()
 		    
@@ -3487,6 +3463,14 @@ Inherits QueryBuilder
 
 
 	#tag ViewBehavior
+		#tag ViewProperty
+			Name="mLogs"
+			Visible=false
+			Group="Behavior"
+			InitialValue=""
+			Type="String"
+			EditorType="MultiLineEditor"
+		#tag EndViewProperty
 		#tag ViewProperty
 			Name="FinishLoaded"
 			Visible=false

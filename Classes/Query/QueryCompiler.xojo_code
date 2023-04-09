@@ -34,7 +34,7 @@ Protected Module QueryCompiler
 		    Case "*"
 		      // Do not escape the column
 		    Else
-		      if IsNumeric(pParts(i)) then
+		      if pParts(i).IsNumeric then
 		        pParts(i) = pParts(i)
 		      else
 		        pParts(i) = "`" + pParts(i)+ "`"
@@ -133,8 +133,8 @@ Protected Module QueryCompiler
 		    Case IsA QueryExpression // Unquoted expression
 		      Return QueryExpression(pValue).Compile
 		      
-		    Case IsA Date // Date
-		      Return QueryCompiler.Value(pValue.DateTimeValue .SQLDateTime)
+		      'Case IsA Date // Date
+		      'Return QueryCompiler.Value(pValue.DateTimeValue .SQLDateTime)
 		      
 		    Case IsA DateTime // Date
 		      Return QueryCompiler.Value(pValue.DateTimeValue .SQLDateTime)

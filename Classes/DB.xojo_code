@@ -216,7 +216,7 @@ Protected Module DB
 		  
 		  Dim pDatabase As SQLiteDatabase
 		  
-		  Dim pRegEx As New JKRegEx.RegEx
+		  Dim pRegEx As New RegEx
 		  
 		  // <1>://<2>:<3>@<4>:<5>/<6>
 		  //
@@ -231,7 +231,7 @@ Protected Module DB
 		  
 		  pRegEx.SearchPattern = "(\w+)\:\/\/(?:(?:(.+?)(?:\:(.+?))?\@)?((?:[\w-éèàō]+\.)+[A-Za-z0-9]+)(?:\:(\d{2,5}))?(?:\/([\/\w\W \.:\\-]+)+))?([\/\w\W \.:\\-]+)?"
 		  
-		  Dim pMatch As JKRegEx.RegExMatch = pRegEx.Search(pURL)
+		  Dim pMatch As RegExMatch = pRegEx.Search(pURL)
 		  
 		  If pMatch <> Nil Then
 		    
@@ -308,41 +308,6 @@ Protected Module DB
 	#tag Method, Flags = &h0
 		Function Expression(pExpression As String) As QueryExpression
 		  Return new ExpressionQueryExpression(pExpression)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as iOSSQLiteRecordSet, pIndex as Integer, pDB as SQLiteDatabase) As Variant
-		  // Properly extract a DatabaseField from a RecordSet
-		  
-		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
-		  // so it has to extract data properly at some time. It is the purpose
-		  // of this function.
-		  
-		  
-		  
-		  Dim pDatabaseFieldName as String = pRecordSet.IdxField(pIndex).Name  // base 1
-		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
-		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
-		  
-		  // juste pour tester
-		  'if pDatabaseFieldName = "montant" then
-		  'System.DebugLog pDatabaseFieldValue
-		  'End If
-		  '
-		  'if  then
-		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.StringValue
-		  'end if
-		  
-		  
-		  // Set encoding to UTF8 for Text
-		  'If pDatabaseFieldValue.Type = Auto.TypeText Then
-		  'Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		  'End If
-		  
-		  return pDatabaseFieldValue
-		  
 		End Function
 	#tag EndMethod
 
@@ -540,6 +505,41 @@ Protected Module DB
 		    return pDatabaseFieldValue
 		    
 		  end if
+		  
+		  return pDatabaseFieldValue
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function Extract(pRecordSet as RowSet, pIndex as Integer, pDB as SQLiteDatabase) As Variant
+		  // Properly extract a DatabaseField from a RecordSet
+		  
+		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
+		  // so it has to extract data properly at some time. It is the purpose
+		  // of this function.
+		  
+		  
+		  
+		  Dim pDatabaseFieldName as String = pRecordSet.ColumnAt(pIndex).Name  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  
+		  // juste pour tester
+		  'if pDatabaseFieldName = "montant" then
+		  'System.DebugLog pDatabaseFieldValue
+		  'End If
+		  '
+		  'if  then
+		  'MsgBox pDatabaseField.NativeValue
+		  'MsgBox pColumnType.StringValue
+		  'end if
+		  
+		  
+		  // Set encoding to UTF8 for Text
+		  'If pDatabaseFieldValue.Type = Auto.TypeText Then
+		  'Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		  'End If
 		  
 		  return pDatabaseFieldValue
 		  

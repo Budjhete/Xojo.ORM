@@ -11,11 +11,8 @@ Inherits RuntimeException
 		Sub Constructor(pMessage As String, pStatement As String, pCode As Integer = 0)
 		  // Constructor for SQL error
 		  
-		  #if TargetIOS then
-		    Reason = pMessage
-		  #else
-		    Message = pMessage
-		  #endif
+		  
+		  Message = pMessage
 		  Statement = pStatement
 		  Code = pCode
 		End Sub
@@ -32,14 +29,6 @@ Inherits RuntimeException
 
 
 	#tag ViewBehavior
-		#tag ViewProperty
-			Name="Reason"
-			Visible=false
-			Group="Behavior"
-			InitialValue=""
-			Type="Text"
-			EditorType=""
-		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Code"
 			Visible=false
@@ -93,7 +82,7 @@ Inherits RuntimeException
 			Visible=false
 			Group="Behavior"
 			InitialValue=""
-			Type="Text"
+			Type="String"
 			EditorType="MultiLineEditor"
 		#tag EndViewProperty
 		#tag ViewProperty
