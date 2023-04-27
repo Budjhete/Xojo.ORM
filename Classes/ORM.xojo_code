@@ -918,8 +918,9 @@ Inherits QueryBuilder
 		      
 		    Catch error As DatabaseException
 		      System.DebugLog "Database error: " + error.Message
+		      Return false
 		    End Try
-		    
+		    Return true
 		  else
 		    
 		    Dim sql As String
@@ -975,7 +976,9 @@ Inherits QueryBuilder
 		      
 		    Catch error As DatabaseException
 		      System.DebugLog "Database error: " + error.Message
+		      Return false
 		    End Try
+		    Return true
 		    
 		  end if
 		End Function
@@ -2707,7 +2710,8 @@ Inherits QueryBuilder
 		        rIndexs = pDatabase.SelectSQL(sss)
 		        
 		        For Each row As DatabaseRow In rIndexs
-		          pDatabase.ExecuteSQL("ALTER TABLE `" + me.TableName + "` DROP INDEX `"+row.Column("Index").StringValue+"`;")
+		          dim ddd as string = "ALTER TABLE `" + me.TableName + "` DROP INDEX `"+row.Column("Index").StringValue+"`;"
+		          pDatabase.ExecuteSQL(ddd)
 		        Next
 		        rIndexs.Close
 		      Catch derror As DatabaseException

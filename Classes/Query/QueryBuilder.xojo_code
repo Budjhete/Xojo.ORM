@@ -110,9 +110,13 @@ Implements QueryExpression
 		      Raise New ORMException(dberror.message, pStatement, dberror.ErrorNumber)
 		    End Try
 		    
-		    If pCommit Then
-		      pDatabase.CommitTransaction
-		    End If
+		    'If pCommit Then
+		    'try
+		    'pDatabase.CommitTransaction
+		    'Catch dberror As DatabaseException
+		    'System.DebugLog dberror.message
+		    'end try
+		    'End If
 		    
 		    Call Reset
 		    
@@ -212,7 +216,7 @@ Implements QueryExpression
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
