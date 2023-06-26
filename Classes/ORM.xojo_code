@@ -2819,6 +2819,19 @@ Inherits QueryBuilder
 		      pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		      try
 		        if HasPrimaryKeys then
+		          
+		          '// check if duplicate on : 
+		          'dim ch as string = "SELECT " + me.PrimaryKey + ", COUNT(*) FROM
+		          'name, email, COUNT(*)
+		          'FROM
+		          'users
+		          'GROUP BY
+		          'name, email
+		          'HAVING 
+		          'COUNT(*) > 1
+		          
+		          
+		          
 		          System.DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
 		          pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
 		        end if
