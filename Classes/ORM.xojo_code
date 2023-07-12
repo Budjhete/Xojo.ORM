@@ -695,7 +695,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Create(pConnexion As KanjoSocket) As Boolean
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  'System.DebugLog "ORM.create isloaded ?"
@@ -2221,7 +2221,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Replace(pConnexion As KanjoSocket) As Boolean
 		  '// Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  '
@@ -2394,7 +2394,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Save(pConnexion As KanjoSocket) As Boolean
 		  dim bSaved as boolean = false
 		  If Not RaiseEvent Saving Then
@@ -3115,7 +3115,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Update(pConnexion As KanjoSocket) As Boolean
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
