@@ -273,6 +273,20 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Sub Constructor(pRecordSet As DatabaseRow)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.ColumnCount
+		    mData.Value(pRecordSet.ColumnAt(pIndex-1).Name) = DB.Extract(pRecordSet, pIndex-1)  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor
+		  Next
+		  
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Sub Constructor(pCriterias as Dictionary, LoadFromJSON as Boolean = False)
 		  // Basic ORM constructor
@@ -436,8 +450,22 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet as RowSet, pDB as SQLiteDatabase)
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Sub Constructor(pRecordSet As RowSet)
+		  // Initialize the ORM with values from a RecordSet
+		  
+		  Me.Constructor
+		  
+		  For pIndex As Integer = 1 To pRecordSet.ColumnCount
+		    mData.Value(pRecordSet.ColumnAt(pIndex-1).Name) = DB.Extract(pRecordSet, pIndex-1)  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor
+		  Next
+		  
+		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Sub Constructor(pRecordSet as RowSet, pDB as Database)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor

@@ -311,6 +311,51 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Extract(pRecordSet As DatabaseRow, pIndex As Integer) As Variant
+		  // Properly extract a DatabaseField from a RecordSet
+		  
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
+		  Dim pColumnType As Integer = pRecordSet.ColumnAt(pIndex).Type  // ZERO base
+		  
+		  
+		  // Perform type detection for unknown data type
+		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
+		    If IsNumeric(pDatabaseFieldValue) Then
+		      Return pDatabaseFieldValue.CurrencyValue
+		    End If
+		  End If
+		  
+		  
+		  If pColumnType = 11 OR pColumnType = 13 Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
+		  
+		  If pColumnType = 8 OR pColumnType = 10 Then
+		    if pDatabaseFieldValue<>nil then
+		      Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
+		    else
+		      return pDatabaseFieldValue
+		    End If
+		  End If
+		  
+		  
+		  // Set encoding to UTF8 for Text
+		  If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
+		    #Pragma BreakOnExceptions False
+		    Try 
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Catch Error as RuntimeException
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.ISOLatin1)
+		    End Try
+		    
+		  End If
+		  
+		  return pDatabaseFieldValue
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Extract(pRecordSet As RecordSet, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
@@ -511,8 +556,53 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as RowSet, pIndex as Integer, pDB as SQLiteDatabase) As Variant
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Extract(pRecordSet As RowSet, pIndex As Integer) As Variant
+		  // Properly extract a DatabaseField from a RecordSet
+		  
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  
+		  
+		  // Perform type detection for unknown data type
+		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
+		    If IsNumeric(pDatabaseFieldValue) Then
+		      Return pDatabaseFieldValue.CurrencyValue
+		    End If
+		  End If
+		  
+		  
+		  If pColumnType = 11 OR pColumnType = 13 Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
+		  
+		  If pColumnType = 8 OR pColumnType = 10 Then
+		    if pDatabaseFieldValue<>nil then
+		      Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
+		    else
+		      return pDatabaseFieldValue
+		    End If
+		  End If
+		  
+		  
+		  // Set encoding to UTF8 for Text
+		  If pDatabaseFieldValue.Type = Variant.TypeText OR pDatabaseFieldValue.Type = Variant.TypeString Then
+		    #Pragma BreakOnExceptions False
+		    Try 
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		    Catch Error as RuntimeException
+		      Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.ISOLatin1)
+		    End Try
+		    
+		  End If
+		  
+		  return pDatabaseFieldValue
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Extract(pRecordSet as RowSet, pIndex as Integer, pDB as Database) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
