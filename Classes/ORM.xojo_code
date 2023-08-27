@@ -912,8 +912,10 @@ Inherits QueryBuilder
 		    Dim sql As String
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
+		    dim HasKeys as Boolean = false
 		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
 		    Dim mUniqueKeys as String = "UNIQUE ("
+		    'dim mKeys as string = 
 		    sql = "CREATE TABLE `"+me.TableName+pSuffix+"` ( "
 		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
@@ -2738,8 +2740,10 @@ Inherits QueryBuilder
 		        rIndexs = pDatabase.SelectSQL(sss)
 		        
 		        For Each row As DatabaseRow In rIndexs
-		          dim ddd as string = "ALTER TABLE `" + me.TableName + "` DROP INDEX `"+row.Column("Index").StringValue+"`;"
-		          pDatabase.ExecuteSQL(ddd)
+		          if row.Column("Index").StringValue <> "PRIMARY" then
+		            dim ddd as string = "ALTER TABLE `" + me.TableName + "` DROP INDEX `"+row.Column("Index").StringValue+"`;"
+		            pDatabase.ExecuteSQL(ddd)
+		          end if
 		        Next
 		        rIndexs.Close
 		      Catch derror As DatabaseException
