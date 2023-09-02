@@ -218,7 +218,7 @@ Implements QueryExpression
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit))
 		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
@@ -262,7 +262,7 @@ Implements QueryExpression
 		          tDatabase.DatabaseName = pDatabase.DatabaseName
 		          
 		          if tDatabase.Connect then
-		            if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		            'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		            pRecordSet = tDatabase.SelectSQL(pStatement)
 		            tDatabase.Close
 		          else
@@ -272,7 +272,7 @@ Implements QueryExpression
 		          
 		        elseif errordb.ErrorNumber = 2006 then
 		          if pDatabase.Connect then
-		            if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		            'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		            pRecordSet = pDatabase.SelectSQL(pStatement)
 		          else
 		            Raise New ORMException(Errordb.message, pStatement)

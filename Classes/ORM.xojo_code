@@ -102,7 +102,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Function AndWhere(pLeft As Variant, pOperator As String, pRight As Variant) As ORM
 		  Call Super.AndWhere(pLeft, pOperator, pRight)
 		  
@@ -1343,8 +1343,8 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as SQLiteDatabase, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil) As ORM
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit))
+		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
 		  End If
@@ -1412,6 +1412,22 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+		Function FindAll(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
+		  Dim pColumns() As Variant
+		  
+		  For Each pColumn As Variant In TableColumns(pDatabase)
+		    pColumns.Append(TableName + "." + pColumn)
+		  Next
+		  
+		  Dim RR as RowSet = Append(new SelectQueryExpression(pColumns)). _
+		  From(Me.TableName). _
+		  Execute(pDatabase, pExpiration)
+		  
+		  return RR
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RecordSet
 		  Dim pColumns() As Variant
@@ -1447,22 +1463,6 @@ Inherits QueryBuilder
 		  Execute(pDatabase)
 		  
 		  return rr
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase As SQLiteDatabase, pExpiration As DateTime = Nil) As RowSet
-		  Dim pColumns() As Variant
-		  
-		  For Each pColumn As Variant In TableColumns(pDatabase)
-		    pColumns.Append(TableName + "." + pColumn)
-		  Next
-		  
-		  Dim RR as RowSet = Append(new SelectQueryExpression(pColumns)). _
-		  From(Me.TableName). _
-		  Execute(pDatabase, pExpiration)
-		  
-		  return RR
 		End Function
 	#tag EndMethod
 
@@ -1772,30 +1772,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Attributes( OS = iOS )  Function JSONValue() As Dictionary
-		  
-		  // Shallow export
-		  
-		  Dim pJSONItem As New Dictionary
-		  
-		  // Adds each column as an Attribute
-		  For Each pDataKeyColumn As DictionaryEntry In Me.Data
-		    'System.DebugLog pDataKeyColumn.key
-		    dim v as Variant = pDataKeyColumn.Value
-		    'System.DebugLog "type : " + v.Type.StringValue
-		    if v.Type = 6 then
-		      pJSONItem.Value(pDataKeyColumn.Key) = v.AutoDoubleValue
-		    else
-		      pJSONItem.Value(pDataKeyColumn.Key) = v
-		    end if
-		    'System.DebugLog pDataKeyColumn.Key + ":" + pDataKeyColumn.Value
-		  Next
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function JSONValue() As Dictionary
 		  // Shallow export
@@ -2077,7 +2053,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Function Reload(pDatabase As Database) As ORM
 		  // Save primary key, the model will be unloaded
 		  
@@ -2618,7 +2594,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Function TableColumns(pDatabase As Database) As Dictionary
 		  if db.DatabaseSchemaCache.Lookup(me.TableName, nil)<>nil then Return db.DatabaseSchemaCache.Value(me.TableName)
 		  
@@ -2643,7 +2619,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function TableColumns(pDatabase As SQLiteDatabase) As String()
 		  Dim pColumns() As String
 		  

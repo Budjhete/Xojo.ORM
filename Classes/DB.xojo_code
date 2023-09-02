@@ -321,7 +321,7 @@ Protected Module DB
 		  
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
-		    If IsNumeric(pDatabaseFieldValue) Then
+		    If pDatabaseFieldValue.IsNumeric Then
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
@@ -333,7 +333,7 @@ Protected Module DB
 		  
 		  If pColumnType = 8 OR pColumnType = 10 Then
 		    if pDatabaseFieldValue<>nil then
-		      Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
+		      Return pDatabaseFieldValue
 		    else
 		      return pDatabaseFieldValue
 		    End If
@@ -566,7 +566,7 @@ Protected Module DB
 		  
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
-		    If IsNumeric(pDatabaseFieldValue) Then
+		    If pDatabaseFieldValue.IsNumeric Then
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
@@ -578,7 +578,7 @@ Protected Module DB
 		  
 		  If pColumnType = 8 OR pColumnType = 10 Then
 		    if pDatabaseFieldValue<>nil then
-		      Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
+		      Return pDatabaseFieldValue.DateTimeValue
 		    else
 		      return pDatabaseFieldValue
 		    End If
