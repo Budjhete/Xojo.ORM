@@ -1,6 +1,7 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
+	#tag CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 	#tag Event
 		Sub Close()
 		  RaiseEvent Close
@@ -475,6 +476,17 @@ Inherits QueryBuilder
 		  Next
 		  
 		  
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target64Bit))
+		Sub Constructor(pIdentificationMethod as String)
+		  // ORM constructor with a ParamArray of initial criteria
+		  // Also used for the empty constructor
+		  
+		  Dim pDictionary As New Dictionary
+		  
+		  Me.Constructor(pDictionary)
 		End Sub
 	#tag EndMethod
 
@@ -1276,73 +1288,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
-		  
-		  If Loaded Then
-		    Raise New ORMException("Cannot call find on a loaded model.")
-		  End If
-		  
-		  If Not RaiseEvent Finding Then
-		    
-		    Dim pColumns() As Variant
-		    
-		    // Prepend table to prevent collision with join
-		    dim pColumnType as Dictionary = Me.TableColumns(pDatabase)
-		    For Each pColumn As Variant In pColumnType.Keys
-		      pColumns.Append(TableName + "." + pColumn.StringValue)
-		    Next
-		    
-		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)). _
-		    From(Me.TableName). _
-		    Limit(1). _
-		    Execute(pDatabase, pExpiration)
-		    
-		    
-		    // Clear any existing data
-		    mData.Clear
-		    
-		    // Fetch record set
-		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
-		      
-		      For pIndex As Integer = 1 To pRecordSet.FieldCount
-		        
-		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name.DefineEncoding(Encodings.UTF8)
-		        
-		        if pColumnType <> nil then
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
-		        else
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase)
-		        end if
-		        
-		        // @todo check if mChanged.Clear is not more appropriate
-		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
-		          mChanged.Remove(pColumn)
-		        End If
-		        
-		      Next
-		      
-		      pRecordSet.Close
-		      
-		      if pFiringFoundEvent then RaiseEvent Found
-		      
-		    else
-		      // clear existing data
-		      call me.Unload.Clear
-		      
-		      if pFiringFoundEvent then RaiseEvent NoFound
-		      
-		    End If
-		    
-		    
-		    
-		  End If
-		  Return Me
-		  
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit))
 		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  If Loaded Then
@@ -1402,6 +1347,73 @@ Inherits QueryBuilder
 		    else
 		      
 		      RaiseEvent NoFound
+		    End If
+		    
+		    
+		    
+		  End If
+		  Return Me
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
+		  
+		  If Loaded Then
+		    Raise New ORMException("Cannot call find on a loaded model.")
+		  End If
+		  
+		  If Not RaiseEvent Finding Then
+		    
+		    Dim pColumns() As Variant
+		    
+		    // Prepend table to prevent collision with join
+		    dim pColumnType as Dictionary = Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In pColumnType.Keys
+		      pColumns.Append(TableName + "." + pColumn.StringValue)
+		    Next
+		    
+		    // Add SELECT and LIMIT 1 to the query
+		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)). _
+		    From(Me.TableName). _
+		    Limit(1). _
+		    Execute(pDatabase, pExpiration)
+		    
+		    
+		    // Clear any existing data
+		    mData.Clear
+		    
+		    // Fetch record set
+		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
+		      
+		      For pIndex As Integer = 1 To pRecordSet.FieldCount
+		        
+		        Dim pColumn As String = pRecordSet.IdxField(pIndex).Name.DefineEncoding(Encodings.UTF8)
+		        
+		        if pColumnType <> nil then
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
+		        else
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase)
+		        end if
+		        
+		        // @todo check if mChanged.Clear is not more appropriate
+		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
+		          mChanged.Remove(pColumn)
+		        End If
+		        
+		      Next
+		      
+		      pRecordSet.Close
+		      
+		      if pFiringFoundEvent then RaiseEvent Found
+		      
+		    else
+		      // clear existing data
+		      call me.Unload.Clear
+		      
+		      if pFiringFoundEvent then RaiseEvent NoFound
+		      
 		    End If
 		    
 		    
@@ -2829,19 +2841,12 @@ Inherits QueryBuilder
 		        if HasPrimaryKeys then
 		          
 		          '// check if duplicate on : 
-		          'dim ch as string = "SELECT " + me.PrimaryKey + ", COUNT(*) FROM
-		          'name, email, COUNT(*)
-		          'FROM
-		          'users
-		          'GROUP BY
-		          'name, email
-		          'HAVING 
-		          'COUNT(*) > 1
+		          dim rr as RowSet = pDatabase.SelectSQL("SHOW INDEX FROM `"+me.TableName+"` where Key_name = 'PRIMARY';")
 		          
-		          
-		          
-		          System.DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
-		          pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
+		          if rr is nil then
+		            System.DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
+		            pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
+		          end if
 		        end if
 		      Catch Error as DatabaseException
 		        System.DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
@@ -2857,7 +2862,35 @@ Inherits QueryBuilder
 		        mLogs =  mlogs + "UniqueKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		      end try
 		      
+		      
+		      // INDEXING DB
+		      
+		      for each dField as DictionaryEntry in SchemaIndex
+		        
+		        Dim sql As String
+		        
+		        sql = "ALTER TABLE `"+me.TableName+"` ADD INDEX `"+ dField.Key + "`  ( "
+		        
+		        dim fields() as string = dField.Value
+		        
+		        For Each name As String In fields
+		          sql = sql + "`"+ name + "`, " 
+		        Next
+		        
+		        sql = sql.Left(sql.Length - 2) + ");"
+		        
+		        try
+		          System.DebugLog sql
+		          pDatabase.ExecuteSQL(sql)
+		        Catch Error as DatabaseException
+		          System.DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
+		          mLogs =  mlogs + "Indexing on  "+me.TableName+" error : " + Error.Message + EndOfLine
+		        end try
+		        
+		      next
+		      
 		      pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		      
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		      
 		    end if
@@ -3488,6 +3521,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaDefaultDatas() As Variant
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaIndex As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
