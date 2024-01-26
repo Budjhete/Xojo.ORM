@@ -1,7 +1,8 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
-	#tag CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+Implements Reports.Dataset
+	#tag CompatibilityFlags = ( TargetConsole and ( Target32Bit or Target64Bit ) ) or ( TargetWeb and ( Target32Bit or Target64Bit ) ) or ( TargetDesktop and ( Target32Bit or Target64Bit ) ) or ( TargetIOS and ( Target64Bit ) ) or ( TargetAndroid and ( Target64Bit ) )
 	#tag Event
 		Sub Close()
 		  RaiseEvent Close
@@ -1165,6 +1166,34 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function EOF() As Boolean
+		  // Part of the Reports.Dataset interface.
+		  
+		  If mRow > 0Then
+		    Return True
+		  Else
+		    Return False
+		  End If
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Field(idx As Integer) As Variant
+		  // Part of the Reports.Dataset interface.
+		  
+		  Return ""
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Field(name As String) As Variant
+		  // Part of the Reports.Dataset interface.
+		  
+		  Return me.Data(name)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function FieldExtra(pValue as String) As ORMField.ExtraList
 		  
 		  if pValue.Contains("auto_increment") then
@@ -1897,6 +1926,14 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function NextRecord() As Boolean
+		  // Part of the Reports.Dataset interface.
+		  
+		  mRow = mRow + 1
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Offset(pOffset As Integer) As ORM
 		  Call Super.Offset(pOffset)
 		  
@@ -2391,6 +2428,14 @@ Inherits QueryBuilder
 		  
 		  Return Me
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Run()
+		  // Part of the Reports.Dataset interface.
+		  
+		  mRow = 0
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
@@ -3006,6 +3051,19 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function Type(fieldName as string) As integer
+		  #PRAGMA unused fieldName
+		  
+		  // Part of the Reports.Dataset interface.
+		  
+		  // All columns in a ListBox are Text/String
+		  // Types described here:
+		  // http://docs.xojo.com/index.php/Database.FieldSchema
+		  Return 5 // value for Text
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Unload() As ORM
 		  // Empties only the primary keys
 		  
@@ -3509,6 +3567,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		mReplaced As Boolean = False
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		mRow As Integer
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
