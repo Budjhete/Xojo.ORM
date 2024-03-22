@@ -1080,6 +1080,9 @@ Implements Reports.Dataset
 		    End If
 		    
 		    RaiseEvent Changed(pColumn)
+		    if ParentORM<>nil then
+		      ParentORM.RaiseChange
+		    End If
 		    
 		  End If
 		  
@@ -2090,6 +2093,12 @@ Implements Reports.Dataset
 		  
 		  Return pPrimaryKeys(pIndex)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub RaiseChange()
+		  RaiseEvent Changed(PrimaryKey)
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -3571,6 +3580,10 @@ Implements Reports.Dataset
 
 	#tag Property, Flags = &h0
 		mRow As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ParentORM As ORM
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
