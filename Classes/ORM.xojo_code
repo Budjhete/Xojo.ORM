@@ -923,6 +923,7 @@ Implements Reports.Dataset
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
 		    Dim sql As String
+		    
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
 		    dim HasKeys as Boolean = false
@@ -1168,7 +1169,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Function EOF() As Boolean
 		  // Part of the Reports.Dataset interface.
 		  
@@ -1180,7 +1181,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Function Field(idx As Integer) As Variant
 		  // Part of the Reports.Dataset interface.
 		  
@@ -1188,7 +1189,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Function Field(name As String) As Variant
 		  // Part of the Reports.Dataset interface.
 		  
@@ -1740,9 +1741,9 @@ Implements Reports.Dataset
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub InsertBaseData(pDatabase as Database)
+		Function InsertBaseData(pDatabase as Database) As Boolean
 		  #Pragma BreakOnExceptions False
-		  
+		  dim errors as Boolean = false
 		  dim rCol as string
 		  for each cCol as DictionaryEntry in Schema
 		    rCol = rCol + "`"+cCol.Key+ "`, "
@@ -1766,6 +1767,7 @@ Implements Reports.Dataset
 		      pDatabase.ExecuteSQL(sql)
 		    catch Err as DatabaseException
 		      System.DebugLog me.TableName + "- " + sql + " : " + err.Reason
+		      errors = errors or true
 		    end try
 		  next
 		  
@@ -1787,9 +1789,13 @@ Implements Reports.Dataset
 		      pDatabase.ExecuteSQL(sql)
 		    catch Err as DatabaseException
 		      System.DebugLog me.TableName + "- " + sql + " : " + err.Reason
+		      errors = errors or true
+		      
 		    end try
 		  next
-		End Sub
+		  
+		  Return not Errors
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1928,7 +1934,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Function NextRecord() As Boolean
 		  // Part of the Reports.Dataset interface.
 		  
@@ -2439,7 +2445,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Sub Run()
 		  // Part of the Reports.Dataset interface.
 		  
@@ -3059,7 +3065,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Function Type(fieldName as string) As integer
 		  #PRAGMA unused fieldName
 		  
