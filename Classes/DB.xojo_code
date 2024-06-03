@@ -142,17 +142,17 @@ Protected Module DB
 		      
 		      pDatabase = New MySQLCommunityServer
 		      
-		      pDatabase.UserName = pMatch.SubExpressionText(2)
-		      pDatabase.Password = pMatch.SubExpressionText(3)
+		      pDatabase.UserName = pMatch.SubExpressionString(2)
+		      pDatabase.Password = pMatch.SubExpressionString(3)
 		      pDatabase.Host = pMatch.SubExpressionText(4)
 		      
 		      If pMatch.SubExpressionText(5) <> "" Then
-		        MySQLCommunityServer(pDatabase).Port = Val(pMatch.SubExpressionText(5))
+		        MySQLCommunityServer(pDatabase).Port = Val(pMatch.SubExpressionString(5))
 		      Else
 		        MySQLCommunityServer(pDatabase).Port = 3306
 		      End If
 		      
-		      pDatabase.DatabaseName = pMatch.SubExpressionText(6)
+		      pDatabase.DatabaseName = pMatch.SubExpressionString(6)
 		      
 		      If pDatabase.Connect Then
 		        
