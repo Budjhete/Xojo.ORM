@@ -37,7 +37,11 @@ Protected Module QueryCompiler
 		      if pParts(i).IsNumeric then
 		        pParts(i) = pParts(i)
 		      else
-		        pParts(i) = "`" + pParts(i)+ "`"
+		        #if TargetIOS then
+		          pParts(i) = """" + pParts(i)+ """"
+		        #else
+		          pParts(i) = "`" + pParts(i)+ "`"
+		        #endif
 		      End
 		    End Select
 		    

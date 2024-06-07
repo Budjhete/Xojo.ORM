@@ -1,22 +1,7 @@
 #tag Class
-Protected Class InsertQueryExpression
+Protected Class InsertOrIgnoreQueryExpression
 Implements QueryExpression
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  #Pragma Unused pLastQueryExpression
-		  
-		  Dim pColumns As String
-		  
-		  // No columns makes a simple insertion
-		  If mColumns.Ubound > -1 Then
-		    pColumns = " ( " + QueryCompiler.Columns(mColumns) + " )"
-		  End If
-		  
-		  Return "INSERT " + QueryCompiler.TableName(mTableName) + pColumns  // MYSQL fonctionne avec IGNORE INTO et SQLITE OR IGNORE INTO, trouver solution pour faire un choix
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  #Pragma Unused pLastQueryExpression
 		  

@@ -1,7 +1,6 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
-Implements Reports.Dataset
 	#tag CompatibilityFlags = ( TargetConsole and ( Target32Bit or Target64Bit ) ) or ( TargetWeb and ( Target32Bit or Target64Bit ) ) or ( TargetDesktop and ( Target32Bit or Target64Bit ) ) or ( TargetIOS and ( Target64Bit ) ) or ( TargetAndroid and ( Target64Bit ) )
 	#tag Event
 		Sub Close()
@@ -226,6 +225,9 @@ Implements Reports.Dataset
 		    mRemoved = new Dictionary
 		    'mRemoved.Clear
 		    
+		    mRelations = nil
+		    mRelations = new Dictionary
+		    
 		    RaiseEvent Cleared
 		    
 		  End If
@@ -255,6 +257,9 @@ Implements Reports.Dataset
 		    mAdded = nil
 		    mAdded = new Dictionary
 		    'mAdded.clear
+		    
+		    mRelations = nil
+		    mRelations = new Dictionary
 		    
 		    RaiseEvent Cleared
 		    
@@ -299,6 +304,7 @@ Implements Reports.Dataset
 		  mChanged = New Dictionary
 		  mAdded = New Dictionary
 		  mRemoved = New Dictionary
+		  mRelations = New Dictionary
 		  
 		  if LoadFromJSON then
 		    mData = pCriterias
@@ -622,6 +628,70 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+		Function Create() As Dictionary
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  'System.DebugLog "ORM.create isloaded ?"
+		  If me.Loaded Then
+		    Raise new ORMException("Cannot create " + me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = me.Data
+		    
+		    //pData contains at least all primary keys
+		    Dim pData As Dictionary = me.Pks
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As DictionaryEntry In me.TableColumns
+		      
+		      If pRaw.HasKey(pColumn.Key) Then
+		        pData.Value(pColumn.Key) = pRaw.Value(pColumn.Key)
+		      End If
+		    Next
+		    
+		    
+		    dim nRelations as Dictionary
+		    
+		    For each dRelations as DictionaryEntry in me.mRelations
+		      dim nORMs() as ORM = dRelations.Value
+		      dim dORMdata() as Dictionary
+		      for each nORM as ORM in nORMs
+		        dORMdata.Add(nORM.Save)
+		      Next
+		      nRelations.Value(dRelations.Key) = dORMdata
+		    Next
+		    
+		    pData.Value("relations") = nRelations
+		    
+		    me.mRelations = nil
+		    me.mRelations = new Dictionary
+		    
+		    me.mChanged = nil
+		    me.mChanged = new Dictionary
+		    
+		    
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    
+		    RaiseEvent Created
+		    
+		    Return pData
+		    
+		  End If
+		  
+		  Return nil
+		  
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
@@ -733,81 +803,6 @@ Implements Reports.Dataset
 		  End If
 		  
 		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Function Create(pConnexion As KanjoSocket) As Boolean
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  'System.DebugLog "ORM.create isloaded ?"
-		  If me.Loaded Then
-		    Raise new ORMException("Cannot create " + me.TableName + " model because it is already loaded.")
-		  End
-		  
-		  If Not RaiseEvent Creating Then
-		    
-		    // Take a merge of mData and mChanged
-		    Dim pRaw As Dictionary = me.Data
-		    
-		    // pData contains at least all primary keys
-		    'Dim pData As Dictionary = me.Pks
-		    '
-		    '// Take only columns defined in the model
-		    'For Each pColumn As DictionaryEntry In me.ColumnsList
-		    '
-		    'If pRaw.HasKey(pColumn.Key) Then
-		    'pData.Value(pColumn.Key) = pRaw.Value(pColumn.Key)
-		    'End If
-		    'Next
-		    
-		    if pRaw.KeyCount >0 then
-		      'pConnexion.BodyRequest = GenerateJSON(pRaw)
-		      'pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.PUT, pConnexion.mURL))
-		      'pConnexion.BodyRequest = ""
-		    End If
-		    
-		    
-		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
-		    // Clear changes, they are saved in mData
-		    //Call Me.mChanged.Clear
-		    me.mChanged = nil
-		    me.mChanged = new Dictionary
-		    
-		    'todo: check if the primary key is auto increment
-		    'If pORM.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
-		    '
-		    '// Biggest primary key
-		    'pORM.mData.Value(pORM.PrimaryKey) = DB.Find(pORM.PrimaryKey). _
-		    'From(pORM.TableName). _
-		    'OrderBy(pORM.PrimaryKey, "DESC"). _
-		    'Execute(pDatabase).Field(pORM.PrimaryKey).Value
-		    '
-		    'End If
-		    
-		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In me.mRemoved.Values
-		      Call pRelation.Remove(me, pConnexion)
-		    Next
-		    
-		    For Each pRelation As ORMRelation In me.mAdded.Values
-		      Call pRelation.Add(me, pConnexion)
-		    Next
-		    
-		    // Clear pending relationships
-		    //mAdded.Clear
-		    me.mAdded = nil
-		    me.mAdded = new Dictionary
-		    
-		    
-		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    //mRemoved.Clear
-		    me.mRemoved = nil
-		    me.mRemoved = new Dictionary
-		    
-		    RaiseEvent Created
-		  End If
-		  
-		  'Return Me
 		End Function
 	#tag EndMethod
 
@@ -2212,6 +2207,77 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Replace() As Dictionary
+		  '// Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  '
+		  'If Loaded Then
+		  'Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  'End
+		  '
+		  'If Not RaiseEvent Creating Then
+		  '
+		  'pDatabase.Begin
+		  '
+		  '// Take a merge of mData and mChanged
+		  'Dim pRaw As Dictionary = Me.Data
+		  '
+		  '// pData contains at least all primary keys
+		  'Dim pData As Dictionary = Me.Pks
+		  '
+		  '// Take only columns defined in the model
+		  'For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		  'If pRaw.HasKey(pColumn) Then
+		  'pData.Value(pColumn) = pRaw.Value(pColumn)
+		  'End If
+		  'Next
+		  '
+		  'DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		  '
+		  '// Merge mChanged into mData
+		  'For Each pKey As Variant In mChanged.Keys()
+		  'mData.Value(pKey) = mChanged.Value(pKey)
+		  'Next
+		  '
+		  '// Clear changes, they are saved in mData
+		  'Call Me.mChanged.Clear
+		  '
+		  '// todo: check if the primary key is auto increment
+		  'If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		  '// Biggest primary key
+		  'Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		  'From(Me.TableName). _
+		  'OrderBy(Me.PrimaryKey, "DESC"). _
+		  'Execute(pDatabase).Field(Me.PrimaryKey).Value
+		  '
+		  'End If
+		  '
+		  '// Execute pendings relationships
+		  'For Each dRelation As DictionaryEntry In mRemoved
+		  'Dim pRelation as ORMRelation = dRelation.value
+		  'Call pRelation.Remove(Me, pDatabase, False)
+		  'Next
+		  '
+		  'For Each dRelation as DictionaryEntry In mAdded
+		  'dim pRelation As ORMRelation = dRelation.Value
+		  'Call pRelation.Add(Me, pDatabase, False)
+		  'Next
+		  '
+		  '// Clear pending relationships
+		  'mAdded.Clear
+		  '// FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		  'mRemoved.Clear
+		  '
+		  'pDatabase.Commit
+		  '
+		  'RaiseEvent Created
+		  '
+		  'End If
+		  '
+		  'Return Me
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Replace(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
@@ -2288,77 +2354,6 @@ Implements Reports.Dataset
 		  End If
 		  
 		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Function Replace(pConnexion As KanjoSocket) As Boolean
-		  '// Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  '
-		  'If Loaded Then
-		  'Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
-		  'End
-		  '
-		  'If Not RaiseEvent Creating Then
-		  '
-		  'pDatabase.Begin
-		  '
-		  '// Take a merge of mData and mChanged
-		  'Dim pRaw As Dictionary = Me.Data
-		  '
-		  '// pData contains at least all primary keys
-		  'Dim pData As Dictionary = Me.Pks
-		  '
-		  '// Take only columns defined in the model
-		  'For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		  'If pRaw.HasKey(pColumn) Then
-		  'pData.Value(pColumn) = pRaw.Value(pColumn)
-		  'End If
-		  'Next
-		  '
-		  'DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
-		  '
-		  '// Merge mChanged into mData
-		  'For Each pKey As Variant In mChanged.Keys()
-		  'mData.Value(pKey) = mChanged.Value(pKey)
-		  'Next
-		  '
-		  '// Clear changes, they are saved in mData
-		  'Call Me.mChanged.Clear
-		  '
-		  '// todo: check if the primary key is auto increment
-		  'If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
-		  '// Biggest primary key
-		  'Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		  'From(Me.TableName). _
-		  'OrderBy(Me.PrimaryKey, "DESC"). _
-		  'Execute(pDatabase).Field(Me.PrimaryKey).Value
-		  '
-		  'End If
-		  '
-		  '// Execute pendings relationships
-		  'For Each dRelation As DictionaryEntry In mRemoved
-		  'Dim pRelation as ORMRelation = dRelation.value
-		  'Call pRelation.Remove(Me, pDatabase, False)
-		  'Next
-		  '
-		  'For Each dRelation as DictionaryEntry In mAdded
-		  'dim pRelation As ORMRelation = dRelation.Value
-		  'Call pRelation.Add(Me, pDatabase, False)
-		  'Next
-		  '
-		  '// Clear pending relationships
-		  'mAdded.Clear
-		  '// FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		  'mRemoved.Clear
-		  '
-		  'pDatabase.Commit
-		  '
-		  'RaiseEvent Created
-		  '
-		  'End If
-		  '
-		  'Return Me
 		End Function
 	#tag EndMethod
 
@@ -2453,6 +2448,24 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Save() As Dictionary
+		  dim bSaved as new Dictionary
+		  If Not RaiseEvent Saving Then
+		    
+		    If Loaded() Then
+		      bSaved = Update()
+		    Elseif mReplaced then
+		      bSaved = Replace()
+		    else
+		      bSaved = Create()
+		    End
+		    
+		  End If
+		  Return bSaved
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Save(pDatabase As Database) As ORM
 		  If Not RaiseEvent Saving Then
@@ -2472,27 +2485,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Function Save(pConnexion As KanjoSocket) As Boolean
-		  dim bSaved as boolean = false
-		  If Not RaiseEvent Saving Then
-		    
-		    If Loaded() Then
-		      bSaved = Update(pConnexion)
-		    Elseif mReplaced then
-		      bSaved = Replace(pConnexion)
-		    else
-		      bSaved = Create(pConnexion)
-		    End
-		    
-		    RaiseEvent Saved
-		    Return bSaved
-		  End If
-		  Return bSaved
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Save(pDatabase As SQLiteDatabase) As ORM
 		  If Not RaiseEvent Saving Then
 		    
@@ -2650,7 +2643,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetDesktop and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function TableColumns() As Dictionary
 		  Dim pColumns() As String
 		  
@@ -3157,11 +3150,70 @@ Implements Reports.Dataset
 		    mAdded = new Dictionary
 		    'mAdded.clear
 		    
+		    mRelations = nil
+		    mRelations = new Dictionary
+		    
 		    RaiseEvent UnloadedAll
 		    
 		  End If
 		  
 		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Update() As Dictionary
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  If Not me.Loaded then
+		    Raise new ORMException("Cannot update " + me.TableName + " model because it is not loaded.")
+		  End If
+		  
+		  If Not RaiseEvent Updating() Then
+		    
+		    
+		    Dim pChanged As Dictionary = me.Pks
+		    
+		    'Take only columns defined in the model
+		    For Each pColumn As DictionaryEntry In me.TableColumns()
+		      If me.mChanged.HasKey(pColumn.Key) Then
+		        pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Key)
+		      End If
+		    Next
+		    
+		    // Clear mChanged, they are merged in mData
+		    me.mChanged.Clear
+		    
+		    dim nRelations as Dictionary
+		    
+		    For each dRelations as DictionaryEntry in me.mRelations
+		      dim nORMs() as ORM = dRelations.Value
+		      dim dORMdata() as Dictionary
+		      for each nORM as ORM in nORMs
+		        dORMdata.Add(nORM.Save)
+		      Next
+		      nRelations.Value(dRelations.Key) = dORMdata
+		    Next
+		    
+		    pChanged.Value("relations") = nRelations
+		    
+		    
+		    // Clear pending relationships
+		    //mAdded.Clear()
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
+		    //mRemoved.Clear()
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    
+		    RaiseEvent Updated()
+		    return pChanged
+		  End If
+		  
+		  Return nil
 		End Function
 	#tag EndMethod
 
@@ -3226,72 +3278,6 @@ Implements Reports.Dataset
 		  End If
 		  
 		  Return Me
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
-		Function Update(pConnexion As KanjoSocket) As Boolean
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  
-		  If Not me.Loaded then
-		    Raise new ORMException("Cannot update " + me.TableName + " model because it is not loaded.")
-		  End If
-		  
-		  If Not RaiseEvent Updating() Then
-		    
-		    
-		    Dim pChanged As New Dictionary
-		    
-		    // Take only columns defined in the model
-		    'For Each pColumn As DictionaryEntry In me.TableColumns()
-		    'If me.mChanged.HasKey(pColumn.Key) Then
-		    'pChanged.Value(pColumn.Key) = me.mChanged.Value(pColumn.Value)
-		    'End If
-		    'Next
-		    
-		    if pChanged.KeyCount >0 then
-		      'pConnexion.BodyRequest = GenerateJSON(pChanged)
-		      'pConnexion.SendMessage(pConnexion.HeaderRequest(pConnexion.POST, pConnexion.mURL+me.Pk.StringValue))
-		      'pConnexion.BodyRequest = ""
-		    End If
-		    
-		    // Merge mData with mChanged
-		    For Each dKey as DictionaryEntry In me.mChanged
-		      dim pKey As Variant = dKey.Key
-		      me.mData.Value(pKey) = me.mChanged.Value(pKey)
-		    Next
-		    
-		    // Clear mChanged, they are merged in mData
-		    me.mChanged.Clear
-		    
-		    // Execute pendings relationships
-		    For Each dRemoved as DictionaryEntry In me.mRemoved
-		      dim pRelation As ORMRelation = dRemoved.Value
-		      
-		      Call pRelation.Remove(me, pConnexion)
-		    Next
-		    
-		    For Each dAdded as DictionaryEntry In me.mAdded
-		      Dim pRelation As ORMRelation = dAdded.Value
-		      Call pRelation.Add(me, pConnexion)
-		    Next
-		    
-		    // Clear pending relationships
-		    //mAdded.Clear()
-		    me.mAdded = nil
-		    me.mAdded = new Dictionary
-		    
-		    // AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!   // not the first time ?
-		    //mRemoved.Clear()
-		    me.mRemoved = nil
-		    me.mRemoved = new Dictionary
-		    
-		    
-		    RaiseEvent Updated()
-		    return true
-		  End If
-		  
-		  Return false
 		End Function
 	#tag EndMethod
 
@@ -3574,6 +3560,10 @@ Implements Reports.Dataset
 
 	#tag Property, Flags = &h1
 		Protected mData As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		mRelations As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h1

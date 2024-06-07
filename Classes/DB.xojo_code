@@ -676,6 +676,14 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Function InsertOrIgnore(pTableName As String, pColumns() As Variant) As QueryBuilder
+		  Dim pQueryBuilder As New QueryBuilder
+		  
+		  Return pQueryBuilder.Append(new InsertOrIgnoreQueryExpression(pTableName, pColumns))
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Instance(pDatabase as Database) As Database
 		  Var tDatabase as Database
