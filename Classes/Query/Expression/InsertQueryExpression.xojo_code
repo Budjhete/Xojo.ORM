@@ -12,7 +12,7 @@ Implements QueryExpression
 		    pColumns = " ( " + QueryCompiler.Columns(mColumns) + " )"
 		  End If
 		  
-		  Return "INSERT " + QueryCompiler.TableName(mTableName) + pColumns  // MYSQL fonctionne avec IGNORE INTO et SQLITE OR IGNORE INTO, trouver solution pour faire un choix
+		  Return "INSERT INTO " + QueryCompiler.TableName(mTableName) + pColumns  // MYSQL fonctionne avec IGNORE INTO et SQLITE OR IGNORE INTO, trouver solution pour faire un choix
 		End Function
 	#tag EndMethod
 
