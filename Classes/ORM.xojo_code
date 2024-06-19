@@ -1911,8 +1911,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Sub LoadJSON(pCriterias as Dictionary)
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+		Sub LoadJSON(pCriterias as Dictionary, pRaiseEvent as Boolean = true)
 		  // use it to bypass database search
 		  // not swetable to manage changes
 		  
@@ -1922,10 +1922,12 @@ Implements Reports.Dataset
 		  mRemoved = New Dictionary
 		  
 		  mData = pCriterias
-		  if mData.Lookup(me.PrimaryKey, 0)>0 then
-		    RaiseEvent Found
-		  else
-		    RaiseEvent NoFound
+		  if pRaiseEvent then
+		    if mData.Lookup(me.PrimaryKey, 0)>0 then
+		      RaiseEvent Found
+		    else
+		      RaiseEvent NoFound
+		    end if
 		  end if
 		End Sub
 	#tag EndMethod
