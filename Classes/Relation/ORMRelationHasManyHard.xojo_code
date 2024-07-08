@@ -4,7 +4,10 @@ Inherits ORMRelationHasMany
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  #Pragma Unused pORM
-		  
+		  #if DebugBuild then 
+		    System.DebugLog DB.Delete(mORM.TableName).Where(mORM.Pks).Compile
+		    
+		  #endif
 		  // Remove the entry instead of nullifying the primary key
 		  DB.Delete(mORM.TableName). _
 		  Where(mORM.Pks). _
