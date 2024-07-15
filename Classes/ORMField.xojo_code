@@ -32,6 +32,8 @@ Protected Class ORMField
 		        dv = "NULL"
 		      case "CURRENT_TIMESTAMP"
 		        dv = "CURRENT_TIMESTAMP"
+		      case " "
+		        dv = "''"
 		      else
 		        dv = "'"+mDefaultValue+"'"
 		      end
@@ -50,6 +52,8 @@ Protected Class ORMField
 		        dv = "NULL"
 		      case "CURRENT_TIMESTAMP"
 		        dv = "CURRENT_TIMESTAMP"
+		      case " "
+		        dv = "''"
 		      else
 		        dv = "'"+mDefaultValue+"'"
 		      end
