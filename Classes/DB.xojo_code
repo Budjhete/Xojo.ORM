@@ -332,7 +332,7 @@ Protected Module DB
 		  End If
 		  
 		  If pColumnType = 8 OR pColumnType = 10 Then
-		    if pDatabaseFieldValue<>nil then
+		    if pDatabaseFieldValue<>nil AND pDatabaseFieldValue<>"" then
 		      Return pDatabaseFieldValue
 		    else
 		      return pDatabaseFieldValue
