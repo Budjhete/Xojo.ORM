@@ -1847,7 +1847,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = false
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit))
 		Function JSONValue(pDatabase As Database) As Dictionary
 		  // Deep export
 		  
