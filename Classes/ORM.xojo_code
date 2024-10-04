@@ -3243,7 +3243,7 @@ Implements Reports.Dataset
 		    Next
 		    
 		    If pChanged.Count > 0 Then
-		      //System.DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
+		      if app.DebugMode then System.DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
 		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
 		    
