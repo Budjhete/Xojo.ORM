@@ -153,8 +153,11 @@ Protected Module DB
 		      End If
 		      
 		      pDatabase.DatabaseName = pMatch.SubExpressionString(6)
+		      dim trycount as integer = 1
+		      redoou: 'on recommance
 		      
 		      If pDatabase.Connect Then
+		        
 		        
 		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		        
@@ -165,7 +168,13 @@ Protected Module DB
 		          System.DebugLog "Can't execute sql_mode : " + error.Message
 		        End Try
 		        Return pDatabase
-		        
+		      else
+		        if trycount<5 then
+		          System.DebugLog "Number of try to connect : " + trycount.StringValue
+		          DelayMBS 0.5
+		          trycount = trycount + 1
+		          GoTo redoou
+		        End If
 		      End If
 		      
 		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
