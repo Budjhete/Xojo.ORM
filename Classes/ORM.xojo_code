@@ -2967,7 +2967,11 @@ Implements Reports.Dataset
 		        sql = sql + "`"+ dField.Key + "` " 
 		        sql = sql + field.Type(pDatabase)
 		        if field.Type = ORMField.TypeList.DECIMAL then  sql = sql + field.Length
+		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		        sql = sql + " " + field.Extra(pdatabase)
 		        sql = sql +";"
+		        
+		        
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
