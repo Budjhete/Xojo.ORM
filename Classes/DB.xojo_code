@@ -159,7 +159,7 @@ Protected Module DB
 		      If pDatabase.Connect Then
 		        
 		        
-		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
+		        System.Log(System.LogLevelSuccess, "Connection to " + pDatabase.Host + " has succeed.")
 		        
 		        pDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		        try
@@ -311,6 +311,12 @@ Protected Module DB
 	#tag Method, Flags = &h0
 		Function Distinct(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("DISTINCT ( " + QueryCompiler.Column(pColumn) + " )")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function Distinct(ParamArray pColumns As Variant) As QueryExpression
+		  Return DB.Expression("DISTINCT " + QueryCompiler.Columns(pColumns) + " ")
 		End Function
 	#tag EndMethod
 

@@ -390,6 +390,18 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Function InnerJoin(pTableName As String) As QueryBuilder
+		  Return InnerJoin(pTableName, pTableName)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function InnerJoin(pTableName As Variant, pTableAlias As String) As QueryBuilder
+		  Return Append(new InnerJoinQueryExpression(pTableName, pTableAlias))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Function Intersect(pQueryBuilder As QueryBuilder) As QueryBuilder
 		  Return Append(New IntersectQueryExpression(pQueryBuilder))
 		End Function
