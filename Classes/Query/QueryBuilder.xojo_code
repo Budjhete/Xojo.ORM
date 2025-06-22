@@ -138,6 +138,7 @@ Implements QueryExpression
 		    
 		    System.DebugLog System.Ticks.StringValue + " " + pStatement
 		    
+		    dim count as integer = 0
 		    Dim pRecordSet As RecordSet
 		    
 		    // Initialize the cache
@@ -152,8 +153,11 @@ Implements QueryExpression
 		      
 		      // Get the result from the cache
 		      pRecordSet = pCache.Value("recordset")
-		      
+		      count = count + 1
 		    Else
+		      StartAgain:
+		      
+		      count = count + 1
 		      
 		      pRecordSet = pDatabase.SQLSelect(pStatement)
 		      
@@ -192,6 +196,8 @@ Implements QueryExpression
 		          else
 		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		          End If
+		        elseif count < 3 AND pDatabase.ErrorCode = 2003 then
+		          GoTo StartAgain
 		        else
 		          Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		        End If
