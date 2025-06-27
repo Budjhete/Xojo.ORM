@@ -387,12 +387,12 @@ Protected Module DB
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "dateLogiciel" then
-		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
+		  ' MessageBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  
 		  'if  then
-		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.StringValue
+		  ' MessageBox pDatabaseField.NativeValue
+		  ' MessageBox pColumnType.StringValue
 		  'end if
 		  // *******************************
 		  // NOTE :  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor of your MODEL, this part is a patch because the current MysQL plugin made a mess with some kind of data
@@ -458,12 +458,12 @@ Protected Module DB
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "categorie" then
-		  'MsgBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
+		  ' MessageBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
 		  'if  then
-		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.StringValue
+		  ' MessageBox pDatabaseField.NativeValue
+		  ' MessageBox pColumnType.StringValue
 		  'end if
 		  // *******************************
 		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
@@ -525,16 +525,16 @@ Protected Module DB
 		  'Dim pDatabaseField As DatabaseField = pRecordSet.IdxField(pIndex).Name
 		  'Dim pDatabaseFieldName as string = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.IdxField(pIndex).Value  // base 1
-		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  'Dim pCurrentColumnType As Integer = pRecordSet.ColumnTypeAt(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "date" or pDatabaseFieldName = "dateLogiciel"then
-		  'MsgBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
+		  ' MessageBox pDatabaseFieldName + ": " + pCurrentColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  
 		  'if  then
-		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.StringValue
+		  ' MessageBox pDatabaseField.NativeValue
+		  ' MessageBox pColumnType.StringValue
 		  'end if
 		  if pDatabaseFieldValue <> nil then
 		    
@@ -576,7 +576,7 @@ Protected Module DB
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
-		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  Dim pColumnType As Integer = pRecordSet.ColumnTypeAt(pIndex - 1)  // ZERO base
 		  
 		  
 		  // Perform type detection for unknown data type
@@ -628,7 +628,7 @@ Protected Module DB
 		  
 		  Dim pDatabaseFieldName as String = pRecordSet.ColumnAt(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
-		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex - 1)  // ZERO base
+		  Dim pColumnType As Integer = pRecordSet.ColumnTypeAt(pIndex - 1)  // ZERO base
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "montant" then
@@ -636,8 +636,8 @@ Protected Module DB
 		  'End If
 		  '
 		  'if  then
-		  'MsgBox pDatabaseField.NativeValue
-		  'MsgBox pColumnType.StringValue
+		  ' MessageBox pDatabaseField.NativeValue
+		  ' MessageBox pColumnType.StringValue
 		  'end if
 		  
 		  
