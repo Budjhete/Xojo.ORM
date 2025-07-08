@@ -126,7 +126,7 @@ Implements QueryExpression
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RecordSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
@@ -136,7 +136,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    System.DebugLog System.Ticks.StringValue + " " + pStatement
+		    System.DebugLog System.Ticks.ToString + " " + pStatement
 		    
 		    dim count as integer = 0
 		    Dim pRecordSet As RecordSet
@@ -224,7 +224,7 @@ Implements QueryExpression
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
@@ -253,6 +253,7 @@ Implements QueryExpression
 		    Else
 		      
 		      Try
+		        System.DebugLog pStatement
 		        pRecordSet = pDatabase.SelectSQL(pStatement)
 		        
 		        // Check for error

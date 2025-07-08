@@ -144,9 +144,9 @@ Protected Module DB
 		      
 		      pDatabase.UserName = pMatch.SubExpressionString(2)
 		      pDatabase.Password = pMatch.SubExpressionString(3)
-		      pDatabase.Host = pMatch.SubExpressionText(4)
+		      pDatabase.Host = pMatch.SubExpressionString(4)
 		      
-		      If pMatch.SubExpressionText(5) <> "" Then
+		      If pMatch.SubExpressionString(5) <> "" Then
 		        MySQLCommunityServer(pDatabase).Port = Val(pMatch.SubExpressionString(5))
 		      Else
 		        MySQLCommunityServer(pDatabase).Port = 3306
@@ -170,7 +170,7 @@ Protected Module DB
 		        Return pDatabase
 		      else
 		        if trycount<5 then
-		          System.DebugLog "Number of try to connect : " + trycount.StringValue
+		          System.DebugLog "Number of try to connect : " + trycount.ToString
 		          DelayMBS 0.5
 		          trycount = trycount + 1
 		          GoTo redoou
@@ -575,8 +575,8 @@ Protected Module DB
 		Function Extract(pRecordSet As RowSet, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
-		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
-		  Dim pColumnType As Integer = pRecordSet.ColumnTypeAt(pIndex - 1)  // ZERO base
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // ZERO base
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)  // ZERO base
 		  
 		  
 		  // Perform type detection for unknown data type
@@ -628,7 +628,7 @@ Protected Module DB
 		  
 		  Dim pDatabaseFieldName as String = pRecordSet.ColumnAt(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
-		  Dim pColumnType As Integer = pRecordSet.ColumnTypeAt(pIndex - 1)  // ZERO base
+		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)  // ZERO base
 		  
 		  // juste pour tester
 		  'if pDatabaseFieldName = "montant" then
