@@ -1,7 +1,6 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
-Implements Reports.Dataset
 	#tag CompatibilityFlags = ( TargetConsole and ( Target32Bit or Target64Bit ) ) or ( TargetWeb and ( Target32Bit or Target64Bit ) ) or ( TargetDesktop and ( Target32Bit or Target64Bit ) ) or ( TargetIOS and ( Target64Bit ) ) or ( TargetAndroid and ( Target64Bit ) )
 	#tag Event
 		Sub Close()
@@ -619,12 +618,22 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CountAll(pDatabase As Database) As Integer
 		  Dim pColumns() As Variant
 		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
 		  
 		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Field("count").IntegerValue
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetWeb and (Target32Bit or Target64Bit)) )
+		Function CountAll(pDatabase As Database) As Integer
+		  Dim pColumns() As Variant
+		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
+		  
+		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Column("count").IntegerValue
 		  
 		End Function
 	#tag EndMethod
@@ -693,7 +702,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  'System.DebugLog "ORM.create isloaded ?"
@@ -764,6 +773,120 @@ Implements Reports.Dataset
 		        From(Me.TableName). _
 		        OrderBy(Me.PrimaryKey, "DESC"). _
 		        Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      End If
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mRemoved.Values
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    'System.DebugLog "ORM.Create.mAdded about to clear"
+		    
+		    // Clear pending relationships
+		    //mAdded.Clear
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    'System.DebugLog "ORM.Create.mAdded cleared"
+		    
+		    
+		    'System.DebugLog "ORM.Create.mRemoved about to clear"
+		    
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    //mRemoved.Clear
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    'System.DebugLog "ORM.Create.mRemoved cleared"
+		    
+		    
+		    pDatabase.Commit
+		    
+		    RaiseEvent Created
+		    System.DebugLog "ORM.Create Done"
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit))
+		Function Create(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  'System.DebugLog "ORM.create isloaded ?"
+		  If Loaded Then
+		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  System.DebugLog "ORM.create is Creating ?"
+		  
+		  If Not RaiseEvent Creating Then
+		    'System.DebugLog "ORM.create not creating"
+		    
+		    pDatabase.Begin
+		    System.DebugLog "ORM.create database.begin"
+		    
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    'System.DebugLog "ORM.create pRaw = data"
+		    
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    'System.DebugLog "ORM.create pData = Pks"
+		    
+		    'System.DebugLog "ORM.create take colums defined in model"
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
+		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
+		      
+		      If pRaw.HasKey(pColumn) Then
+		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    'System.DebugLog "ORM.create DB.Insert"
+		    
+		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
+		    // Clear changes, they are saved in mData
+		    //Call Me.mChanged.Clear
+		    me.mChanged = nil
+		    me.mChanged = new Dictionary
+		    
+		    'System.DebugLog "ORM.Create.mChanged cleared"
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      
+		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		        // Best guess for MySQL when available
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
 		      End If
 		      
 		    End If
@@ -1317,7 +1440,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
@@ -1328,8 +1451,9 @@ Implements Reports.Dataset
 		    Dim pColumns() As Variant
 		    
 		    // Prepend table to prevent collision with join
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      pColumns.Append(TableName + "." + pColumn)
+		    dim pColumnType as Dictionary = Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In pColumnType.Keys
+		      pColumns.Add(TableName + "." + pColumn.StringValue)
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
@@ -1339,8 +1463,6 @@ Implements Reports.Dataset
 		    Execute(pDatabase)
 		    
 		    dim pRecordSetType as RowSet = pDatabase.TableColumns(Me.TableName)
-		    
-		    dim pColumnType as new Dictionary
 		    
 		    while not pRecordSetType.AfterLastRow
 		      pColumnType.Value(pRecordSetType.Column("ColumnName").StringValue) = pRecordSetType.Column("FieldType").IntegerValue
@@ -1352,7 +1474,7 @@ Implements Reports.Dataset
 		    // Fetch record set
 		    If pRecordSet.RowCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
 		      
-		      For pIndex As Integer = 1 To pRecordSet.ColumnCount
+		      For pIndex As Integer = 0 To pRecordSet.ColumnCount-1
 		        
 		        Dim pColumn As String = pRecordSet.ColumnAt(pIndex).Name
 		        
@@ -1386,7 +1508,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  
 		  If Loaded Then
@@ -1404,6 +1526,11 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
+		    System.DebugLog Append(new SelectQueryExpression(pColumns)). _
+		    From(Me.TableName). _
+		    Limit(1). _
+		    Compile
+		    
 		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)). _
 		    From(Me.TableName). _
 		    Limit(1). _
@@ -1453,12 +1580,12 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Function FindAll(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
 		  Dim pColumns() As Variant
 		  
-		  For Each pColumn As Variant In TableColumns(pDatabase)
-		    pColumns.Append(TableName + "." + pColumn)
+		  For Each pColumn As DictionaryEntry In TableColumns(pDatabase)
+		    pColumns.Add(TableName + "." + pColumn.key)
 		  Next
 		  
 		  Dim RR as RowSet = Append(new SelectQueryExpression(pColumns)). _
@@ -1469,7 +1596,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RecordSet
 		  Dim pColumns() As Variant
 		  
@@ -1489,7 +1616,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function FindAll(pDatabase as Database, pOtherColumn() as Variant) As RecordSet
 		  Dim pColumns() As Variant
 		  
@@ -1498,6 +1625,9 @@ Implements Reports.Dataset
 		  For Each nColumn as Variant in pOtherColumn
 		    pColumns.Append(nColumn)
 		  Next
+		  System.DebugLog Append(new SelectQueryExpression(pColumns)). _
+		  From(Me.TableName). _
+		  Compile
 		  
 		  Dim rr as RecordSet = Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
@@ -1529,7 +1659,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pORM.TableName)._
@@ -1537,6 +1667,17 @@ Implements Reports.Dataset
 		  Where(pForeignColumn, "=", Me.Pk)._
 		  Execute(pDatabase)._
 		  Field("count").BooleanValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pORM.TableName)._
+		  Where(pORM.Pks). _
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  Execute(pDatabase)._
+		  Column("count").BooleanValue
 		End Function
 	#tag EndMethod
 
@@ -1549,7 +1690,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
 		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
@@ -1560,7 +1701,30 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
+		  // Tells if this model has at least one HasManyThrough relationship
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pPivotTableName)._
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  Execute(pDatabase)._
+		  Column("count").BooleanValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+		  // Tells if this model is in HasManyThrough relationship
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pPivotTableName)._
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  AndWhere(pFarColumn, "=", pORM.Pk)._
+		  Execute(pDatabase)._
+		  Column("count").BooleanValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
@@ -1916,12 +2080,17 @@ Implements Reports.Dataset
 		  // use it to bypass database search
 		  // not swetable to manage changes
 		  
-		  mData = New Dictionary
-		  mChanged = New Dictionary
-		  mAdded = New Dictionary
-		  mRemoved = New Dictionary
+		  'mData = New Dictionary
+		  'mChanged = New Dictionary
+		  'mAdded = New Dictionary
+		  'mRemoved = New Dictionary
 		  
-		  mData = pCriterias
+		  'mData = pCriterias
+		  
+		  for Each ddd as DictionaryEntry in pCriterias
+		    data(ddd.Key) = ddd.Value
+		  next
+		  
 		  if pRaiseEvent then
 		    if mData.Lookup(me.PrimaryKey, 0)>0 then
 		      RaiseEvent Found
@@ -2281,7 +2450,86 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit))
+		Function Replace(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  
+		  If Loaded Then
+		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    pDatabase.Begin
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear changes, they are saved in mData
+		    Call Me.mChanged.Clear
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		      
+		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		        // Best guess for MySQL when available
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
+		      End If
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mRemoved.Values
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    // Clear pending relationships
+		    mAdded.Clear
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    mRemoved.Clear
+		    
+		    pDatabase.Commit
+		    
+		    RaiseEvent Created
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Replace(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
@@ -2646,7 +2894,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function TableColumns() As Dictionary
 		  Dim pColumns() As String
 		  
@@ -3006,7 +3254,8 @@ Implements Reports.Dataset
 		              dim colVal as string
 		              if rr.ColumnAt(i).Value<>nil then
 		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then 
-		                  colval = rr.ColumnAt(i).BooleanValue.SQLValue.StringValue + ","
+		                  dim z as integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
+		                  colval = z.ToString + ","
 		                else
 		                  colval =  "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
 		                end if
