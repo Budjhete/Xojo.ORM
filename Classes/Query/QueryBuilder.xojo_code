@@ -196,7 +196,7 @@ Implements QueryExpression
 		          else
 		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		          End If
-		        elseif count < 3 AND pDatabase.ErrorCode = 2003 then
+		        elseif count < 3 AND (pDatabase.ErrorCode = 2003 or pDatabase.ErrorCode = 2013) then
 		          GoTo StartAgain
 		        else
 		          Raise New ORMException(pDatabase.ErrorMessage, pStatement)
