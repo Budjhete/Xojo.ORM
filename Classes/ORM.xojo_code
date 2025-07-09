@@ -1,6 +1,7 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
+Implements Reports.Dataset
 	#tag CompatibilityFlags = ( TargetConsole and ( Target32Bit or Target64Bit ) ) or ( TargetWeb and ( Target32Bit or Target64Bit ) ) or ( TargetDesktop and ( Target32Bit or Target64Bit ) ) or ( TargetIOS and ( Target64Bit ) ) or ( TargetAndroid and ( Target64Bit ) )
 	#tag Event
 		Sub Close()
@@ -1525,11 +1526,11 @@ Inherits QueryBuilder
 		      pColumns.Append(TableName + "." + pColumn.StringValue)
 		    Next
 		    
-		    // Add SELECT and LIMIT 1 to the query
-		    System.DebugLog Append(new SelectQueryExpression(pColumns)). _
-		    From(Me.TableName). _
-		    Limit(1). _
-		    Compile
+		    // Add SELECT and LIMIT 1 to the query, NOTE : Every compile adds QueriesExpressions in the model....
+		    'System.DebugLog Append(new SelectQueryExpression(pColumns)). _
+		    'From(Me.TableName). _
+		    'Limit(1). _
+		    'Compile
 		    
 		    Dim pRecordSet As RecordSet = Append(new SelectQueryExpression(pColumns)). _
 		    From(Me.TableName). _
