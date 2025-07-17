@@ -419,8 +419,8 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet As RecordSet)
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
+		Attributes( Deprecated )  Sub Constructor(pRecordSet As RecordSet)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor
@@ -433,8 +433,8 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet As RecordSet, pDB as Database)
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
+		Attributes( Deprecated )  Sub Constructor(pRecordSet As RecordSet, pDB as Database)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor
@@ -447,8 +447,8 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Constructor(pRecordSet as RecordSet, pColumnType as Dictionary)
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
+		Attributes( Deprecated )  Sub Constructor(pRecordSet as RecordSet, pColumnType as Dictionary)
 		  // Initialize the ORM with values from a RecordSet
 		  
 		  Me.Constructor
@@ -480,7 +480,7 @@ Implements Reports.Dataset
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.ColumnCount
-		    mData.Value(pRecordSet.ColumnAt(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pDB)
+		    mData.Value(pRecordSet.ColumnAt(pIndex-1).Name) = DB.Extract(pRecordSet, pIndex-1, pDB)
 		  Next
 		  
 		  
@@ -1581,7 +1581,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function FindAll(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
 		  Dim pColumns() As Variant
 		  
@@ -1597,8 +1597,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RecordSet
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RowSet
 		  Dim pColumns() As Variant
 		  
 		  For Each pColumn As Variant In TableColumns(pDatabase).Keys
@@ -1609,7 +1609,7 @@ Implements Reports.Dataset
 		    pColumns.Append(nColumn)
 		  Next
 		  
-		  dim RR as recordSet = Append(new SelectQueryExpression(pColumns)). _
+		  dim RR as RowSet = Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Execute(pDatabase, pExpiration)
 		  
@@ -1618,7 +1618,7 @@ Implements Reports.Dataset
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function FindAll(pDatabase as Database, pOtherColumn() as Variant) As RecordSet
+		Attributes( Deprecated )  Function FindAll(pDatabase as Database, pOtherColumn() as Variant) As RecordSet
 		  Dim pColumns() As Variant
 		  
 		  pColumns.Append(TableName + "." + PrimaryKey)
