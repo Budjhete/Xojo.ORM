@@ -17,6 +17,7 @@ Protected Module DB
 		  // Begin a transaction
 		  
 		  If pDatabase IsA MySQLCommunityServer Then
+		    if NOT MySQLCommunityServer(pDatabase).IsConnected then pDatabase.Connect
 		    pDatabase.ExecuteSQL("START TRANSACTION")
 		  Else
 		    pDatabase.ExecuteSQL("BEGIN TRANSACTION")
