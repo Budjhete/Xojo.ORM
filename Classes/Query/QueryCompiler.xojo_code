@@ -171,7 +171,7 @@ Protected Module QueryCompiler
 		  
 		  // Remove bad characters
 		  #if TargetMacOS then
-		    pValue = pValue.StringValue.ReplaceAll(Text.FromUnicodeCodepoint(0), "")
+		    pValue = pValue.StringValue.ReplaceAll(String.Chr(0), "")
 		  #endif
 		  
 		  // Quote quotes

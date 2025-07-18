@@ -163,6 +163,9 @@ Protected Module DB
 		        System.Log(System.LogLevelSuccess, "Connection to " + pDatabase.Host + " has succeed.")
 		        
 		        pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		        pDatabase.ExecuteSQL("SET character_set_connection = 'utf8'")
+		        pDatabase.ExecuteSQL("SET character_set_results = 'utf8'")
+		        pDatabase.ExecuteSQL("SET character_set_client = 'utf8'")
 		        try
 		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		        Catch error As DatabaseException
@@ -170,7 +173,7 @@ Protected Module DB
 		        End Try
 		        Return pDatabase
 		      else
-		        if trycount<5 then
+		        if trycount<2 then
 		          System.DebugLog "Number of try to connect : " + trycount.ToString
 		          DelayMBS 0.5
 		          trycount = trycount + 1
@@ -327,7 +330,7 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function Extract(pRecordSet As DatabaseRow, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
@@ -372,8 +375,8 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet As RecordSet, pIndex As Integer) As Variant
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Extract(pRecordSet As RecordSet, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -443,8 +446,8 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as RecordSet, pIndex as Integer, pDB as Database) As Variant
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Extract(pRecordSet as RecordSet, pIndex as Integer, pDB as Database) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -513,8 +516,8 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Extract(pRecordSet as RecordSet, pIndex as Integer, pColumnType as Integer) As Variant
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Extract(pRecordSet as RecordSet, pIndex as Integer, pColumnType as Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
 		  // Internaly, the ORM uses Auto to store its data in a Dictionary,
@@ -572,7 +575,7 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Extract(pRecordSet As RowSet, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
@@ -617,7 +620,7 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Extract(pRecordSet as RowSet, pIndex as Integer, pDB as Database) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
@@ -627,25 +630,60 @@ Protected Module DB
 		  
 		  
 		  
-		  Dim pDatabaseFieldName as String = pRecordSet.ColumnAt(pIndex).Name  // base 1
+		  'Dim pDatabaseFieldName as string = pRecordSet.IdxField(pIndex).Name  // base 1
 		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)  // ZERO base
 		  
 		  // juste pour tester
-		  'if pDatabaseFieldName = "montant" then
-		  'System.DebugLog pDatabaseFieldValue
+		  'if pDatabaseFieldName = "categorie" then
+		  ' MessageBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
 		  'End If
 		  '
 		  'if  then
 		  ' MessageBox pDatabaseField.NativeValue
 		  ' MessageBox pColumnType.StringValue
 		  'end if
+		  // *******************************
+		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
+		  // *******************************
+		  // Perform type detection for unknown data type
+		  If pColumnType = -1 and pDB isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
+		    If IsNumeric(pDatabaseFieldValue) Then
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
+		      Return pDatabaseFieldValue.CurrencyValue
+		    End If
+		  End If
 		  
+		  // Correction caca pour SQLite
+		  'If pColumnType = 19 and  pDB isa SQLiteDatabase and pDatabaseFieldName = "montant" Then
+		  'if NOT (pDatabaseFieldValue.DoubleValue > 0.0001 OR pDatabaseFieldValue.DoubleValue <-0.0001 OR pDatabaseFieldValue.DoubleValue = 0.0000) then
+		  'dim cc as currency = 0.0000
+		  'Return cc
+		  'End If
+		  'End If
+		  
+		  If pColumnType = 1 Then
+		    Return pDatabaseFieldValue.BooleanValue
+		  End If
+		  
+		  // MySQL and SQLite dont manage dates exactly the same, so we use text instead
+		  If pColumnType = 10 or pColumnType = 8 Then
+		    if pDatabaseFieldValue<>nil then Return DateTime.FromString(pDatabaseFieldValue.StringValue)
+		    
+		  End If
+		  
+		  If pColumnType = 11 OR (pColumnType = 11 and pDB isa MySQLCommunityServer) Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
+		  
+		  If pColumnType = 13 OR (pColumnType = 13 and pDB isa MySQLCommunityServer) Then
+		    Return pDatabaseFieldValue.CurrencyValue
+		  End If
 		  
 		  // Set encoding to UTF8 for Text
-		  'If pDatabaseFieldValue.Type = Auto.TypeText Then
-		  'Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
-		  'End If
+		  If pDatabaseFieldValue.Type = Variant.TypeText  OR pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		  End If
 		  
 		  return pDatabaseFieldValue
 		  

@@ -344,7 +344,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPk As integer, pDatabase As Database)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -358,7 +358,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Sub Constructor(pPk As integer, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -459,7 +459,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pRecordSet As RowSet)
 		  // Initialize the ORM with values from a RecordSet
 		  
@@ -473,7 +473,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pRecordSet as RowSet, pDB as Database)
 		  // Initialize the ORM with values from a RecordSet
 		  
@@ -498,6 +498,18 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+		Sub Constructor(pPk As String, pDatabase As Database)
+		  // Initialize an ORM with a primary key and the call Find
+		  // This can be used to fetch your model by its primary key on a single line
+		  
+		  Me.Constructor(Me.PrimaryKey, pPk)
+		  
+		  Call Me.Find(pDatabase)
+		  
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Sub Constructor(pPrimaryKey as String, pKeyValue as integer)
 		  // ORM constructor with a ParamArray of initial criteria
@@ -511,7 +523,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Sub Constructor(pPk As String, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -549,7 +561,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Sub Constructor(pPk As Variant, pDatabase As Database)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -619,17 +631,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function CountAll(pDatabase As Database) As Integer
-		  Dim pColumns() As Variant
-		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
-		  
-		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Field("count").IntegerValue
-		  
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetWeb and (Target32Bit or Target64Bit)) )
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit)) )
 		Function CountAll(pDatabase As Database) As Integer
 		  Dim pColumns() As Variant
 		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
@@ -703,8 +705,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Create(pDatabase As Database) As ORM
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  'System.DebugLog "ORM.create isloaded ?"
 		  If Loaded Then
@@ -817,7 +819,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  'System.DebugLog "ORM.create isloaded ?"
@@ -1345,8 +1347,8 @@ Implements Reports.Dataset
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function FieldSchema(pDatabase As Database) As RecordSet
-		  Return pDatabase.FieldSchema(Me.TableName)
+		Function FieldSchema(pDatabase As Database) As RowSet
+		  Return pDatabase.TableColumns(Me.TableName)
 		End Function
 	#tag EndMethod
 
@@ -1441,7 +1443,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
@@ -1494,11 +1496,15 @@ Implements Reports.Dataset
 		      
 		      pRecordSet.Close
 		      
-		      RaiseEvent Found
+		      if pFiringFoundEvent then RaiseEvent Found
 		      
 		    else
 		      
-		      RaiseEvent NoFound
+		      // clear existing data
+		      call me.Unload.Clear
+		      
+		      if pFiringFoundEvent then RaiseEvent NoFound
+		      
 		    End If
 		    
 		    
@@ -1509,8 +1515,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  
 		  If Loaded Then
 		    Raise New ORMException("Cannot call find on a loaded model.")
@@ -1597,7 +1603,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function FindAll(pDatabase as Database, pExpiration as DateTime = Nil, pOtherColumn() as Variant = nil) As RowSet
 		  Dim pColumns() As Variant
 		  
@@ -1617,7 +1623,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Attributes( Deprecated )  Function FindAll(pDatabase as Database, pOtherColumn() as Variant) As RecordSet
 		  Dim pColumns() As Variant
 		  
@@ -1660,8 +1666,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pORM.TableName)._
 		  Where(pORM.Pks). _
@@ -1671,7 +1677,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pORM.TableName)._
@@ -1682,7 +1688,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0
 		Function Has(pPivotTableName As String, pForeignColumn As String) As QueryBuilder
 		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
@@ -1691,8 +1697,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
 		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
@@ -1702,7 +1708,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
 		  // Tells if this model has at least one HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
@@ -1713,7 +1719,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
@@ -1725,8 +1731,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
 		  From(pPivotTableName)._
@@ -2451,7 +2457,7 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetWeb and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Replace(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
@@ -2530,8 +2536,8 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Replace(pDatabase As Database) As ORM
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Replace(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
 		  
