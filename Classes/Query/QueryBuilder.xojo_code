@@ -234,7 +234,9 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
+		    System.DebugLog System.Ticks.ToString + " " + pStatement
 		    
+		    dim count as integer = 0
 		    Dim pRecordSet As RowSet
 		    
 		    // Initialize the cache
@@ -243,53 +245,62 @@ Implements QueryExpression
 		    End If
 		    
 		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
-		    Dim pNow As DateTime = DateTime.Now
+		    Dim pNow As Date = DateTime.Now
 		    
 		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
 		      
 		      // Get the result from the cache
 		      pRecordSet = pCache.Value("recordset")
-		      
+		      count = count + 1
 		    Else
+		      StartAgain:
 		      
-		      Try
-		        System.DebugLog pStatement
-		        pRecordSet = pDatabase.SelectSQL(pStatement)
-		        
-		        // Check for error
-		      Catch errordb As DatabaseException
-		        if errordb.ErrorNumber = 1055 then
+		      count = count + 1
+		      
+		      pRecordSet = pDatabase.SelectSQL(pStatement)
+		      
+		      // Check for error
+		      If pDatabase.Error Then
+		        if pDatabase.ErrorCode = 1055 then
 		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
 		          pRecordSet = pDatabase.SelectSQL(pStatement)
-		        elseif errordb.ErrorNumber = 48879 then
+		        elseif pDatabase.ErrorCode = 48879 then
 		          Dim tDatabase as Database
-		          
-		          tDatabase = new SQLiteDatabase
-		          SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		          if pDatabase isa MySQLCommunityServer then
+		            tDatabase = new MySQLCommunityServer
+		            tDatabase.UserName = pDatabase.UserName
+		            tDatabase.Password = pDatabase.Password
+		            tDatabase.Host = pDatabase.Host
+		            MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
+		          else
+		            tDatabase = new SQLiteDatabase
+		            SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		          End If
 		          tDatabase.DatabaseName = pDatabase.DatabaseName
 		          
 		          if tDatabase.Connect then
-		            'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		            if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		            pRecordSet = tDatabase.SelectSQL(pStatement)
 		            tDatabase.Close
 		          else
-		            Raise New ORMException(Errordb.message, pStatement)
+		            Raise New ORMException(tDatabase.ErrorMessage, pStatement)
 		          End If
 		          
 		          
-		        elseif errordb.ErrorNumber = 2006 then
+		        elseif pDatabase.ErrorCode = 2006 then
 		          if pDatabase.Connect then
-		            'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		            if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		            pRecordSet = pDatabase.SelectSQL(pStatement)
 		          else
-		            Raise New ORMException(Errordb.message, pStatement)
+		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		          End If
+		        elseif count < 3 AND (pDatabase.ErrorCode = 2003 or pDatabase.ErrorCode = 2013) then
+		          GoTo StartAgain
 		        else
-		          Raise New ORMException(Errordb.message, pStatement)
+		          Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		        End If
 		        
-		        
-		      End Try
+		      End If
 		      
 		    End If
 		    
@@ -303,7 +314,7 @@ Implements QueryExpression
 		    
 		    Call Reset
 		    
-		    RaiseEvent ExecutedRS(pRecordSet)
+		    RaiseEvent Executed(pRecordSet)
 		    
 		    Return pRecordSet
 		    
@@ -668,11 +679,7 @@ Implements QueryExpression
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
-		Event Executed(pRecordSet As RecordSet)
-	#tag EndHook
-
-	#tag Hook, Flags = &h0
-		Event ExecutedRS(pRecordSet As RowSet)
+		Event Executed(pRecordSet As RowSet)
 	#tag EndHook
 
 	#tag Hook, Flags = &h0
