@@ -1048,7 +1048,7 @@ Implements Reports.Dataset
 		    
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
-		    dim HasKeys as Boolean = false
+		    'dim HasKeys as Boolean = false
 		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
 		    Dim mUniqueKeys as String = "UNIQUE ("
 		    'dim mKeys as string = 
@@ -3055,7 +3055,7 @@ Implements Reports.Dataset
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Dim sql As String
 		        sql = "ALTER TABLE `"+me.TableName+"` DROP COLUMN "
-		        dim field as ORMField = dField.Value
+		        'dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
 		        
 		        System.DebugLog sql
