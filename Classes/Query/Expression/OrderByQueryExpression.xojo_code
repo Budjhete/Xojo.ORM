@@ -6,7 +6,7 @@ Implements QueryExpression
 		  Dim pCompiledColumns() As String
 		  
 		  // Compile each column and add its direction
-		  For i As Integer = 0 To mColumns.UBound
+		  For i As Integer = 0 To mColumns.LastIndex
 		    if mComparator(i) = "" then
 		      pCompiledColumns.Append QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
 		    else

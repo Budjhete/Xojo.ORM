@@ -1753,7 +1753,7 @@ Implements Reports.Dataset
 		Protected Function HasMany(pORM As ORM, pForeignColumns() As String) As ORM
 		  // pForeignColumns must be specified in the same order as PrimaryKeys
 		  
-		  For pIndex As Integer = 0 To Me.PrimaryKeys.Ubound
+		  For pIndex As Integer = 0 To Me.PrimaryKeys.LastIndex
 		    Call pORM.Where(pForeignColumns(pIndex), "=", Me.Pks.Value(Me.PrimaryKeys(pIndex)))
 		  Next
 		  

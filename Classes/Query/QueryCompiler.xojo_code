@@ -56,7 +56,7 @@ Protected Module QueryCompiler
 		  // Compile values
 		  Dim pCompiledColumns() As String
 		  
-		  For i As Integer = 0 To pColumns.Ubound
+		  For i As Integer = 0 To pColumns.LastIndex
 		    pCompiledColumns.Append(QueryCompiler.Column(pColumns(i)))
 		  Next
 		  
