@@ -8,9 +8,9 @@ Implements QueryExpression
 		  // Compile each column and add its direction
 		  For i As Integer = 0 To mColumns.LastIndex
 		    if mComparator(i) = "" then
-		      pCompiledColumns.Append QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
+		      pCompiledColumns.Add QueryCompiler.Column(mColumns(i)) + " " + mDirections(i)
 		    else
-		      pCompiledColumns.Append "( " + QueryCompiler.Column(mColumns(i)) + mComparator(i) + " ) " + mDirections(i)
+		      pCompiledColumns.Add "( " + QueryCompiler.Column(mColumns(i)) + mComparator(i) + " ) " + mDirections(i)
 		    end if
 		  Next
 		  

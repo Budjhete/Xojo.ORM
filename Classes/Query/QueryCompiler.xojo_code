@@ -28,7 +28,7 @@ Protected Module QueryCompiler
 		  // Compile column
 		  Dim pParts() As String = pColumn.StringValue.Split(".")
 		  
-		  For i As Integer = 0 To pParts.Ubound
+		  For i As Integer = 0 To pParts.LastIndex
 		    
 		    Select Case pParts(i)
 		    Case "*"
@@ -57,7 +57,7 @@ Protected Module QueryCompiler
 		  Dim pCompiledColumns() As String
 		  
 		  For i As Integer = 0 To pColumns.LastIndex
-		    pCompiledColumns.Append(QueryCompiler.Column(pColumns(i)))
+		    pCompiledColumns.Add(QueryCompiler.Column(pColumns(i)))
 		  Next
 		  
 		  Return String.FromArray(pCompiledColumns, ", ")
@@ -82,7 +82,7 @@ Protected Module QueryCompiler
 		  
 		  For Each pColumn As DictionaryEntry In pValues
 		    
-		    pCompiledValues.Append(QueryCompiler.Set(pColumn.Key, pColumn.Value))
+		    pCompiledValues.Add(QueryCompiler.Set(pColumn.Key, pColumn.Value))
 		    
 		  Next
 		  
@@ -150,16 +150,16 @@ Protected Module QueryCompiler
 		  end if
 		  
 		  // Tests for primitives
-		  Select Case Xojo.Introspection.GetType(pValue)
+		  Select Case pType
 		    
-		  Case GetTypeInfo(Integer), GetTypeInfo(Double), GetTypeInfo(Currency)
+		  Case Variant.TypeInt32, Variant.TypeInt64, Variant.TypeDouble, Variant.TypeCurrency
 		    'if pValue.Type = Variant.TypeDouble then
 		    'Dim locale As New Xojo.Core.Locale("en-US")
 		    'Return pValue.DoubleValue.ToString(locale, "0.000000000000") // return e-12
 		    'end if
 		    Return pValue.StringValue
 		    
-		  Case GetTypeInfo(Boolean)
+		  Case Variant.TypeBoolean
 		    
 		    If pValue.BooleanValue Then
 		      Return "1"
@@ -187,9 +187,9 @@ Protected Module QueryCompiler
 		  // Compile values
 		  Dim pCompiledValues() As String
 		  
-		  For i As Integer = 0 To pValues.Ubound
+		  For i As Integer = 0 To pValues.LastIndex
 		    dim v as Variant = pValues(i)
-		    pCompiledValues.Append(QueryCompiler.Value(v))
+		    pCompiledValues.Add(QueryCompiler.Value(v))
 		  Next
 		  
 		  Return String.FromArray(pCompiledValues, ", ")
@@ -203,9 +203,9 @@ Protected Module QueryCompiler
 		  // Compile values
 		  Dim pCompiledValues() As String
 		  
-		  For i As Integer = 0 To pValues.Ubound
+		  For i As Integer = 0 To pValues.LastIndex
 		    dim v as Variant = pValues(i)
-		    pCompiledValues.Append(QueryCompiler.Value(v))
+		    pCompiledValues.Add(QueryCompiler.Value(v))
 		  Next
 		  
 		  Return String.FromArray(pCompiledValues, ", ")
@@ -219,9 +219,9 @@ Protected Module QueryCompiler
 		  // Compile values
 		  Dim pCompiledValues() As string
 		  
-		  For i As Integer = 0 To pValues.Ubound
+		  For i As Integer = 0 To pValues.LastIndex
 		    dim v as Variant = pValues(i)
-		    pCompiledValues.Append(QueryCompiler.Value(v))
+		    pCompiledValues.Add(QueryCompiler.Value(v))
 		  Next
 		  
 		  Return String.FromArray(pCompiledValues, ", ")

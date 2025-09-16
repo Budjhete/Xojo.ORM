@@ -13,11 +13,13 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub Begin(Extends pDatabase As Database)
+		Attributes( Deprecated )  Sub Begin(Extends pDatabase As Database)
 		  // Begin a transaction
 		  
 		  If pDatabase IsA MySQLCommunityServer Then
-		    if NOT MySQLCommunityServer(pDatabase).IsConnected then pDatabase.Connect
+		    if NOT MySQLCommunityServer(pDatabase).IsConnected then
+		      pDatabase.Connect
+		    End If
 		    pDatabase.ExecuteSQL("START TRANSACTION")
 		  Else
 		    pDatabase.ExecuteSQL("BEGIN TRANSACTION")
@@ -26,7 +28,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
-		Sub Begin(Extends pDatabase As SQLiteDatabase)
+		Attributes( Deprecated )  Sub Begin(Extends pDatabase As SQLiteDatabase)
 		  // Begin a transaction
 		  
 		  pDatabase.ExecuteSQL("BEGIN TRANSACTION")
@@ -42,7 +44,7 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Coalesce(pColumn as Variant, pSubtitu as Integer = 0) As QueryExpression
-		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToText+" )")
+		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToString+" )")
 		End Function
 	#tag EndMethod
 
@@ -85,9 +87,9 @@ Protected Module DB
 		      pDatabase = New SQLiteDatabase
 		      
 		      // Attempt each path type to match the database path
-		      For Each pPathType As Integer In Array(FolderItem.PathTypeNative, FolderItem.PathTypeAbsolute, FolderItem.PathTypeShell)
+		      For Each pPathType As FolderItem.PathModes In Array(FolderItem.PathModes.Native, FolderItem.PathModes.URL, FolderItem.PathModes.Shell)
 		        
-		        SQLiteDatabase(pDatabase).DatabaseFile = GetFolderItem(pMatch.SubExpressionString(7), pPathType)
+		        SQLiteDatabase(pDatabase).DatabaseFile = New FolderItem(pMatch.SubExpressionString(7), pPathType)
 		        
 		        If SQLiteDatabase(pDatabase).DatabaseFile <> Nil and SQLiteDatabase(pDatabase).DatabaseFile.Exists Then
 		          Exit
@@ -95,49 +97,23 @@ Protected Module DB
 		        
 		      Next
 		      
-		      If pDatabase.Connect Then
+		      Try
+		        pDatabase.Connect
 		        
-		        System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
-		        
-		        pDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
-		        pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
-		        
-		        Return pDatabase
-		        
-		      End If
+		      Catch error As DatabaseException
+		        System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + error.Message)
+		      End Try
 		      
-		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
 		      
-		    Case "mysqlMBS" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
-		      //SQLDatabaseMBS MySQL : databasename = "<protocol>:<host>:<port>@<database>"
+		      pDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
+		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
 		      
-		      // UNCOMMENT THIS SECTION BELOW IF YOU INSTALLED MONKEYBREAD SQL PLUGIN
+		      Return pDatabase
 		      
-		      'pDatabase = new SQLDatabaseMBS
-		      '
-		      'dim port as String
-		      'If pMatch.SubExpressionText(5) <> "" Then
-		      'port = pMatch.SubExpressionText(5)
-		      'Else
-		      'port = "3306"
-		      'End If
-		      '
-		      'pDatabase.DatabaseName = pMatch.SubExpressionText(1) + ":" + pMatch.SubExpressionText(4) + ":" + port + "@" + pMatch.SubExpressionText(6)
-		      '
-		      'pDatabase.UserName = pMatch.SubExpressionText(2)
-		      'pDatabase.Password = pMatch.SubExpressionText(3)
-		      '
-		      'If pDatabase.Connect Then
-		      '
-		      'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
-		      '
-		      'pDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		      '
-		      'Return pDatabase
-		      '
-		      'End If
-		      '
-		      'System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
+		      
+		      
+		      
 		      
 		    Case "mysql" // <protocol>://((<username>):<password>@)<host>(:<port>)/<database>
 		      
@@ -156,60 +132,45 @@ Protected Module DB
 		      pDatabase.DatabaseName = pMatch.SubExpressionString(6)
 		      dim trycount as integer = 1
 		      redoou: 'on recommance
-		      
-		      If pDatabase.Connect Then
+		      Try
 		        
+		        pDatabase.Connect
 		        
-		        System.Log(System.LogLevelSuccess, "Connection to " + pDatabase.Host + " has succeed.")
-		        
-		        pDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		        pDatabase.ExecuteSQL("SET character_set_connection = 'utf8'")
-		        pDatabase.ExecuteSQL("SET character_set_results = 'utf8'")
-		        pDatabase.ExecuteSQL("SET character_set_client = 'utf8'")
-		        try
-		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
-		        Catch error As DatabaseException
-		          System.DebugLog "Can't execute sql_mode : " + error.Message
-		        End Try
-		        Return pDatabase
-		      else
+		        If MySQLCommunityServer(pDatabase).IsConnected Then
+		          
+		          
+		          System.Log(System.LogLevelSuccess, "Connection to " + pDatabase.Host + " has succeed.")
+		          
+		          pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		          'pDatabase.ExecuteSQL("SET character_set_connection = 'utf8'")
+		          'pDatabase.ExecuteSQL("SET character_set_results = 'utf8'")
+		          'pDatabase.ExecuteSQL("SET character_set_client = 'utf8'")
+		          try
+		            pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		          Catch error As DatabaseException
+		            System.DebugLog "Can't execute sql_mode : " + error.Message
+		          End Try
+		          Return pDatabase
+		        else
+		          if trycount<2 then
+		            System.DebugLog "Number of try to connect : " + trycount.ToString
+		            DelayMBS 0.5
+		            trycount = trycount + 1
+		            GoTo redoou
+		          End If
+		        End If
+		      Catch Error as DatabaseException
 		        if trycount<2 then
 		          System.DebugLog "Number of try to connect : " + trycount.ToString
 		          DelayMBS 0.5
 		          trycount = trycount + 1
 		          GoTo redoou
+		        else
+		          System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + Error.Message)
 		        End If
-		      End If
-		      
-		      System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
-		      
+		      End Try
 		    Case "postgresql"
 		      
-		      'pDatabase = New PostgreSQLDatabase
-		      '
-		      'pDatabase.UserName = pMatch.SubExpressionText(2)
-		      'pDatabase.Password = pMatch.SubExpressionText(3)
-		      'pDatabase.Host = pMatch.SubExpressionText(4)
-		      '
-		      'If pMatch.SubExpressionText(5) <> "" Then
-		      'PostgreSQLDatabase(pDatabase).Port = Val(pMatch.SubExpressionText(5))
-		      'Else
-		      'PostgreSQLDatabase(pDatabase).Port = 5432
-		      'End If
-		      '
-		      'pDatabase.DatabaseName = pMatch.SubExpressionText(6)
-		      '
-		      'If pDatabase.Connect Then
-		      '
-		      'System.Log(System.LogLevelSuccess, "Connection to " + pURL + " has succeed.")
-		      '
-		      'pDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		      '
-		      'Return pDatabase
-		      '
-		      'End If
-		      '
-		      'System.Log(System.LogLevelError, "Connexion to " + pURL + " has failed." + pDatabase.ErrorMessage)
 		      
 		    End Select
 		    
@@ -404,7 +365,7 @@ Protected Module DB
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
 		    If IsNumeric(pDatabaseFieldValue) Then
-		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToString
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
@@ -423,7 +384,7 @@ Protected Module DB
 		  
 		  If pColumnType = 8 OR pColumnType = 10 Then
 		    if pDatabaseFieldValue<>nil then
-		      Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
+		      Return datetime.FromString(pDatabaseFieldValue.DateTimeValue.SQLDateTime)
 		    else
 		      return pDatabaseFieldValue
 		    End If
@@ -475,7 +436,7 @@ Protected Module DB
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1 and pDB isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
 		    If IsNumeric(pDatabaseFieldValue) Then
-		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToString
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
@@ -550,7 +511,7 @@ Protected Module DB
 		    Case 11, 13
 		      Return pDatabaseFieldValue.CurrencyValue
 		    Case 10, 8  // SQLite a marde ne gère pas les DateTime and Xojo fait un Date au lieu d'un DateTime
-		      if pDatabaseFieldValue<>"" then Return datetime.FromString(pDatabaseFieldValue.DateValue.SQLDateTime)
+		      if pDatabaseFieldValue<>"" then Return datetime.FromString(pDatabaseFieldValue.DateTimeValue.SQLDateTime)
 		    Case 7
 		      Return pDatabaseFieldValue.DoubleValue
 		    Case 2, 3, 19
@@ -630,59 +591,36 @@ Protected Module DB
 		  
 		  
 		  
-		  'Dim pDatabaseFieldName as string = pRecordSet.IdxField(pIndex).Name  // base 1
-		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 1
+		  Dim pDatabaseFieldValue as Variant = pRecordSet.ColumnAt(pIndex).Value  // base 0
 		  Dim pColumnType As Integer = pRecordSet.ColumnType(pIndex)  // ZERO base
 		  
-		  // juste pour tester
-		  'if pDatabaseFieldName = "categorie" then
-		  ' MessageBox pDatabaseFieldName + ": " + pColumnType.StringValue + "  " + pDatabaseFieldValue.StringValue
-		  'End If
-		  '
-		  'if  then
-		  ' MessageBox pDatabaseField.NativeValue
-		  ' MessageBox pColumnType.StringValue
-		  'end if
-		  // *******************************
-		  // NOTE : Change "Company.Current.Database" to your DATABASE, this part is a patch because the current MysQL plugin made a mess with some kind of data
-		  // *******************************
+		  
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1 and pDB isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
 		    If IsNumeric(pDatabaseFieldValue) Then
-		      'System.DebugLog pDatabaseField.CurrencyValue.ToText
+		      'System.DebugLog pDatabaseField.CurrencyValue.ToString
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
 		  
-		  // Correction caca pour SQLite
-		  'If pColumnType = 19 and  pDB isa SQLiteDatabase and pDatabaseFieldName = "montant" Then
-		  'if NOT (pDatabaseFieldValue.DoubleValue > 0.0001 OR pDatabaseFieldValue.DoubleValue <-0.0001 OR pDatabaseFieldValue.DoubleValue = 0.0000) then
-		  'dim cc as currency = 0.0000
-		  'Return cc
-		  'End If
-		  'End If
 		  
-		  If pColumnType = 1 Then
+		  
+		  select case pColumnType
+		  case 1
 		    Return pDatabaseFieldValue.BooleanValue
-		  End If
-		  
-		  // MySQL and SQLite dont manage dates exactly the same, so we use text instead
-		  If pColumnType = 10 or pColumnType = 8 Then
-		    if pDatabaseFieldValue<>nil then Return DateTime.FromString(pDatabaseFieldValue.StringValue)
-		    
-		  End If
-		  
-		  If pColumnType = 11 OR (pColumnType = 11 and pDB isa MySQLCommunityServer) Then
+		  case 10, 8
+		    if pDatabaseFieldValue<>nil then
+		      Return DateTime.FromString(pDatabaseFieldValue.StringValue)
+		    end if
+		  Case 11
 		    Return pDatabaseFieldValue.CurrencyValue
-		  End If
-		  
-		  If pColumnType = 13 OR (pColumnType = 13 and pDB isa MySQLCommunityServer) Then
+		  case 13
 		    Return pDatabaseFieldValue.CurrencyValue
-		  End If
+		  end select
 		  
 		  // Set encoding to UTF8 for Text
-		  If pDatabaseFieldValue.Type = Variant.TypeText  OR pDatabaseFieldValue.Type = Variant.TypeString Then
-		    Return pDatabaseFieldValue.StringValue.DefineEncoding(Encodings.UTF8)
+		  If pDatabaseFieldValue.Type = Variant.TypeString Then
+		    Return pDatabaseFieldValue.StringValue
 		  End If
 		  
 		  return pDatabaseFieldValue
@@ -700,7 +638,7 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Find(ParamArray pColumns As Variant) As QueryBuilder
-		  If pColumns.UBound = -1 Then
+		  If pColumns.LastIndex = -1 Then
 		    // Find * when no columns are specified
 		    Return DB.Find(DB.Expression("*"))
 		  End If
@@ -767,11 +705,11 @@ Protected Module DB
 		  
 		  if tDatabase isa MySQLCommunityServer then
 		    tDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		    try
-		      tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
-		    Catch error as DatabaseException
-		      System.DebugLog "Can't set SQL_MODE : " + error.Message
-		    end try
+		    'try
+		    'tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
+		    'Catch error as DatabaseException
+		    'System.DebugLog "Can't set SQL_MODE : " + error.Message
+		    'end try
 		  else
 		    tDatabase.ExecuteSQL("PRAGMA encoding = 'utf-8'")
 		    tDatabase.ExecuteSQL("PRAGMA foreign_keys = ON")
@@ -843,7 +781,7 @@ Protected Module DB
 
 	#tag Method, Flags = &h0
 		Function Round(pColumn as Variant, pSubtitu as Integer = 4) As QueryExpression
-		  Return DB.Expression("ROUND( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToText+" )")
+		  Return DB.Expression("ROUND( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToString+" )")
 		End Function
 	#tag EndMethod
 

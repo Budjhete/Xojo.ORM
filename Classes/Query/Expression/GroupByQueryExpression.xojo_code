@@ -6,8 +6,8 @@ Implements QueryExpression
 		  Dim pCompiledColumns() As String
 		  
 		  // Compile each column
-		  For i As Integer = 0 To mColumns.UBound
-		    pCompiledColumns.Append QueryCompiler.Column(mColumns(i))
+		  For i As Integer = 0 To mColumns.LastIndex
+		    pCompiledColumns.Add QueryCompiler.Column(mColumns(i))
 		  Next
 		  
 		  If pLastQueryExpression IsA GroupByQueryExpression Then

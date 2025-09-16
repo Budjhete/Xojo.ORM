@@ -32,7 +32,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Append(pQueryExpression As QueryExpression) As QueryBuilder
-		  mQuery.Append(pQueryExpression)
+		  mQuery.Add(pQueryExpression)
 		  
 		  Return Me
 		End Function
@@ -44,14 +44,14 @@ Implements QueryExpression
 		  Dim pNice As Integer
 		  
 		  // Sort statements
-		  While pStatements.Ubound < mQuery.Ubound
+		  While pStatements.LastIndex < mQuery.LastIndex
 		    
-		    For i As Integer = 0 To mQuery.Ubound
+		    For i As Integer = 0 To mQuery.LastIndex
 		      
 		      Dim pQueryExpression As QueryExpression = mQuery(i)
 		      
 		      If pQueryExpression.Nice() = pNice Then
-		        pStatements.Append(pQueryExpression.Compile(pLastQueryExpression))
+		        pStatements.Add(pQueryExpression.Compile(pLastQueryExpression))
 		        pLastQueryExpression = pQueryExpression
 		      End If
 		      
@@ -86,7 +86,7 @@ Implements QueryExpression
 		  Dim pQueryBuilder As New QueryBuilder
 		  
 		  For Each pQueryExpression As QueryExpression In Me.mQuery
-		    pQueryBuilder.mQuery.Append(pQueryExpression)
+		    pQueryBuilder.mQuery.Add(pQueryExpression)
 		  Next
 		  
 		  Return pQueryBuilder
@@ -164,7 +164,7 @@ Implements QueryExpression
 		      // Check for error
 		      If pDatabase.Error Then
 		        if pDatabase.ErrorCode = 1055 then
-		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
+		          'pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
 		          pRecordSet = pDatabase.SQLSelect(pStatement)
 		        elseif pDatabase.ErrorCode = 48879 then
 		          Dim tDatabase as Database
@@ -181,9 +181,9 @@ Implements QueryExpression
 		          tDatabase.DatabaseName = pDatabase.DatabaseName
 		          
 		          if tDatabase.Connect then
-		            if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		            'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		            pRecordSet = tDatabase.SQLSelect(pStatement)
-		            tDatabase.Close
+		            'tDatabase.Close
 		          else
 		            Raise New ORMException(tDatabase.ErrorMessage, pStatement)
 		          End If
@@ -191,7 +191,7 @@ Implements QueryExpression
 		          
 		        elseif pDatabase.ErrorCode = 2006 then
 		          if pDatabase.Connect then
-		            if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		            'if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
 		            pRecordSet = pDatabase.SQLSelect(pStatement)
 		          else
 		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
@@ -245,7 +245,7 @@ Implements QueryExpression
 		    End If
 		    
 		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
-		    Dim pNow As Date = DateTime.Now
+		    Dim pNow As DateTime = DateTime.Now
 		    
 		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
 		      
@@ -257,50 +257,52 @@ Implements QueryExpression
 		      
 		      count = count + 1
 		      
-		      pRecordSet = pDatabase.SelectSQL(pStatement)
-		      
-		      // Check for error
-		      If pDatabase.Error Then
-		        if pDatabase.ErrorCode = 1055 then
-		          pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
-		          pRecordSet = pDatabase.SelectSQL(pStatement)
-		        elseif pDatabase.ErrorCode = 48879 then
-		          Dim tDatabase as Database
-		          if pDatabase isa MySQLCommunityServer then
-		            tDatabase = new MySQLCommunityServer
-		            tDatabase.UserName = pDatabase.UserName
-		            tDatabase.Password = pDatabase.Password
-		            tDatabase.Host = pDatabase.Host
-		            MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
-		          else
-		            tDatabase = new SQLiteDatabase
-		            SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
-		          End If
-		          tDatabase.DatabaseName = pDatabase.DatabaseName
-		          
-		          if tDatabase.Connect then
-		            if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		            pRecordSet = tDatabase.SelectSQL(pStatement)
-		            tDatabase.Close
-		          else
-		            Raise New ORMException(tDatabase.ErrorMessage, pStatement)
-		          End If
-		          
-		          
-		        elseif pDatabase.ErrorCode = 2006 then
-		          if pDatabase.Connect then
-		            if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		            pRecordSet = pDatabase.SelectSQL(pStatement)
-		          else
-		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
-		          End If
-		        elseif count < 3 AND (pDatabase.ErrorCode = 2003 or pDatabase.ErrorCode = 2013) then
-		          GoTo StartAgain
-		        else
-		          Raise New ORMException(pDatabase.ErrorMessage, pStatement)
-		        End If
+		      Try
 		        
-		      End If
+		        pRecordSet = pDatabase.SelectSQL(pStatement)
+		        
+		        // Check for error
+		      Catch Errorr as DatabaseException
+		        'if Error.ErrorNumber = 1055 then
+		        ''pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
+		        'pRecordSet = pDatabase.SelectSQL(pStatement)
+		        'elseif Error.ErrorNumber = 48879 then
+		        'Dim tDatabase as Database
+		        'if pDatabase isa MySQLCommunityServer then
+		        'tDatabase = new MySQLCommunityServer
+		        'tDatabase.UserName = pDatabase.UserName
+		        'tDatabase.Password = pDatabase.Password
+		        'tDatabase.Host = pDatabase.Host
+		        'MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
+		        'else
+		        'tDatabase = new SQLiteDatabase
+		        'SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		        'End If
+		        'tDatabase.DatabaseName = pDatabase.DatabaseName
+		        '
+		        'if tDatabase.Connect then
+		        'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		        'pRecordSet = tDatabase.SelectSQL(pStatement)
+		        ''tDatabase.Close
+		        'else
+		        'Raise New ORMException(tDatabase.ErrorMessage, pStatement)
+		        'End If
+		        '
+		        '
+		        'elseif Error.ErrorNumber = 2006 then
+		        'if pDatabase.Connect then
+		        'if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		        'pRecordSet = pDatabase.SelectSQL(pStatement)
+		        'else
+		        'Raise New ORMException(pDatabase.ErrorMessage, pStatement)
+		        'End If
+		        'elseif count < 3 AND (pDatabase.ErrorCode = 2003 or pDatabase.ErrorCode = 2013) then
+		        'GoTo StartAgain
+		        'else
+		        Raise New ORMException(Errorr.message, pStatement)
+		        'End If
+		        
+		      End Try
 		      
 		    End If
 		    
@@ -348,14 +350,14 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumns() As Variant) As QueryBuilder
-		  mQuery.Append(new GroupByQueryExpression(pColumns))
+		  mQuery.Add(new GroupByQueryExpression(pColumns))
 		  return me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumn As Variant) As QueryBuilder
-		  mQuery.Append( new GroupByQueryExpression(Array(pColumn)) )
+		  mQuery.Add( new GroupByQueryExpression(Array(pColumn)) )
 		  
 		  return me
 		  //Return GroupBy(Array(pColumn))
@@ -463,7 +465,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As QueryBuilder
-		  mQuery.Append(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
+		  mQuery.Add(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
 		  
 		  return Me
 		End Function
@@ -471,7 +473,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Limit(pLimit As Integer) As QueryBuilder
-		  mQuery.Append(new LimitQueryExpression(pLimit))
+		  mQuery.Add(new LimitQueryExpression(pLimit))
 		  
 		  Return Me
 		End Function
@@ -479,7 +481,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Limit(pOffset as integer, pLimit As Integer) As QueryBuilder
-		  mQuery.Append(new LimitQueryExpression(pOffset, pLimit))
+		  mQuery.Add(new LimitQueryExpression(pOffset, pLimit))
 		  
 		  Return Me
 		End Function
@@ -523,7 +525,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() as Variant, pDirections() as String, pComparators() as String) As QueryBuilder
-		  mQuery.Append(new OrderByQueryExpression(pColumns, pDirections, pComparators))
+		  mQuery.Add(new OrderByQueryExpression(pColumns, pDirections, pComparators))
 		  
 		  Return Me
 		End Function
@@ -531,7 +533,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function OrderBy(pColumn as Variant, pDirection as String = "ASC", pComparator as String = "") As QueryBuilder
-		  mQuery.Append( new OrderByQueryExpression(Array(pColumn), Array(pDirection), Array(pComparator)) )
+		  mQuery.Add( new OrderByQueryExpression(Array(pColumn), Array(pDirection), Array(pComparator)) )
 		  
 		  Return Me
 		End Function
@@ -539,7 +541,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function OrHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new OrHavingQueryExpression(pLeft, pOperator, pRight))
+		  mQuery.Add(new OrHavingQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
 		End Function
@@ -547,7 +549,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function OrOn(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new OrOnQueryExpression(pLeft, pOperator, pRight))
+		  mQuery.Add(new OrOnQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
 		End Function
@@ -555,7 +557,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function OrOn(pLeft as Variant, pOperator as String, pRight as Variant, pType as DataType) As QueryBuilder
-		  mQuery.Append(new OrOnQueryExpression(pLeft, pOperator, pRight, pType))
+		  mQuery.Add(new OrOnQueryExpression(pLeft, pOperator, pRight, pType))
 		  
 		  Return Me
 		End Function
@@ -563,7 +565,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function OrWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
-		  mQuery.Append(new OrWhereQueryExpression(pLeft, pOperator, pRight))
+		  mQuery.Add(new OrWhereQueryExpression(pLeft, pOperator, pRight))
 		  
 		  Return Me
 		End Function
@@ -592,7 +594,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Set(pValues As Dictionary) As QueryBuilder
-		  mQuery.Append(new SetQueryExpression(pValues))
+		  mQuery.Add(new SetQueryExpression(pValues))
 		  
 		  Return Me
 		End Function
@@ -625,7 +627,7 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function Values(pValues() As Variant) As QueryBuilder
-		  mQuery.Append(new ValuesQueryExpression(pValues))
+		  mQuery.Add(new ValuesQueryExpression(pValues))
 		  
 		  Return Me
 		End Function
@@ -690,6 +692,10 @@ Implements QueryExpression
 		Event Open()
 	#tag EndHook
 
+
+	#tag Property, Flags = &h0
+		hasHandler As Boolean = False
+	#tag EndProperty
 
 	#tag Property, Flags = &h1
 		Protected Shared mCache As Dictionary

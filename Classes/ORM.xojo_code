@@ -11,7 +11,7 @@ Implements Reports.Dataset
 
 	#tag Event
 		Sub Open()
-		  mChanged.Clear
+		  mChanged.RemoveAll
 		  
 		  RaiseEvent Open
 		End Sub
@@ -136,7 +136,7 @@ Implements Reports.Dataset
 		  end
 		  
 		  If Not RaiseEvent Updating() Then
-		    pDatabase.Begin
+		    pDatabase.BeginTransaction
 		    
 		    dim pD as new Dictionary
 		    If mData.HasKey("estActif") Then
@@ -144,7 +144,7 @@ Implements Reports.Dataset
 		      pd.Value("estActif") = not BouActive
 		    End If
 		    
-		    If pD.Count > 0 Then
+		    If pD.KeyCount > 0 Then
 		      DB.Update(Me.TableName).Set(pD).Where(Me.Pks).Execute(pDatabase, pCommit)
 		    End If
 		    
@@ -154,9 +154,9 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear mChanged, they are merged in mData
-		    mChanged.Clear
+		    mChanged.RemoveAll
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Updated()
 		  End If
@@ -583,7 +583,7 @@ Implements Reports.Dataset
 		  
 		  // Copy the QueryBuilder
 		  For Each pQueryExpression As QueryExpression In Me.mQuery
-		    pORM.mQuery.Append(pQueryExpression)
+		    pORM.mQuery.Add(pQueryExpression)
 		  Next
 		  
 		  For Each entry As DictionaryEntry In mData
@@ -610,7 +610,7 @@ Implements Reports.Dataset
 		Sub Copy(cORM as ORM)
 		  // Copy the QueryBuilder
 		  For Each pQueryExpression As QueryExpression In cORM.mQuery
-		    me.mQuery.Append(pQueryExpression)
+		    me.mQuery.Add(pQueryExpression)
 		  Next
 		  
 		  For Each pDataEntry As DictionaryEntry In cORM.mData
@@ -634,7 +634,7 @@ Implements Reports.Dataset
 	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit)) )
 		Function CountAll(pDatabase As Database) As Integer
 		  Dim pColumns() As Variant
-		  pColumns.Append(DB.Expression("COUNT(*) AS count"))
+		  pColumns.Add(DB.Expression("COUNT(*) AS count"))
 		  
 		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Column("count").IntegerValue
 		  
@@ -762,7 +762,7 @@ Implements Reports.Dataset
 		    'System.DebugLog "ORM.Create.mChanged cleared"
 		    
 		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      
 		      If pDatabase IsA SQLiteDatabase Then
 		        // Best guess for SQLite
@@ -832,7 +832,7 @@ Implements Reports.Dataset
 		  If Not RaiseEvent Creating Then
 		    'System.DebugLog "ORM.create not creating"
 		    
-		    pDatabase.Begin
+		    pDatabase.BeginTransaction
 		    System.DebugLog "ORM.create database.begin"
 		    
 		    
@@ -876,7 +876,7 @@ Implements Reports.Dataset
 		    'System.DebugLog "ORM.Create.mChanged cleared"
 		    
 		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      
 		      If pDatabase IsA SQLiteDatabase Then
 		        // Best guess for SQLite
@@ -923,7 +923,7 @@ Implements Reports.Dataset
 		    'System.DebugLog "ORM.Create.mRemoved cleared"
 		    
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    System.DebugLog "ORM.Create Done"
@@ -990,7 +990,7 @@ Implements Reports.Dataset
 		    System.DebugLog "ORM.Create.mChanged cleared"
 		    
 		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      
 		      
 		      // Biggest primary key
@@ -1233,14 +1233,14 @@ Implements Reports.Dataset
 		    DB.Delete(Me.TableName).Where(Me.Pks).Execute(pDatabase, pCommit)
 		    
 		    // Empty mData
-		    Call mData.Clear()
+		    Call mData.RemoveAll()
 		    
 		    // Empty mChanges
-		    Call mChanged.Clear()
+		    Call mChanged.RemoveAll()
 		    
 		    // Empty pending relationships
-		    Call mAdded.Clear()
-		    Call mRemoved.Clear()
+		    Call mAdded.RemoveAll()
+		    Call mRemoved.RemoveAll()
 		    
 		    RaiseEvent Deleted()
 		    
@@ -1261,10 +1261,10 @@ Implements Reports.Dataset
 		  
 		  For Each DataEntry As DictionaryEntry In Me.Data
 		    
-		    pChanged.Append(QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key)))
+		    pChanged.Add(QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key)))
 		    
 		    If Me.Initial(DataEntry.Key.StringValue) <> Me.Data(DataEntry.Key.StringValue) Then
-		      pChanged(pChanged.Ubound) = pChanged(pChanged.Ubound) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
+		      pChanged(pChanged.LastIndex) = pChanged(pChanged.LastIndex) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
 		    End If
 		    
 		  Next
@@ -1472,7 +1472,7 @@ Implements Reports.Dataset
 		      pRecordSetType.MoveToNextRow
 		    wend
 		    // Clear any existing data
-		    mData.Clear
+		    mData.RemoveAll
 		    
 		    // Fetch record set
 		    If pRecordSet.RowCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
@@ -1608,11 +1608,11 @@ Implements Reports.Dataset
 		  Dim pColumns() As Variant
 		  
 		  For Each pColumn As Variant In TableColumns(pDatabase).Keys
-		    pColumns.Append(TableName + "." + pColumn.StringValue)
+		    pColumns.Add(TableName + "." + pColumn.StringValue)
 		  Next
 		  
 		  For Each nColumn as Variant in pOtherColumn
-		    pColumns.Append(nColumn)
+		    pColumns.Add(nColumn)
 		  Next
 		  
 		  dim RR as RowSet = Append(new SelectQueryExpression(pColumns)). _
@@ -1855,7 +1855,7 @@ Implements Reports.Dataset
 		  Call Super.Inflate(pORM)
 		  
 		  // Clear mData
-		  pORM.mData.Clear()
+		  pORM.mData.RemoveAll()
 		  
 		  // Use a copy of mData to avoid external changes
 		  For Each DataEntry As DictionaryEntry In mData
@@ -1863,21 +1863,21 @@ Implements Reports.Dataset
 		  Next
 		  
 		  // Clear mChanged
-		  pORM.mChanged.Clear()
+		  pORM.mChanged.RemoveAll()
 		  
 		  // Use a copy of mChanged to avoid external changes
 		  For Each ChangedEntry As DictionaryEntry In mChanged
 		    pORM.mChanged.Value(ChangedEntry.Key) = ChangedEntry.Value
 		  Next
 		  
-		  pORM.mAdded.Clear
+		  pORM.mAdded.RemoveAll
 		  
 		  // Use a copy of mAdd to avoid external changes
 		  For Each AddedEntry As DictionaryEntry In mAdded
 		    pORM.mAdded.Value(AddedEntry.Key) = AddedEntry.Value
 		  Next
 		  
-		  pORM.mRemoved.Clear
+		  pORM.mRemoved.RemoveAll
 		  
 		  // Use a copy of mRemove to avoid external changes
 		  For Each RemovedEntry As DictionaryEntry In mRemoved
@@ -1917,7 +1917,7 @@ Implements Reports.Dataset
 		  next
 		  rcol = rCol.left(rcol.Length -2)
 		  
-		  for i as integer = 0 to SchemaMadantoryData.LastRowIndex
+		  for i as integer = 0 to SchemaMadantoryData.LastIndex
 		    dim strrr() as String = SchemaMadantoryData(i)
 		    
 		    dim sql as string = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
@@ -1933,13 +1933,13 @@ Implements Reports.Dataset
 		    try
 		      pDatabase.ExecuteSQL(sql)
 		    catch Err as DatabaseException
-		      System.DebugLog me.TableName + "- " + sql + " : " + err.Reason
+		      System.DebugLog me.TableName + "- " + sql + " : " + err.Message
 		      errors = errors or true
 		    end try
 		  next
 		  
 		  
-		  for i as integer = 0 to SchemaDefaultDatas.LastRowIndex
+		  for i as integer = 0 to SchemaDefaultDatas.LastIndex
 		    dim strrr() as String = SchemaDefaultDatas(i)
 		    
 		    dim sql as string = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
@@ -1955,7 +1955,7 @@ Implements Reports.Dataset
 		    try
 		      pDatabase.ExecuteSQL(sql)
 		    catch Err as DatabaseException
-		      System.DebugLog me.TableName + "- " + sql + " : " + err.Reason
+		      System.DebugLog me.TableName + "- " + sql + " : " + err.Message
 		      errors = errors or true
 		      
 		    end try
@@ -2011,7 +2011,7 @@ Implements Reports.Dataset
 		    else
 		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v
 		    End Select
-		    'System.DebugLog pJSONItem.ToText
+		    'System.DebugLog pJSONItem.ToString
 		  Next
 		  
 		  Return pJSONItem
@@ -2422,7 +2422,7 @@ Implements Reports.Dataset
 		  'Call Me.mChanged.Clear
 		  '
 		  '// todo: check if the primary key is auto increment
-		  'If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		  'If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		  '// Biggest primary key
 		  'Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
 		  'From(Me.TableName). _
@@ -2468,7 +2468,7 @@ Implements Reports.Dataset
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    pDatabase.Begin
+		    pDatabase.BeginTransaction
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
@@ -2491,10 +2491,10 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear changes, they are saved in mData
-		    Call Me.mChanged.Clear
+		    Call Me.mChanged.RemoveAll
 		    
 		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      
 		      If pDatabase IsA SQLiteDatabase Then
 		        // Best guess for SQLite
@@ -2522,11 +2522,11 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdded.Clear
+		    mAdded.RemoveAll
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear
+		    mRemoved.RemoveAll
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    
@@ -2573,7 +2573,7 @@ Implements Reports.Dataset
 		    Call Me.mChanged.Clear
 		    
 		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      
 		      If pDatabase IsA SQLiteDatabase Then
 		        // Best guess for SQLite
@@ -2651,7 +2651,7 @@ Implements Reports.Dataset
 		    Call Me.mChanged.Clear
 		    
 		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.Ubound = 0 Then // Refetching the primary key work only with a single primary key
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      // Biggest primary key
 		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
 		      From(Me.TableName). _
@@ -2688,9 +2688,9 @@ Implements Reports.Dataset
 
 	#tag Method, Flags = &h0
 		Function Reset() As ORM
-		  mChanged.Clear
-		  mAdded.Clear
-		  mRemoved.Clear
+		  mChanged.RemoveAll
+		  mAdded.RemoveAll
+		  mRemoved.RemoveAll
 		  
 		  Call Super.Reset()
 		  
@@ -2908,7 +2908,7 @@ Implements Reports.Dataset
 		  'BuildSchema()
 		  
 		  for each entr as DictionaryEntry in me.Schema
-		    pColumns.Append(entr.Key.StringValue)
+		    pColumns.Add(entr.Key.StringValue)
 		  next
 		  
 		  Return me.Schema
@@ -3234,7 +3234,7 @@ Implements Reports.Dataset
 		        end try
 		      next
 		      
-		      If SchemaToAlter.Count > 0 then
+		      If SchemaToAlter.KeyCount > 0 then
 		        dim selectSQL as string = "SELECT "
 		        dim collSelect as string
 		        for each dSelect as DictionaryEntry in  Schema
@@ -3445,7 +3445,7 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear mChanged, they are merged in mData
-		    me.mChanged.Clear
+		    me.mChanged.RemoveAll
 		    
 		    dim nRelations as Dictionary
 		    
@@ -3491,7 +3491,7 @@ Implements Reports.Dataset
 		  
 		  If Not RaiseEvent Updating() Then
 		    
-		    pDatabase.Begin
+		    pDatabase.BeginTransaction
 		    
 		    Dim pChanged As New Dictionary
 		    
@@ -3502,7 +3502,7 @@ Implements Reports.Dataset
 		      End If
 		    Next
 		    
-		    If pChanged.Count > 0 Then
+		    If pChanged.KeyCount > 0 Then
 		      if app.DebugMode then System.DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
 		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
@@ -3513,7 +3513,7 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear mChanged, they are merged in mData
-		    mChanged.Clear
+		    mChanged.RemoveAll
 		    
 		    // Execute pendings relationships
 		    For Each pRelation As ORMRelation In mRemoved.Values()
@@ -3534,7 +3534,7 @@ Implements Reports.Dataset
 		    mRemoved = nil
 		    mRemoved = new Dictionary
 		    
-		    pDatabase.Commit
+		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Updated()
 		    

@@ -8,7 +8,7 @@ Implements QueryExpression
 		  Dim pColumns As String
 		  
 		  // No columns makes a simple insertion
-		  If mColumns.Ubound > -1 Then
+		  If mColumns.LastIndex > -1 Then
 		    pColumns = " ( " + QueryCompiler.Columns(mColumns) + " )"
 		  End If
 		  
