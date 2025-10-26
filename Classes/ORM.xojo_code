@@ -3884,6 +3884,14 @@ Implements Reports.Dataset
 
 	#tag ViewBehavior
 		#tag ViewProperty
+			Name="hasHandler"
+			Visible=false
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
 			Name="mLogs"
 			Visible=false
 			Group="Behavior"
