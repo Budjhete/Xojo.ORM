@@ -145,11 +145,13 @@ Protected Module DB
 		          'pDatabase.ExecuteSQL("SET character_set_connection = 'utf8'")
 		          'pDatabase.ExecuteSQL("SET character_set_results = 'utf8'")
 		          'pDatabase.ExecuteSQL("SET character_set_client = 'utf8'")
+		          #Pragma BreakOnExceptions False
 		          try
 		            pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		          Catch error As DatabaseException
 		            System.DebugLog "Can't execute sql_mode : " + error.Message
 		          End Try
+		          #Pragma BreakOnExceptions Default
 		          Return pDatabase
 		        else
 		          if trycount<2 then
