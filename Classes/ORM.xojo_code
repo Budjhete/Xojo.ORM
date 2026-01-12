@@ -2936,7 +2936,7 @@ Implements Reports.Dataset
 		    Return pColumns
 		    
 		  Catch error As DatabaseException
-		    Raise New ORMException(Me.TableName + " is not an existing table.")
+		    Raise New ORMException(Me.TableName + " is not an existing table. Please update your database.")
 		    
 		  End Try
 		End Function
