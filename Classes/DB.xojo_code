@@ -43,7 +43,7 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Coalesce(pColumn as Variant, pSubtitu as Integer = 0) As QueryExpression
+		Function Coalesce(pColumn as Variant, pSubtitu as Integer) As QueryExpression
 		  Return DB.Expression("COALESCE( " + QueryCompiler.Column(pColumn)  + ", "+pSubtitu.ToString+" )")
 		End Function
 	#tag EndMethod
@@ -119,9 +119,11 @@ Protected Module DB
 		      
 		      pDatabase = New MySQLCommunityServer
 		      
+		      
 		      pDatabase.UserName = pMatch.SubExpressionString(2)
 		      pDatabase.Password = pMatch.SubExpressionString(3)
 		      pDatabase.Host = pMatch.SubExpressionString(4)
+		      
 		      
 		      If pMatch.SubExpressionString(5) <> "" Then
 		        MySQLCommunityServer(pDatabase).Port = Val(pMatch.SubExpressionString(5))
