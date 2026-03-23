@@ -281,7 +281,7 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetWeb and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Sub Constructor(pRecordSet As DatabaseRow)
 		  // Initialize the ORM with values from a RecordSet
 		  
