@@ -1443,6 +1443,179 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function FieldNeedAlter(pCurrent as ORMField, pExpected as ORMField, pDatabase as Database) As Boolean
+		  if pCurrent is nil or pExpected is nil then
+		    Return true
+		  end if
+		  
+		  if pCurrent.Type(pDatabase) <> pExpected.Type(pDatabase) then
+		    Return true
+		  end if
+		  
+		  if pCurrent.Unique <> pExpected.Unique then
+		    Return true
+		  end if
+		  
+		  if pCurrent.PrimaryKey <> pExpected.PrimaryKey then
+		    Return true
+		  end if
+		  
+		  if pCurrent.NotNull <> pExpected.NotNull then
+		    Return true
+		  end if
+		  
+		  if pDatabase isa MySQLCommunityServer then
+		    if pCurrent.Length <> pExpected.Length then
+		      Return true
+		    end if
+		    
+		    if pCurrent.Extra(pDatabase) <> pExpected.Extra(pDatabase) then
+		      Return true
+		    end if
+		  end if
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLCurrentIndexes(pDatabase as Database) As Dictionary
+		  dim indexes as new Dictionary
+		  
+		  Try
+		    dim sql as String = "SELECT index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns`, MIN(non_unique) AS `NonUnique` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' GROUP BY index_name;"
+		    dim rows as RowSet = pDatabase.SelectSQL(sql)
+		    
+		    if rows <> nil then
+		      For Each row As DatabaseRow In rows
+		        dim meta as new Dictionary
+		        meta.Value("Columns") = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		        meta.Value("NonUnique") = row.Column("NonUnique").IntegerValue <> 0
+		        indexes.Value(row.Column("Index").StringValue) = meta
+		      Next
+		      rows.Close
+		    end if
+		  Catch error as DatabaseException
+		    System.DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
+		    mLogs =  mlogs + "Error loading indexes on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+		  
+		  Return indexes
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLForeignKeyColumns(pDatabase as Database) As Dictionary
+		  dim foreignKeys as new Dictionary
+		  
+		  Try
+		    dim sql as String = "SELECT constraint_name AS `Constraint`, GROUP_CONCAT(column_name ORDER BY ordinal_position) AS `Columns` FROM information_schema.key_column_usage WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' AND referenced_table_name IS NOT NULL GROUP BY constraint_name;"
+		    dim rows as RowSet = pDatabase.SelectSQL(sql)
+		    
+		    if rows <> nil then
+		      For Each row As DatabaseRow In rows
+		        foreignKeys.Value(row.Column("Constraint").StringValue) = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		      Next
+		      rows.Close
+		    end if
+		  Catch error as DatabaseException
+		    System.DebugLog "Error loading foreign keys on " + me.TableName + " : " + error.Message
+		    mLogs =  mlogs + "Error loading foreign keys on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+		  
+		  Return foreignKeys
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLHasIndexColumns(pIndexes as Dictionary, pColumns as String, pRequireUnique as Boolean = False) As Boolean
+		  if pIndexes = nil then
+		    Return false
+		  end if
+		  
+		  dim expectedColumns as String = MySQLNormalizeIndexColumns(pColumns)
+		  if expectedColumns = "" then
+		    Return false
+		  end if
+		  
+		  For Each entry As DictionaryEntry In pIndexes
+		    dim meta as Dictionary = Dictionary(entry.Value)
+		    dim currentColumns as String = meta.Lookup("Columns", "")
+		    dim nonUnique as Boolean = meta.Lookup("NonUnique", true)
+		    
+		    if currentColumns = expectedColumns then
+		      if (Not pRequireUnique) or (nonUnique = false) then
+		        Return true
+		      end if
+		    end if
+		  Next
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLIndexExists(pIndexes as Dictionary, pIndexName as String) As Boolean
+		  if pIndexes = nil then
+		    Return false
+		  end if
+		  
+		  Return pIndexes.HasKey(pIndexName)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLIndexNeededByForeignKey(pIndexName as String, pIndexColumns as String, pForeignKeys as Dictionary) As Boolean
+		  if pForeignKeys = nil then
+		    Return false
+		  end if
+		  
+		  dim normalizedIndexColumns as String = MySQLNormalizeIndexColumns(pIndexColumns)
+		  
+		  For Each entry As DictionaryEntry In pForeignKeys
+		    dim fkColumns as String = MySQLNormalizeIndexColumns(entry.Value.StringValue)
+		    
+		    if entry.Key.StringValue = pIndexName then
+		      Return true
+		    end if
+		    
+		    if fkColumns <> "" then
+		      if normalizedIndexColumns = fkColumns then
+		        Return true
+		      end if
+		      
+		      if normalizedIndexColumns.Length > fkColumns.Length then
+		        if normalizedIndexColumns.Left(fkColumns.Length) = fkColumns and normalizedIndexColumns.Middle(fkColumns.Length, 1) = "," then
+		          Return true
+		        end if
+		      end if
+		    end if
+		  Next
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLNormalizeIndexColumns(pColumns as String) As String
+		  if pColumns = "" then
+		    Return ""
+		  end if
+		  
+		  dim normalizedColumns() as String
+		  
+		  For Each rawColumn As String In pColumns.Split(",")
+		    dim normalizedColumn as String = rawColumn.ReplaceAll("`", "").Trim.Lowercase
+		    if normalizedColumn <> "" then
+		      normalizedColumns.Add(normalizedColumn)
+		    end if
+		  Next
+		  
+		  Return Join(normalizedColumns, ",")
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
 		  If Loaded Then
@@ -2899,7 +3072,7 @@ Implements Reports.Dataset
 		      dim cCurrent as ORMField = SchemaCurrent.value(dField.Key)
 		      dim cReal as ORMField = dField.Value
 		      
-		      if cCurrent.Type(pDatabase)<>cReal.type(pDatabase) or cCurrent.Unique<>cReal.Unique or cCurrent.PrimaryKey<>cReal.PrimaryKey or cCurrent.NotNull<>cReal.NotNull  then
+		      if FieldNeedAlter(cCurrent, cReal, pDatabase) then
 		        SchemaToAlter.Value(dField.Key) = cReal
 		      end if
 		    end if
@@ -3047,20 +3220,40 @@ Implements Reports.Dataset
 		      dim HasUniqueKeys as Boolean = false
 		      Dim mPrimaryKeys as String = "ALTER TABLE `"+me.TableName+"` ADD PRIMARY KEY ("
 		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `unique"+System.Random.InRange(0, 1000).ToString+"`("
+		      dim mUniqueColumns as String
+		      dim currentIndexes as Dictionary
+		      dim foreignKeyColumns as Dictionary
 		      
-		      // we remove all index and uni ckey
-		      dim rIndexs as RowSet
-		      Try
-		        dim sss as string = "SELECT table_name AS `Table`, index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '"+me.TableName+"' GROUP BY 1,2;"
-		        rIndexs = pDatabase.SelectSQL(sss)
+		      for each schemaEntry as DictionaryEntry in Schema
+		        dim schemaField as ORMField = schemaEntry.Value
 		        
-		        For Each row As DatabaseRow In rIndexs
-		          if row.Column("Index").StringValue <> "PRIMARY" then
-		            dim ddd as string = "ALTER TABLE `" + me.TableName + "` DROP INDEX `"+row.Column("Index").StringValue+"`;"
+		        if schemaField.PrimaryKey then
+		          HasPrimaryKeys = true
+		          mPrimaryKeys = mPrimaryKeys + "`"+schemaEntry.key+"`,"
+		        end if
+		        
+		        if schemaField.Unique then
+		          HasUniqueKeys = true
+		          mUniqueKeys = mUniqueKeys + "`"+schemaEntry.key+"`,"
+		          mUniqueColumns = mUniqueColumns + "`"+schemaEntry.key+"`,"
+		        end if
+		      next
+		      
+		      currentIndexes = MySQLCurrentIndexes(pDatabase)
+		      foreignKeyColumns = MySQLForeignKeyColumns(pDatabase)
+		      
+		      // we remove indexes only when they are not required by a foreign key constraint
+		      Try
+		        For Each row As DictionaryEntry In currentIndexes
+		          dim indexName as String = row.Key.StringValue
+		          dim indexMeta as Dictionary = Dictionary(row.Value)
+		          dim indexColumns as String = indexMeta.Lookup("Columns", "")
+		          
+		          if indexName <> "PRIMARY" and Not MySQLIndexNeededByForeignKey(indexName, indexColumns, foreignKeyColumns) then
+		            dim ddd as string = "ALTER TABLE `" + me.TableName + "` DROP INDEX `"+indexName+"`;"
 		            pDatabase.ExecuteSQL(ddd)
 		          end if
 		        Next
-		        rIndexs.Close
 		      Catch derror As DatabaseException
 		        System.DebugLog "Error by droping keys on " + me.TableName + " : " + derror.Message
 		        mLogs =  mlogs + "Error by droping keys on " + me.TableName + " : " + derror.Message + EndOfLine
@@ -3098,17 +3291,7 @@ Implements Reports.Dataset
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        if field.Extra = ORMField.ExtraList.AutoIncremente then
-		          sql = sql + " " + field.Extra(pdatabase)  +  " , ADD PRIMARY KEY (`" + dField.Key + "`);"
-		        end if
-		        
-		        if field.PrimaryKey then
-		          HasPrimaryKeys = HasPrimaryKeys OR true
-		          mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
-		        end if
-		        
-		        if field.Unique then
-		          HasUniqueKeys = HasUniqueKeys OR true
-		          mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
+		          sql = sql + " " + field.Extra(pdatabase)  +  " , ADD PRIMARY KEY (`" + dField.Key + "`)"
 		        end if
 		        
 		        sql = sql + ";"
@@ -3138,16 +3321,6 @@ Implements Reports.Dataset
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase)  +";"
-		        
-		        if field.PrimaryKey then
-		          HasPrimaryKeys = HasPrimaryKeys OR true
-		          mPrimaryKeys  = mPrimaryKeys + "`"+dField.key+"`"+ ","
-		        end if
-		        
-		        if field.Unique then
-		          HasUniqueKeys = HasUniqueKeys OR true
-		          mUniqueKeys  = mUniqueKeys + "`"+dField.key+"`"+ ","
-		        end if
 		        System.DebugLog sql
 		        
 		        try
@@ -3164,15 +3337,13 @@ Implements Reports.Dataset
 		        
 		      next
 		      pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      try
 		        if HasPrimaryKeys then
-		          
-		          '// check if duplicate on : 
-		          dim rr as RowSet = pDatabase.SelectSQL("SHOW INDEX FROM `"+me.TableName+"` where Key_name = 'PRIMARY';")
-		          
-		          if rr is nil then
+		          if Not MySQLIndexExists(currentIndexes, "PRIMARY") then
 		            System.DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
 		            pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
+		            currentIndexes = MySQLCurrentIndexes(pDatabase)
 		          end if
 		        end if
 		      Catch Error as DatabaseException
@@ -3181,8 +3352,11 @@ Implements Reports.Dataset
 		      end try
 		      try
 		        if HasUniqueKeys then
-		          System.DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
-		          pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
+		          if Not MySQLHasIndexColumns(currentIndexes, mUniqueColumns, true) then
+		            System.DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
+		            pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
+		            currentIndexes = MySQLCurrentIndexes(pDatabase)
+		          end if
 		        end if
 		      Catch Error as DatabaseException
 		        System.DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
@@ -3193,26 +3367,29 @@ Implements Reports.Dataset
 		      // INDEXING DB
 		      
 		      for each dField as DictionaryEntry in SchemaIndex
-		        
-		        Dim sql As String
-		        
-		        sql = "ALTER TABLE `"+me.TableName+"` ADD INDEX `"+ dField.Key + "`  ( "
-		        
 		        dim fields() as string = dField.Value
+		        dim desiredColumns as String = MySQLNormalizeIndexColumns(Join(fields, ","))
 		        
-		        For Each name As String In fields
-		          sql = sql + "`"+ name + "`, " 
-		        Next
-		        
-		        sql = sql.Left(sql.Length - 2) + ");"
-		        
-		        try
-		          System.DebugLog sql
-		          pDatabase.ExecuteSQL(sql)
-		        Catch Error as DatabaseException
-		          System.DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
-		          mLogs =  mlogs + "Indexing on  "+me.TableName+" error : " + Error.Message + EndOfLine
-		        end try
+		        if Not MySQLIndexExists(currentIndexes, dField.Key.StringValue) and Not MySQLHasIndexColumns(currentIndexes, desiredColumns) then
+		          Dim sql As String
+		          
+		          sql = "ALTER TABLE `"+me.TableName+"` ADD INDEX `"+ dField.Key + "`  ( "
+		          
+		          For Each name As String In fields
+		            sql = sql + "`"+ name + "`, " 
+		          Next
+		          
+		          sql = sql.Left(sql.Length - 2) + ");"
+		          
+		          try
+		            System.DebugLog sql
+		            pDatabase.ExecuteSQL(sql)
+		            currentIndexes = MySQLCurrentIndexes(pDatabase)
+		          Catch Error as DatabaseException
+		            System.DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
+		            mLogs =  mlogs + "Indexing on  "+me.TableName+" error : " + Error.Message + EndOfLine
+		          end try
+		        end if
 		        
 		      next
 		      
