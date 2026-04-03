@@ -295,7 +295,7 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = false
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Extract(pRecordSet As DatabaseRow, pIndex As Integer) As Variant
 		  // Properly extract a DatabaseField from a RecordSet
 		  
@@ -600,11 +600,16 @@ Protected Module DB
 		  
 		  
 		  // Perform type detection for unknown data type
-		  If pColumnType = -1 and pDB isa MySQLCommunityServer  Then // patch de marde car Xojo est trop nono pour voir les chiffres
-		    If IsNumeric(pDatabaseFieldValue) Then
-		      'System.DebugLog pDatabaseField.CurrencyValue.ToString
-		      Return pDatabaseFieldValue.CurrencyValue
-		    End If
+		  If pColumnType = -1 Then // patch de marde car Xojo est trop nono pour voir les chiffres
+		    #If Not TargetIOS
+		      If pDB isa MySQLCommunityServer And IsNumeric(pDatabaseFieldValue) Then
+		        Return pDatabaseFieldValue.CurrencyValue
+		      End If
+		    #Else
+		      If IsNumeric(pDatabaseFieldValue) Then
+		        Return pDatabaseFieldValue.CurrencyValue
+		      End If
+		    #EndIf
 		  End If
 		  
 		  

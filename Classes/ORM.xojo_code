@@ -768,8 +768,10 @@ Implements Reports.Dataset
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		      ElseIf pDatabase IsA MySQLCommunityServer Then
-		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #If Not TargetIOS
+		        ElseIf pDatabase IsA MySQLCommunityServer Then
+		          Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #EndIf
 		      Else
 		        // Biggest primary key
 		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
@@ -882,8 +884,10 @@ Implements Reports.Dataset
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		      ElseIf pDatabase IsA MySQLCommunityServer Then
-		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #If Not TargetIOS
+		        ElseIf pDatabase IsA MySQLCommunityServer Then
+		          Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #EndIf
 		      Else
 		        // Biggest primary key
 		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
@@ -1718,7 +1722,7 @@ Implements Reports.Dataset
 		    
 		    
 		    // Clear any existing data
-		    mData.Clear
+		    mData.RemoveAll
 		    
 		    // Fetch record set
 		    If pRecordSet.RecordCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
@@ -2689,8 +2693,10 @@ Implements Reports.Dataset
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		      ElseIf pDatabase IsA MySQLCommunityServer Then
-		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #If Not TargetIOS
+		        ElseIf pDatabase IsA MySQLCommunityServer Then
+		          Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #EndIf
 		      Else
 		        // Biggest primary key
 		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
@@ -2759,7 +2765,7 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear changes, they are saved in mData
-		    Call Me.mChanged.Clear
+		    Call Me.mChanged.RemoveAll
 		    
 		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
@@ -2768,8 +2774,10 @@ Implements Reports.Dataset
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		      ElseIf pDatabase IsA MySQLCommunityServer Then
-		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #If Not TargetIOS
+		        ElseIf pDatabase IsA MySQLCommunityServer Then
+		          Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		      #EndIf
 		      Else
 		        // Biggest primary key
 		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
@@ -2790,9 +2798,9 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdded.Clear
+		    mAdded.RemoveAll
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear
+		    mRemoved.RemoveAll
 		    
 		    pDatabase.Commit
 		    
@@ -2837,7 +2845,7 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear changes, they are saved in mData
-		    Call Me.mChanged.Clear
+		    Call Me.mChanged.RemoveAll
 		    
 		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
@@ -2861,9 +2869,9 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear pending relationships
-		    mAdded.Clear
+		    mAdded.RemoveAll
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.Clear
+		    mRemoved.RemoveAll
 		    
 		    pDatabase.CommitTransaction
 		    
@@ -3769,7 +3777,7 @@ Implements Reports.Dataset
 		    Next
 		    
 		    // Clear mChanged, they are merged in mData
-		    mChanged.Clear
+		    mChanged.RemoveAll
 		    
 		    // Execute pendings relationships
 		    For Each dRemoved as DictionaryEntry In mRemoved

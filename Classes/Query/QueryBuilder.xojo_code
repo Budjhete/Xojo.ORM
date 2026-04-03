@@ -97,7 +97,7 @@ Implements QueryExpression
 		Sub Execute(pDatabase As Database, pCommit As Boolean = True)
 		  // Execute the QueryBuilder using ExecuteSQL,
 		  // which will not get any result from the database
-		  
+		  #Pragma BreakOnExceptions False
 		  If Not RaiseEvent Executing Then
 		    
 		    Dim pStatement As String = Compile
@@ -123,6 +123,8 @@ Implements QueryExpression
 		    RaiseEvent Executed(Nil)
 		    
 		  End If
+		  
+		  #Pragma BreakOnExceptions Default
 		End Sub
 	#tag EndMethod
 
@@ -758,6 +760,14 @@ Implements QueryExpression
 			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="hasHandler"
+			Visible=false
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class
