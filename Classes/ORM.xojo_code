@@ -281,14 +281,14 @@ Implements Reports.Dataset
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pRecordSet As DatabaseRow)
-		  // Initialize the ORM with values from a RecordSet
+		  // Initialize the ORM from a RowSet row (For Each row As DatabaseRow In rowSet)
 		  
 		  Me.Constructor
 		  
 		  For pIndex As Integer = 1 To pRecordSet.ColumnCount
-		    mData.Value(pRecordSet.ColumnAt(pIndex-1).Name) = DB.Extract(pRecordSet, pIndex-1)  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor
+		    mData.Value(pRecordSet.ColumnAt(pIndex - 1).Name) = DB.Extract(pRecordSet, pIndex - 1)
 		  Next
 		  
 		  
