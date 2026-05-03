@@ -163,6 +163,196 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function BaseDataColumnIndex(pColNames() as String, pName as String) As Integer
+		  for i as integer = 0 to pColNames.LastIndex
+		    if pColNames(i) = pName then
+		      return i
+		    end if
+		  next
+		  return -1
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataEscapeSQLString(pValue as String) As String
+		  return pValue.ReplaceAll("'", "''")
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataInsertFullRow(pDatabase as Database, pColNames() as String, pRow() as String) As Boolean
+		  dim rcol as String
+		  for each n as String in pColNames
+		    rcol = rcol + "`" + n + "`, "
+		  next
+		  rcol = rcol.Left(rcol.Length - 2)
+		  
+		  dim sql as String = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
+		  for each st as String in pRow
+		    if st = "NULL" or st = "CURRENT_TIMESTAMP" then
+		      sql = sql + st + ", "
+		    else
+		      sql = sql + "'" + BaseDataEscapeSQLString(st) + "', "
+		    end if
+		  next
+		  sql = sql.Left(sql.Length - 2) + ");"
+		  
+		  try
+		    pDatabase.ExecuteSQL(sql)
+		  catch err as DatabaseException
+		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
+		    mLogs = mLogs + "Base data INSERT error on " + me.TableName + ": " + err.Message + EndOfLine
+		    return false
+		  end try
+		  return true
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataInsertIgnoreFullRow(pDatabase as Database, pColNames() as String, pRow() as String) As Boolean
+		  dim rcol as String
+		  for each n as String in pColNames
+		    rcol = rcol + "`" + n + "`, "
+		  next
+		  rcol = rcol.Left(rcol.Length - 2)
+		  
+		  dim sql as String
+		  if pDatabase isa MySQLCommunityServer then
+		    sql = "INSERT IGNORE INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
+		  else
+		    sql = "INSERT OR IGNORE INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
+		  end if
+		  
+		  for each st as String in pRow
+		    if st = "NULL" or st = "CURRENT_TIMESTAMP" then
+		      sql = sql + st + ", "
+		    else
+		      sql = sql + "'" + BaseDataEscapeSQLString(st) + "', "
+		    end if
+		  next
+		  sql = sql.Left(sql.Length - 2) + ");"
+		  
+		  try
+		    pDatabase.ExecuteSQL(sql)
+		  catch err as DatabaseException
+		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
+		    mLogs = mLogs + "Base data INSERT IGNORE error on " + me.TableName + ": " + err.Message + EndOfLine
+		    return false
+		  end try
+		  return true
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataPrimaryKeyLookupUsable(pColNames() as String, pRow() as String) As Boolean
+		  dim pks() as String = PrimaryKeys()
+		  for each pkName as String in pks
+		    dim ix as integer = BaseDataColumnIndex(pColNames, pkName)
+		    if ix < 0 or ix > pRow.LastIndex then
+		      return false
+		    end if
+		    if pRow(ix) = "NULL" then
+		      return false
+		    end if
+		  next
+		  return true
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataSchemaColumnNames() As String()
+		  dim names() as String
+		  for each cCol as DictionaryEntry in Schema
+		    names.Add(cCol.Key.StringValue)
+		  next
+		  return names
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataSQLLiteralForCell(pCell as String) As String
+		  if pCell = "NULL" or pCell = "CURRENT_TIMESTAMP" then
+		    return pCell
+		  end if
+		  return "'" + BaseDataEscapeSQLString(pCell) + "'"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataUpdateNonPrimaryColumns(pDatabase as Database, pColNames() as String, pRow() as String) As Boolean
+		  dim pkSet as New Dictionary
+		  dim pks() as String = PrimaryKeys()
+		  for each pkName as String in pks
+		    pkSet.Value(pkName) = true
+		  next
+		  
+		  dim setParts as String
+		  for i as integer = 0 to pColNames.LastIndex
+		    dim cname as String = pColNames(i)
+		    if pkSet.HasKey(cname) then
+		      continue
+		    end if
+		    // Clé primaire physique (ex. id auto-inc.) : PrimaryKeys() peut ne lister que la clé métier.
+		    if Schema.HasKey(cname) then
+		      dim sf as ORMField = Schema.Value(cname)
+		      if sf.PrimaryKey then
+		        continue
+		      end if
+		    end if
+		    dim st as String = pRow(i)
+		    if st = "NULL" or st = "CURRENT_TIMESTAMP" then
+		      setParts = setParts + "`" + cname + "` = " + st + ", "
+		    else
+		      setParts = setParts + "`" + cname + "` = '" + BaseDataEscapeSQLString(st) + "', "
+		    end if
+		  next
+		  
+		  if setParts = "" then
+		    return true
+		  end if
+		  setParts = setParts.Left(setParts.Length - 2)
+		  
+		  dim w as String = BaseDataWherePrimaryKey(pColNames, pRow)
+		  if w = "" then
+		    return false
+		  end if
+		  
+		  dim sql as String = "UPDATE `" + me.TableName + "` SET " + setParts + " WHERE " + w + ";"
+		  try
+		    pDatabase.ExecuteSQL(sql)
+		  catch err as DatabaseException
+		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
+		    mLogs = mLogs + "Base data UPDATE error on " + me.TableName + ": " + err.Message + EndOfLine
+		    return false
+		  end try
+		  return true
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function BaseDataWherePrimaryKey(pColNames() as String, pRow() as String) As String
+		  dim parts as String
+		  dim pks() as String = PrimaryKeys()
+		  for each pkName as String in pks
+		    dim ix as integer = BaseDataColumnIndex(pColNames, pkName)
+		    if ix < 0 or ix > pRow.LastIndex then
+		      return ""
+		    end if
+		    dim v as String = pRow(ix)
+		    if v = "NULL" then
+		      parts = parts + "`" + pkName + "` IS NULL AND "
+		    else
+		      parts = parts + "`" + pkName + "` = " + BaseDataSQLLiteralForCell(v) + " AND "
+		    end if
+		  next
+		  if parts = "" then
+		    return ""
+		  end if
+		  return parts.Left(parts.Length - 5)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function BelongsTo(pORM As ORM, pForeignKey As String) As ORM
 		  // Return the related model in belongs to relationship
@@ -705,122 +895,6 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = false
-		Attributes( Deprecated )  Function Create(pDatabase As Database) As ORM
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  'System.DebugLog "ORM.create isloaded ?"
-		  If Loaded Then
-		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
-		  End
-		  
-		  System.DebugLog "ORM.create is Creating ?"
-		  
-		  If Not RaiseEvent Creating Then
-		    'System.DebugLog "ORM.create not creating"
-		    
-		    pDatabase.Begin
-		    System.DebugLog "ORM.create database.begin"
-		    
-		    
-		    // Take a merge of mData and mChanged
-		    Dim pRaw As Dictionary = Me.Data
-		    'System.DebugLog "ORM.create pRaw = data"
-		    
-		    
-		    // pData contains at least all primary keys
-		    Dim pData As Dictionary = Me.Pks
-		    
-		    'System.DebugLog "ORM.create pData = Pks"
-		    
-		    'System.DebugLog "ORM.create take colums defined in model"
-		    
-		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
-		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
-		      
-		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
-		        pData.Value(pColumn) = pRaw.Value(pColumn)
-		      End If
-		    Next
-		    
-		    'System.DebugLog "ORM.create DB.Insert"
-		    
-		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
-		    
-		    // Merge mChanged into mData
-		    For Each pKey As Variant In mChanged.Keys()
-		      mData.Value(pKey) = mChanged.Value(pKey)
-		    Next
-		    
-		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
-		    // Clear changes, they are saved in mData
-		    //Call Me.mChanged.Clear
-		    me.mChanged = nil
-		    me.mChanged = new Dictionary
-		    
-		    'System.DebugLog "ORM.Create.mChanged cleared"
-		    
-		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
-		      
-		      If pDatabase IsA SQLiteDatabase Then
-		        // Best guess for SQLite
-		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
-		        // Best guess for MySQL when available
-		        #If Not TargetIOS
-		      ElseIf pDatabase IsA MySQLCommunityServer Then
-		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
-		        #EndIf
-		      Else
-		        // Biggest primary key
-		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		        From(Me.TableName). _
-		        OrderBy(Me.PrimaryKey, "DESC"). _
-		        Execute(pDatabase).Field(Me.PrimaryKey).Value
-		      End If
-		      
-		    End If
-		    
-		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mRemoved.Values
-		      Call pRelation.Remove(Me, pDatabase, False)
-		    Next
-		    
-		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me, pDatabase, False)
-		    Next
-		    
-		    'System.DebugLog "ORM.Create.mAdded about to clear"
-		    
-		    // Clear pending relationships
-		    //mAdded.Clear
-		    me.mAdded = nil
-		    me.mAdded = new Dictionary
-		    
-		    'System.DebugLog "ORM.Create.mAdded cleared"
-		    
-		    
-		    'System.DebugLog "ORM.Create.mRemoved about to clear"
-		    
-		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    //mRemoved.Clear
-		    me.mRemoved = nil
-		    me.mRemoved = new Dictionary
-		    
-		    'System.DebugLog "ORM.Create.mRemoved cleared"
-		    
-		    
-		    pDatabase.Commit
-		    
-		    RaiseEvent Created
-		    System.DebugLog "ORM.Create Done"
-		  End If
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetWeb and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Create(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
@@ -928,6 +1002,122 @@ Implements Reports.Dataset
 		    
 		    
 		    pDatabase.CommitTransaction
+		    
+		    RaiseEvent Created
+		    System.DebugLog "ORM.Create Done"
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Create(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  'System.DebugLog "ORM.create isloaded ?"
+		  If Loaded Then
+		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  System.DebugLog "ORM.create is Creating ?"
+		  
+		  If Not RaiseEvent Creating Then
+		    'System.DebugLog "ORM.create not creating"
+		    
+		    pDatabase.Begin
+		    System.DebugLog "ORM.create database.begin"
+		    
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    'System.DebugLog "ORM.create pRaw = data"
+		    
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    'System.DebugLog "ORM.create pData = Pks"
+		    
+		    'System.DebugLog "ORM.create take colums defined in model"
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
+		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
+		      
+		      If pRaw.HasKey(pColumn) Then
+		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    'System.DebugLog "ORM.create DB.Insert"
+		    
+		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    'System.DebugLog "ORM.Create.mChanged about to clear : " + me.Name
+		    // Clear changes, they are saved in mData
+		    //Call Me.mChanged.Clear
+		    me.mChanged = nil
+		    me.mChanged = new Dictionary
+		    
+		    'System.DebugLog "ORM.Create.mChanged cleared"
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
+		      
+		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		        // Best guess for MySQL when available
+		        #If Not TargetIOS
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		        #EndIf
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Field(Me.PrimaryKey).Value
+		      End If
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mRemoved.Values
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    'System.DebugLog "ORM.Create.mAdded about to clear"
+		    
+		    // Clear pending relationships
+		    //mAdded.Clear
+		    me.mAdded = nil
+		    me.mAdded = new Dictionary
+		    
+		    'System.DebugLog "ORM.Create.mAdded cleared"
+		    
+		    
+		    'System.DebugLog "ORM.Create.mRemoved about to clear"
+		    
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    //mRemoved.Clear
+		    me.mRemoved = nil
+		    me.mRemoved = new Dictionary
+		    
+		    'System.DebugLog "ORM.Create.mRemoved cleared"
+		    
+		    
+		    pDatabase.Commit
 		    
 		    RaiseEvent Created
 		    System.DebugLog "ORM.Create Done"
@@ -2005,284 +2195,6 @@ Implements Reports.Dataset
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function SyncBaseDataAfterTableUpdate(pDatabase as Database) As Boolean
-		  // Après migration de schéma: réapplique les données de base.
-		  // SchemaMadantoryData: si BaseDataMandatorySyncEnabled, upsert (insert ou mise à jour des colonnes non-PK).
-		  // Sinon, même comportement que SchemaDefaultDatas: insertion seulement si la ligne (clé primaire logique) n'existe pas.
-		  // SchemaDefaultDatas: toujours insertion si absent, ne pas écraser les choix utilisateur.
-		  #Pragma BreakOnExceptions False
-		  
-		  if SchemaMadantoryData.LastIndex < 0 and SchemaDefaultDatas.LastIndex < 0 then
-		    return true
-		  end if
-		  
-		  dim colNames() as String = BaseDataSchemaColumnNames()
-		  if colNames.LastIndex < 0 then
-		    return true
-		  end if
-		  
-		  for each rowV as Variant in SchemaMadantoryData
-		    if not SyncOneBaseDataRow(pDatabase, colNames, rowV, BaseDataMandatorySyncEnabled) then
-		      return false
-		    end if
-		  next
-		  
-		  for each rowV as Variant in SchemaDefaultDatas
-		    if not SyncOneBaseDataRow(pDatabase, colNames, rowV, false) then
-		      return false
-		    end if
-		  next
-		  
-		  return true
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataSchemaColumnNames() As String()
-		  dim names() as String
-		  for each cCol as DictionaryEntry in Schema
-		    names.Add(cCol.Key.StringValue)
-		  next
-		  return names
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataColumnIndex(pColNames() as String, pName as String) As Integer
-		  for i as integer = 0 to pColNames.LastIndex
-		    if pColNames(i) = pName then
-		      return i
-		    end if
-		  next
-		  return -1
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataEscapeSQLString(pValue as String) As String
-		  return pValue.ReplaceAll("'", "''")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataSQLLiteralForCell(pCell as String) As String
-		  if pCell = "NULL" or pCell = "CURRENT_TIMESTAMP" then
-		    return pCell
-		  end if
-		  return "'" + BaseDataEscapeSQLString(pCell) + "'"
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataPrimaryKeyLookupUsable(pColNames() as String, pRow() as String) As Boolean
-		  dim pks() as String = PrimaryKeys()
-		  for each pkName as String in pks
-		    dim ix as integer = BaseDataColumnIndex(pColNames, pkName)
-		    if ix < 0 or ix > pRow.LastIndex then
-		      return false
-		    end if
-		    if pRow(ix) = "NULL" then
-		      return false
-		    end if
-		  next
-		  return true
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataWherePrimaryKey(pColNames() as String, pRow() as String) As String
-		  dim parts as String
-		  dim pks() as String = PrimaryKeys()
-		  for each pkName as String in pks
-		    dim ix as integer = BaseDataColumnIndex(pColNames, pkName)
-		    if ix < 0 or ix > pRow.LastIndex then
-		      return ""
-		    end if
-		    dim v as String = pRow(ix)
-		    if v = "NULL" then
-		      parts = parts + "`" + pkName + "` IS NULL AND "
-		    else
-		      parts = parts + "`" + pkName + "` = " + BaseDataSQLLiteralForCell(v) + " AND "
-		    end if
-		  next
-		  if parts = "" then
-		    return ""
-		  end if
-		  return parts.Left(parts.Length - 5)
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function SyncOneBaseDataRow(pDatabase as Database, pColNames() as String, pRowData as Variant, pAllowMandatoryUpdate as Boolean) As Boolean
-		  dim pRow() as String = pRowData
-		  if pRow.LastIndex <> pColNames.LastIndex then
-		    mLogs = mLogs + "Base data row column count mismatch on " + me.TableName + EndOfLine
-		    return false
-		  end if
-		  
-		  if BaseDataPrimaryKeyLookupUsable(pColNames, pRow) then
-		    dim w as String = BaseDataWherePrimaryKey(pColNames, pRow)
-		    if w = "" then
-		      return BaseDataInsertFullRow(pDatabase, pColNames, pRow)
-		    end if
-		    
-		    // COUNT(*) retourne toujours une ligne; évite RowCount / curseur peu fiables selon les moteurs (ex. SQLite).
-		    dim sqlSel as String = "SELECT COUNT(*) AS __bdc FROM `" + me.TableName + "` WHERE " + w + ";"
-		    dim rs as RowSet
-		    try
-		      rs = pDatabase.SelectSQL(sqlSel)
-		    catch err as DatabaseException
-		      System.DebugLog me.TableName + " - " + sqlSel + " : " + err.Message
-		      mLogs = mLogs + "Base data SELECT error on " + me.TableName + ": " + err.Message + EndOfLine
-		      return false
-		    end try
-		    
-		    dim exists as Boolean = false
-		    if rs <> nil then
-		      try
-		        // COUNT(*) produit exactement une ligne; première colonne = le nombre.
-		        while not rs.AfterLastRow
-		          exists = (rs.ColumnAt(0).IntegerValue > 0)
-		          exit while
-		        wend
-		      catch ex as RuntimeException
-		        System.DebugLog me.TableName + " base data COUNT read: " + ex.Message
-		      end try
-		      rs.Close
-		    end if
-		    
-		    if not exists then
-		      return BaseDataInsertFullRow(pDatabase, pColNames, pRow)
-		    end if
-		    
-		    if pAllowMandatoryUpdate then
-		      return BaseDataUpdateNonPrimaryColumns(pDatabase, pColNames, pRow)
-		    end if
-		    
-		    return true
-		  else
-		    // Clé primaire non utilisable (ex.: id auto NULL): insertion seule, ignore si doublon.
-		    return BaseDataInsertIgnoreFullRow(pDatabase, pColNames, pRow)
-		  end if
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataInsertFullRow(pDatabase as Database, pColNames() as String, pRow() as String) As Boolean
-		  dim rcol as String
-		  for each n as String in pColNames
-		    rcol = rcol + "`" + n + "`, "
-		  next
-		  rcol = rcol.Left(rcol.Length - 2)
-		  
-		  dim sql as String = "INSERT INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
-		  for each st as String in pRow
-		    if st = "NULL" or st = "CURRENT_TIMESTAMP" then
-		      sql = sql + st + ", "
-		    else
-		      sql = sql + "'" + BaseDataEscapeSQLString(st) + "', "
-		    end if
-		  next
-		  sql = sql.Left(sql.Length - 2) + ");"
-		  
-		  try
-		    pDatabase.ExecuteSQL(sql)
-		  catch err as DatabaseException
-		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
-		    mLogs = mLogs + "Base data INSERT error on " + me.TableName + ": " + err.Message + EndOfLine
-		    return false
-		  end try
-		  return true
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataInsertIgnoreFullRow(pDatabase as Database, pColNames() as String, pRow() as String) As Boolean
-		  dim rcol as String
-		  for each n as String in pColNames
-		    rcol = rcol + "`" + n + "`, "
-		  next
-		  rcol = rcol.Left(rcol.Length - 2)
-		  
-		  dim sql as String
-		  if pDatabase isa MySQLCommunityServer then
-		    sql = "INSERT IGNORE INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
-		  else
-		    sql = "INSERT OR IGNORE INTO `" + me.TableName + "` (" + rcol + ") VALUES ("
-		  end if
-		  
-		  for each st as String in pRow
-		    if st = "NULL" or st = "CURRENT_TIMESTAMP" then
-		      sql = sql + st + ", "
-		    else
-		      sql = sql + "'" + BaseDataEscapeSQLString(st) + "', "
-		    end if
-		  next
-		  sql = sql.Left(sql.Length - 2) + ");"
-		  
-		  try
-		    pDatabase.ExecuteSQL(sql)
-		  catch err as DatabaseException
-		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
-		    mLogs = mLogs + "Base data INSERT IGNORE error on " + me.TableName + ": " + err.Message + EndOfLine
-		    return false
-		  end try
-		  return true
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function BaseDataUpdateNonPrimaryColumns(pDatabase as Database, pColNames() as String, pRow() as String) As Boolean
-		  dim pkSet as New Dictionary
-		  dim pks() as String = PrimaryKeys()
-		  for each pkName as String in pks
-		    pkSet.Value(pkName) = true
-		  next
-		  
-		  dim setParts as String
-		  for i as integer = 0 to pColNames.LastIndex
-		    dim cname as String = pColNames(i)
-		    if pkSet.HasKey(cname) then
-		      continue
-		    end if
-		    // Clé primaire physique (ex. id auto-inc.) : PrimaryKeys() peut ne lister que la clé métier.
-		    if Schema.HasKey(cname) then
-		      dim sf as ORMField = Schema.Value(cname)
-		      if sf.PrimaryKey then
-		        continue
-		      end if
-		    end if
-		    dim st as String = pRow(i)
-		    if st = "NULL" or st = "CURRENT_TIMESTAMP" then
-		      setParts = setParts + "`" + cname + "` = " + st + ", "
-		    else
-		      setParts = setParts + "`" + cname + "` = '" + BaseDataEscapeSQLString(st) + "', "
-		    end if
-		  next
-		  
-		  if setParts = "" then
-		    return true
-		  end if
-		  setParts = setParts.Left(setParts.Length - 2)
-		  
-		  dim w as String = BaseDataWherePrimaryKey(pColNames, pRow)
-		  if w = "" then
-		    return false
-		  end if
-		  
-		  dim sql as String = "UPDATE `" + me.TableName + "` SET " + setParts + " WHERE " + w + ";"
-		  try
-		    pDatabase.ExecuteSQL(sql)
-		  catch err as DatabaseException
-		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
-		    mLogs = mLogs + "Base data UPDATE error on " + me.TableName + ": " + err.Message + EndOfLine
-		    return false
-		  end try
-		  return true
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function Join(pTableName As QueryExpression, pTableAlias As String) As ORM
 		  Call Super.Join(pTableName, pTableAlias)
@@ -3262,6 +3174,94 @@ Implements Reports.Dataset
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function SyncBaseDataAfterTableUpdate(pDatabase as Database) As Boolean
+		  // Après migration de schéma: réapplique les données de base.
+		  // SchemaMadantoryData: si BaseDataMandatorySyncEnabled, upsert (insert ou mise à jour des colonnes non-PK).
+		  // Sinon, même comportement que SchemaDefaultDatas: insertion seulement si la ligne (clé primaire logique) n'existe pas.
+		  // SchemaDefaultDatas: toujours insertion si absent, ne pas écraser les choix utilisateur.
+		  #Pragma BreakOnExceptions False
+		  
+		  if SchemaMadantoryData.LastIndex < 0 and SchemaDefaultDatas.LastIndex < 0 then
+		    return true
+		  end if
+		  
+		  dim colNames() as String = BaseDataSchemaColumnNames()
+		  if colNames.LastIndex < 0 then
+		    return true
+		  end if
+		  
+		  for each rowV as Variant in SchemaMadantoryData
+		    if not SyncOneBaseDataRow(pDatabase, colNames, rowV, BaseDataMandatorySyncEnabled) then
+		      return false
+		    end if
+		  next
+		  
+		  for each rowV as Variant in SchemaDefaultDatas
+		    if not SyncOneBaseDataRow(pDatabase, colNames, rowV, false) then
+		      return false
+		    end if
+		  next
+		  
+		  return true
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SyncOneBaseDataRow(pDatabase as Database, pColNames() as String, pRowData as Variant, pAllowMandatoryUpdate as Boolean) As Boolean
+		  dim pRow() as String = pRowData
+		  if pRow.LastIndex <> pColNames.LastIndex then
+		    mLogs = mLogs + "Base data row column count mismatch on " + me.TableName + EndOfLine
+		    return false
+		  end if
+		  
+		  if BaseDataPrimaryKeyLookupUsable(pColNames, pRow) then
+		    dim w as String = BaseDataWherePrimaryKey(pColNames, pRow)
+		    if w = "" then
+		      return BaseDataInsertFullRow(pDatabase, pColNames, pRow)
+		    end if
+		    
+		    // COUNT(*) retourne toujours une ligne; évite RowCount / curseur peu fiables selon les moteurs (ex. SQLite).
+		    dim sqlSel as String = "SELECT COUNT(*) AS __bdc FROM `" + me.TableName + "` WHERE " + w + ";"
+		    dim rs as RowSet
+		    try
+		      rs = pDatabase.SelectSQL(sqlSel)
+		    catch err as DatabaseException
+		      System.DebugLog me.TableName + " - " + sqlSel + " : " + err.Message
+		      mLogs = mLogs + "Base data SELECT error on " + me.TableName + ": " + err.Message + EndOfLine
+		      return false
+		    end try
+		    
+		    dim exists as Boolean = false
+		    if rs <> nil then
+		      try
+		        // COUNT(*) produit exactement une ligne; première colonne = le nombre.
+		        while not rs.AfterLastRow
+		          exists = (rs.ColumnAt(0).IntegerValue > 0)
+		          exit while
+		        wend
+		      catch ex as RuntimeException
+		        System.DebugLog me.TableName + " base data COUNT read: " + ex.Message
+		      end try
+		      rs.Close
+		    end if
+		    
+		    if not exists then
+		      return BaseDataInsertFullRow(pDatabase, pColNames, pRow)
+		    end if
+		    
+		    if pAllowMandatoryUpdate then
+		      return BaseDataUpdateNonPrimaryColumns(pDatabase, pColNames, pRow)
+		    end if
+		    
+		    return true
+		  else
+		    // Clé primaire non utilisable (ex.: id auto NULL): insertion seule, ignore si doublon.
+		    return BaseDataInsertIgnoreFullRow(pDatabase, pColNames, pRow)
+		  end if
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableCheck(pDatabase as Database) As Boolean
 		  #Pragma BreakOnExceptions False
 		  
@@ -3553,7 +3553,12 @@ Implements Reports.Dataset
 		      
 		      // remove unused columns
 		      for each dField as DictionaryEntry in SchemaToRemoveColumn
-		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Try
+		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Catch lockError As DatabaseException
+		          System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
+		        End Try
 		        Dim sql As String
 		        sql = "ALTER TABLE `"+me.TableName+"` DROP COLUMN "
 		        'dim field as ORMField = dField.Value
@@ -3568,12 +3573,22 @@ Implements Reports.Dataset
 		          mLogs =  mlogs + "drop "+me.TableName+" DB error : " + Error.Message + EndOfLine
 		        end try
 		        
-		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Try
+		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Catch unlockError As DatabaseException
+		          System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		          mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
+		        End Try
 		      next dField
 		      
 		      // add new columns
 		      for each dField as DictionaryEntry in SchemaToAdd
-		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Try
+		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Catch lockError As DatabaseException
+		          System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
+		        End Try
 		        Dim sql As String
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` ADD "
@@ -3595,13 +3610,23 @@ Implements Reports.Dataset
 		          mLogs =  mlogs + "DB ADD "+me.TableName+"  error : " + Error.Message + EndOfLine
 		        end try
 		        
-		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Try
+		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Catch unlockError As DatabaseException
+		          System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		          mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
+		        End Try
 		      next
 		      
 		      // alter table's columns
 		      for each dField as DictionaryEntry in SchemaToAlter
 		        
-		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Try
+		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		        Catch lockError As DatabaseException
+		          System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
+		        End Try
 		        
 		        Dim sql As String
 		        
@@ -3620,15 +3645,30 @@ Implements Reports.Dataset
 		          
 		        catch error as DatabaseException
 		          pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
-		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		          Try
+		            pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		          Catch unlockError As DatabaseException
+		            System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		            mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
+		          End Try
 		          System.DebugLog "db alter "+me.TableName+ " : "+ error.Message
 		          mLogs =  mlogs + "db alter "+me.TableName+ " : "+ error.Message + EndOfLine
 		        end try
 		        
-		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Try
+		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Catch unlockError As DatabaseException
+		          System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		          mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
+		        End Try
 		        
 		      next
-		      pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		      Try
+		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
+		      Catch lockError As DatabaseException
+		        System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		        mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
+		      End Try
 		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      try
 		        if HasPrimaryKeys then
@@ -3657,7 +3697,7 @@ Implements Reports.Dataset
 		      
 		      
 		      // INDEXING DB
-		      
+		      #Pragma BreakOnExceptions False
 		      for each dField as DictionaryEntry in SchemaIndex
 		        dim fields() as string = dField.Value
 		        dim desiredColumns as String = MySQLNormalizeIndexColumns(Join(fields, ","))
@@ -3684,8 +3724,14 @@ Implements Reports.Dataset
 		        end if
 		        
 		      next
+		      #Pragma BreakOnExceptions True
 		      
-		      pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		      Try
+		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		      Catch unlockError As DatabaseException
+		        System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		        mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
+		      End Try
 		      
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		      
@@ -4300,6 +4346,10 @@ Implements Reports.Dataset
 
 
 	#tag Property, Flags = &h0
+		BaseDataMandatorySyncEnabled As Boolean = False
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = false
 	#tag EndProperty
 
@@ -4357,13 +4407,6 @@ Implements Reports.Dataset
 
 	#tag Property, Flags = &h0
 		SchemaMadantoryData() As Variant
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		// Si True: lors d'une mise à jour de schéma, les lignes SchemaMadantoryData sont synchronisées (insert + mise à jour des colonnes hors clé primaire).
-		// Si False: SchemaMadantoryData se comporte comme SchemaDefaultDatas (insertion seulement si la clé n'existe pas).
-		// Par défaut False; activer sur les modèles dont les traductions / données catalogue doivent suivre l'application.
-		BaseDataMandatorySyncEnabled As Boolean = False
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -4478,6 +4521,14 @@ Implements Reports.Dataset
 			Group="Behavior"
 			InitialValue=""
 			Type="Integer"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="BaseDataMandatorySyncEnabled"
+			Visible=false
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
 			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
