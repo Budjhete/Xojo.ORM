@@ -1,7 +1,7 @@
 #tag Class
 Protected Class ORM
 Inherits QueryBuilder
-Implements Reports.Dataset
+Implements Dataset
 	#tag CompatibilityFlags = ( TargetConsole and ( Target32Bit or Target64Bit ) ) or ( TargetWeb and ( Target32Bit or Target64Bit ) ) or ( TargetDesktop and ( Target32Bit or Target64Bit ) ) or ( TargetIOS and ( Target64Bit ) ) or ( TargetAndroid and ( Target64Bit ) )
 	#tag Event
 		Sub Close()
@@ -1670,6 +1670,183 @@ Implements Reports.Dataset
 		  else
 		    Return ORMField.TypeList.VARCHAR
 		  end if
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function FieldNeedAlter(pCurrent as ORMField, pExpected as ORMField, pDatabase as Database) As Boolean
+		  if pCurrent is nil or pExpected is nil then
+		    Return true
+		  end if
+		  
+		  if pCurrent.Type <> pExpected.Type then
+		    Return true
+		  end if
+		  
+		  if pCurrent.Unique <> pExpected.Unique then
+		    Return true
+		  end if
+		  
+		  if pCurrent.PrimaryKey <> pExpected.PrimaryKey then
+		    Return true
+		  end if
+		  
+		  if pCurrent.NotNull <> pExpected.NotNull then
+		    Return true
+		  end if
+		  
+		  #If Not TargetIOS And Not TargetAndroid Then
+		  if pDatabase isa MySQLCommunityServer then
+		    if pCurrent.Length <> pExpected.Length then
+		      Return true
+		    end if
+		    
+		    if pCurrent.Extra <> pExpected.Extra then
+		      Return true
+		    end if
+		  end if
+		  #Else
+		  #Pragma Unused pDatabase
+		  #EndIf
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLCurrentIndexes(pDatabase as Database) As Dictionary
+		  dim indexes as new Dictionary
+		  
+		  Try
+		    dim sql as String = "SELECT index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns`, MIN(non_unique) AS `NonUnique` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' GROUP BY index_name;"
+		    dim rows as RowSet = pDatabase.SelectSQL(sql)
+		    
+		    if rows <> nil then
+		      For Each row As DatabaseRow In rows
+		        dim meta as new Dictionary
+		        meta.Value("Columns") = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		        meta.Value("NonUnique") = row.Column("NonUnique").IntegerValue <> 0
+		        indexes.Value(row.Column("Index").StringValue) = meta
+		      Next
+		      rows.Close
+		    end if
+		  Catch error as DatabaseException
+		    System.DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
+		    mLogs =  mlogs + "Error loading indexes on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+		  
+		  Return indexes
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLForeignKeyColumns(pDatabase as Database) As Dictionary
+		  dim foreignKeys as new Dictionary
+		  
+		  Try
+		    dim sql as String = "SELECT constraint_name AS `Constraint`, GROUP_CONCAT(column_name ORDER BY ordinal_position) AS `Columns` FROM information_schema.key_column_usage WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' AND referenced_table_name IS NOT NULL GROUP BY constraint_name;"
+		    dim rows as RowSet = pDatabase.SelectSQL(sql)
+		    
+		    if rows <> nil then
+		      For Each row As DatabaseRow In rows
+		        foreignKeys.Value(row.Column("Constraint").StringValue) = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		      Next
+		      rows.Close
+		    end if
+		  Catch error as DatabaseException
+		    System.DebugLog "Error loading foreign keys on " + me.TableName + " : " + error.Message
+		    mLogs =  mlogs + "Error loading foreign keys on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+		  
+		  Return foreignKeys
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLHasIndexColumns(pIndexes as Dictionary, pColumns as String, pRequireUnique as Boolean = False) As Boolean
+		  if pIndexes = nil then
+		    Return false
+		  end if
+		  
+		  dim expectedColumns as String = MySQLNormalizeIndexColumns(pColumns)
+		  if expectedColumns = "" then
+		    Return false
+		  end if
+		  
+		  For Each entry As DictionaryEntry In pIndexes
+		    dim meta as Dictionary = Dictionary(entry.Value)
+		    dim currentColumns as String = meta.Lookup("Columns", "")
+		    dim nonUnique as Boolean = meta.Lookup("NonUnique", true)
+		    
+		    if currentColumns = expectedColumns then
+		      if (Not pRequireUnique) or (nonUnique = false) then
+		        Return true
+		      end if
+		    end if
+		  Next
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLIndexExists(pIndexes as Dictionary, pIndexName as String) As Boolean
+		  if pIndexes = nil then
+		    Return false
+		  end if
+		  
+		  Return pIndexes.HasKey(pIndexName)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLIndexNeededByForeignKey(pIndexName as String, pIndexColumns as String, pForeignKeys as Dictionary) As Boolean
+		  if pForeignKeys = nil then
+		    Return false
+		  end if
+		  
+		  dim normalizedIndexColumns as String = MySQLNormalizeIndexColumns(pIndexColumns)
+		  
+		  For Each entry As DictionaryEntry In pForeignKeys
+		    dim fkColumns as String = MySQLNormalizeIndexColumns(entry.Value.StringValue)
+		    
+		    if entry.Key.StringValue = pIndexName then
+		      Return true
+		    end if
+		    
+		    if fkColumns <> "" then
+		      if normalizedIndexColumns = fkColumns then
+		        Return true
+		      end if
+		      
+		      if normalizedIndexColumns.Length > fkColumns.Length then
+		        if normalizedIndexColumns.Left(fkColumns.Length) = fkColumns and normalizedIndexColumns.Middle(fkColumns.Length, 1) = "," then
+		          Return true
+		        end if
+		      end if
+		    end if
+		  Next
+		  
+		  Return false
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLNormalizeIndexColumns(pColumns as String) As String
+		  if pColumns = "" then
+		    Return ""
+		  end if
+		  
+		  dim normalizedColumns() as String
+		  
+		  For Each rawColumn As String In pColumns.Split(",")
+		    dim normalizedColumn as String = rawColumn.ReplaceAll("`", "").Trim.Lowercase
+		    if normalizedColumn <> "" then
+		      normalizedColumns.Add(normalizedColumn)
+		    end if
+		  Next
+		  
+		  Return String.FromArray(normalizedColumns, ",")
 		End Function
 	#tag EndMethod
 
