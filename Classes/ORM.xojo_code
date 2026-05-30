@@ -1834,18 +1834,20 @@ Implements Dataset
 		      pColumns.Add(TableName + "." + pColumn.StringValue)
 		    Next
 		    
-		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
-		    From(Me.TableName). _
-		    Limit(1). _
-		    Execute(pDatabase)
-		    
 		    dim pRecordSetType as RowSet = pDatabase.TableColumns(Me.TableName)
 		    
 		    while not pRecordSetType.AfterLastRow
 		      pColumnType.Value(pRecordSetType.Column("ColumnName").StringValue) = pRecordSetType.Column("FieldType").IntegerValue
 		      pRecordSetType.MoveToNextRow
 		    wend
+		    pRecordSetType.Close
+		    
+		    // Add SELECT and LIMIT 1 to the query
+		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
+		    From(Me.TableName). _
+		    Limit(1). _
+		    Execute(pDatabase)
+		    
 		    // Clear any existing data
 		    mData.RemoveAll
 		    
@@ -1874,6 +1876,8 @@ Implements Dataset
 		      if pFiringFoundEvent then RaiseEvent Found
 		      
 		    else
+		      
+		      pRecordSet.Close
 		      
 		      // clear existing data
 		      call me.Unload.Clear
@@ -3543,6 +3547,7 @@ Implements Dataset
 		      foreignKeyColumns = MySQLForeignKeyColumns(pDatabase)
 		      
 		      // we remove indexes only when they are not required by a foreign key constraint
+		      
 		      Try
 		        For Each row As DictionaryEntry In currentIndexes
 		          dim indexName as String = row.Key.StringValue
