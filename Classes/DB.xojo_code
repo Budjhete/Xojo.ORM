@@ -151,13 +151,13 @@ Protected Module DB
 		          try
 		            pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		          Catch error As DatabaseException
-		            System.DebugLog "Can't execute sql_mode : " + error.Message
+		            DebugLog "Can't execute sql_mode : " + error.Message
 		          End Try
 		          #Pragma BreakOnExceptions Default
 		          Return pDatabase
 		        else
 		          if trycount<2 then
-		            System.DebugLog "Number of try to connect : " + trycount.ToString
+		            DebugLog "Number of try to connect : " + trycount.ToString
 		            DelayMBS 0.5
 		            trycount = trycount + 1
 		            GoTo redoou
@@ -165,7 +165,7 @@ Protected Module DB
 		        End If
 		      Catch Error as DatabaseException
 		        if trycount<2 then
-		          System.DebugLog "Number of try to connect : " + trycount.ToString
+		          DebugLog "Number of try to connect : " + trycount.ToString
 		          DelayMBS 0.5
 		          trycount = trycount + 1
 		          GoTo redoou

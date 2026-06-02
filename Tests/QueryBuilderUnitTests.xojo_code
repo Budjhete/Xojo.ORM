@@ -96,7 +96,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub JoinTest()
-		  System.DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
+		  DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
 		  Dim pRecordSet As RecordSet
 		  Dim pStatement As String
 		  
@@ -131,7 +131,7 @@ Inherits TestGroup
 
 	#tag Method, Flags = &h0
 		Sub LeftOuterJoinTest()
-		  System.DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
+		  DebugLog("BEGINS TESTS FOR QueryBuilder.Join()")
 		  Dim pRecordSet As RecordSet
 		  Dim pStatement As String
 		  
@@ -294,13 +294,13 @@ Inherits TestGroup
 		  // Looks up a record where the username is Paul
 		  pRecordSet =  DB.Find().From("Users").Where("username", "=", "Paul").OrderBy("id").Execute(ORMTestDatabase)
 		  // Logs the new Entry
-		  System.DebugLog(DB.Find().From("Users").Where("username", "=", "Paul").OrderBy("id").Compile())
-		  System.DebugLog(ShowSelect(pRecordSet))
+		  DebugLog(DB.Find().From("Users").Where("username", "=", "Paul").OrderBy("id").Compile())
+		  DebugLog(ShowSelect(pRecordSet))
 		  
 		  // Tests a where using a LIKE comparison
 		  pRecordSet =  DB.Find.From("Users").Where("username", "LIKE", "Pau%").Execute(ORMTestDatabase)
-		  System.DebugLog(DB.Find().From("Users").Where("username", "LIKE", "Pau%").Compile())
-		  System.DebugLog(ShowSelect(pRecordSet))
+		  DebugLog(DB.Find().From("Users").Where("username", "LIKE", "Pau%").Compile())
+		  DebugLog(ShowSelect(pRecordSet))
 		  
 		  Assert.IsNotNil(pRecordSet)
 		  

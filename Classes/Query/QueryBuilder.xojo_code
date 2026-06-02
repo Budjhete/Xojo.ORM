@@ -114,7 +114,7 @@ Implements QueryExpression
 		      try
 		        pDatabase.CommitTransaction
 		      Catch dberror As DatabaseException
-		        System.DebugLog dberror.message
+		        DebugLog dberror.message
 		      end try
 		    End If
 		    
@@ -138,7 +138,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    System.DebugLog System.Ticks.ToString + " " + pStatement
+		    DebugLog System.Ticks.ToString + " " + pStatement
 		    
 		    dim count as integer = 0
 		    Dim pRecordSet As RecordSet
@@ -236,7 +236,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    System.DebugLog System.Ticks.ToString + " " + pStatement
+		    DebugLog System.Ticks.ToString + " " + pStatement
 		    
 		    dim count as integer = 0
 		    Dim pRecordSet As RowSet

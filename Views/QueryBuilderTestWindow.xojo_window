@@ -185,7 +185,7 @@ End
 		      gUsers.AddRow(pRecordSet.Field("id"), pRecordSet.Field("username"), pRecordSet.Field("password"), pRecordSet.Field("group"))
 		    WEnd
 		  Else
-		    System.DebugLog "No entries found in Users table!"
+		    DebugLog "No entries found in Users table!"
 		  End If
 		  
 		  

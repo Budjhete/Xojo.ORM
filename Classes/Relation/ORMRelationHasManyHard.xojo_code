@@ -5,7 +5,7 @@ Inherits ORMRelationHasMany
 		Sub Remove(pORM As ORM, pDatabase As Database, pCommit As Boolean)
 		  #Pragma Unused pORM
 		  #if DebugBuild then 
-		    System.DebugLog DB.Delete(mORM.TableName).Where(mORM.Pks).Compile
+		    DebugLog DB.Delete(mORM.TableName).Where(mORM.Pks).Compile
 		    
 		  #endif
 		  // Remove the entry instead of nullifying the primary key

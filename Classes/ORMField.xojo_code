@@ -105,6 +105,17 @@ Protected Class ORMField
 		  dim normalizedLength as String = mLength
 		  if mType = TypeList.DECIMAL then
 		    normalizedLength = normalizedLength.ReplaceAll(".", ",")
+
+		    dim decimalParts() as String = normalizedLength.Split(",")
+		    if decimalParts.LastIndex = 1 then
+		      dim precision as Integer = decimalParts(0).Trim.IntegerValue
+		      dim scale as Integer = decimalParts(1).Trim.IntegerValue
+
+		      if precision > 0 and scale > 0 and precision < scale then
+		        precision = scale + 1
+		        normalizedLength = precision.ToString + "," + scale.ToString
+		      end if
+		    end if
 		  end if
 		  
 		  return "("+normalizedLength+")"

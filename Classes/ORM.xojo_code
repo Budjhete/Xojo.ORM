@@ -200,7 +200,7 @@ Inherits QueryBuilder
 		  try
 		    pDatabase.ExecuteSQL(sql)
 		  catch err as DatabaseException
-		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
+		    DebugLog me.TableName + " - " + sql + " : " + err.Message
 		    mLogs = mLogs + "Base data INSERT error on " + me.TableName + ": " + err.Message + EndOfLine
 		    return false
 		  end try
@@ -239,7 +239,7 @@ Inherits QueryBuilder
 		  try
 		    pDatabase.ExecuteSQL(sql)
 		  catch err as DatabaseException
-		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
+		    DebugLog me.TableName + " - " + sql + " : " + err.Message
 		    mLogs = mLogs + "Base data INSERT IGNORE error on " + me.TableName + ": " + err.Message + EndOfLine
 		    return false
 		  end try
@@ -325,7 +325,7 @@ Inherits QueryBuilder
 		  try
 		    pDatabase.ExecuteSQL(sql)
 		  catch err as DatabaseException
-		    System.DebugLog me.TableName + " - " + sql + " : " + err.Message
+		    DebugLog me.TableName + " - " + sql + " : " + err.Message
 		    mLogs = mLogs + "Base data UPDATE error on " + me.TableName + ": " + err.Message + EndOfLine
 		    return false
 		  end try
@@ -906,13 +906,13 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
 		  End
 		  
-		  System.DebugLog "ORM.create is Creating ?"
+		  DebugLog "ORM.create is Creating ?"
 		  
 		  If Not RaiseEvent Creating Then
 		    'System.DebugLog "ORM.create not creating"
 		    
 		    pDatabase.BeginTransaction
-		    System.DebugLog "ORM.create database.begin"
+		    DebugLog "ORM.create database.begin"
 		    
 		    
 		    // Take a merge of mData and mChanged
@@ -929,10 +929,10 @@ Inherits QueryBuilder
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
-		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
+		      DebugLog "ORM.create pColum = " + pColumn.StringValue
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
+		        DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
@@ -1007,7 +1007,7 @@ Inherits QueryBuilder
 		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
-		    System.DebugLog "ORM.Create Done"
+		    DebugLog "ORM.Create Done"
 		  End If
 		  
 		  Return Me
@@ -1022,13 +1022,13 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
 		  End
 		  
-		  System.DebugLog "ORM.create is Creating ?"
+		  DebugLog "ORM.create is Creating ?"
 		  
 		  If Not RaiseEvent Creating Then
 		    'System.DebugLog "ORM.create not creating"
 		    
 		    pDatabase.Begin
-		    System.DebugLog "ORM.create database.begin"
+		    DebugLog "ORM.create database.begin"
 		    
 		    
 		    // Take a merge of mData and mChanged
@@ -1045,10 +1045,10 @@ Inherits QueryBuilder
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As Variant In Me.TableColumns(pDatabase).Keys
-		      System.DebugLog "ORM.create pColum = " + pColumn.StringValue
+		      DebugLog "ORM.create pColum = " + pColumn.StringValue
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
+		        DebugLog "ORM.create "+pColumn.StringValue+" = " + pRaw.Value(pColumn.StringValue)
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
@@ -1123,7 +1123,7 @@ Inherits QueryBuilder
 		    pDatabase.Commit
 		    
 		    RaiseEvent Created
-		    System.DebugLog "ORM.Create Done"
+		    DebugLog "ORM.Create Done"
 		  End If
 		  
 		  Return Me
@@ -1138,18 +1138,18 @@ Inherits QueryBuilder
 		    Raise new ORMException("Cannot create " + Me.TableName + " model because it is already loaded.")
 		  End
 		  
-		  System.DebugLog "ORM.create is Creating ?"
+		  DebugLog "ORM.create is Creating ?"
 		  
 		  If Not RaiseEvent Creating Then
 		    'System.DebugLog "ORM.create not creating"
 		    
 		    pDatabase.Begin
-		    System.DebugLog "ORM.create database.begin"
+		    DebugLog "ORM.create database.begin"
 		    
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
-		    System.DebugLog "ORM.create pRaw = data"
+		    DebugLog "ORM.create pRaw = data"
 		    
 		    
 		    // pData contains at least all primary keys
@@ -1157,19 +1157,19 @@ Inherits QueryBuilder
 		    
 		    'System.DebugLog "ORM.create pData = Pks"
 		    
-		    System.DebugLog "ORM.create take colums defined in model"
+		    DebugLog "ORM.create take colums defined in model"
 		    
 		    // Take only columns defined in the model
 		    For Each pColumn As String In Me.TableColumns(pDatabase)
-		      System.DebugLog "ORM.create pColum = " + pColumn
+		      DebugLog "ORM.create pColum = " + pColumn
 		      
 		      If pRaw.HasKey(pColumn) Then
-		        System.DebugLog "ORM.create "+pColumn+" = " + pRaw.Value(pColumn)
+		        DebugLog "ORM.create "+pColumn+" = " + pRaw.Value(pColumn)
 		        pData.Value(pColumn) = pRaw.Value(pColumn)
 		      End If
 		    Next
 		    
-		    System.DebugLog "ORM.create DB.Insert"
+		    DebugLog "ORM.create DB.Insert"
 		    
 		    DB.Insert(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
 		    
@@ -1184,7 +1184,7 @@ Inherits QueryBuilder
 		    me.mChanged = nil
 		    me.mChanged = new Dictionary
 		    
-		    System.DebugLog "ORM.Create.mChanged cleared"
+		    DebugLog "ORM.Create.mChanged cleared"
 		    
 		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
@@ -1214,7 +1214,7 @@ Inherits QueryBuilder
 		    me.mAdded = nil
 		    me.mAdded = new Dictionary
 		    
-		    System.DebugLog "ORM.Create.mAdded cleared"
+		    DebugLog "ORM.Create.mAdded cleared"
 		    
 		    
 		    'System.DebugLog "ORM.Create.mRemoved about to clear"
@@ -1224,13 +1224,13 @@ Inherits QueryBuilder
 		    me.mRemoved = nil
 		    me.mRemoved = new Dictionary
 		    
-		    System.DebugLog "ORM.Create.mRemoved cleared"
+		    DebugLog "ORM.Create.mRemoved cleared"
 		    
 		    
 		    pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
-		    System.DebugLog "ORM.Create Done"
+		    DebugLog "ORM.Create Done"
 		  End If
 		  
 		  Return Me
@@ -1280,7 +1280,7 @@ Inherits QueryBuilder
 		      pDatabase.ExecuteSQL(sql)
 		      
 		    Catch error As DatabaseException
-		      System.DebugLog "Database error: " + error.Message
+		      DebugLog "Database error: " + error.Message
 		      Return false
 		    End Try
 		    Return true
@@ -1338,7 +1338,7 @@ Inherits QueryBuilder
 		      pDatabase.ExecuteSQL(sql)
 		      
 		    Catch error As DatabaseException
-		      System.DebugLog "Database error: " + error.Message
+		      DebugLog "Database error: " + error.Message
 		      Return false
 		    End Try
 		    Return true
@@ -1698,7 +1698,7 @@ Inherits QueryBuilder
 		      rows.Close
 		    end if
 		  Catch error as DatabaseException
-		    System.DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
+		    DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
 		    mLogs =  mlogs + "Error loading indexes on " + me.TableName + " : " + error.Message + EndOfLine
 		  End Try
 		  
@@ -1721,7 +1721,7 @@ Inherits QueryBuilder
 		      rows.Close
 		    end if
 		  Catch error as DatabaseException
-		    System.DebugLog "Error loading foreign keys on " + me.TableName + " : " + error.Message
+		    DebugLog "Error loading foreign keys on " + me.TableName + " : " + error.Message
 		    mLogs =  mlogs + "Error loading foreign keys on " + me.TableName + " : " + error.Message + EndOfLine
 		  End Try
 		  
@@ -2010,7 +2010,7 @@ Inherits QueryBuilder
 		  For Each nColumn as Variant in pOtherColumn
 		    pColumns.Append(nColumn)
 		  Next
-		  System.DebugLog Append(new SelectQueryExpression(pColumns)). _
+		  DebugLog Append(new SelectQueryExpression(pColumns)). _
 		  From(Me.TableName). _
 		  Compile
 		  
@@ -2311,7 +2311,7 @@ Inherits QueryBuilder
 		    try
 		      pDatabase.ExecuteSQL(sql)
 		    catch Err as DatabaseException
-		      System.DebugLog me.TableName + "- " + sql + " : " + err.Message
+		      DebugLog me.TableName + "- " + sql + " : " + err.Message
 		      errors = errors or true
 		    end try
 		  next
@@ -2333,7 +2333,7 @@ Inherits QueryBuilder
 		    try
 		      pDatabase.ExecuteSQL(sql)
 		    catch Err as DatabaseException
-		      System.DebugLog me.TableName + "- " + sql + " : " + err.Message
+		      DebugLog me.TableName + "- " + sql + " : " + err.Message
 		      errors = errors or true
 		      
 		    end try
@@ -2376,7 +2376,7 @@ Inherits QueryBuilder
 		  // Adds each column as an Attribute
 		  For Each pColumn As String In Me.Data.Keys
 		    if pColumn = "logo" then
-		      System.DebugLog "logo"
+		      DebugLog "logo"
 		    end if
 		    'System.DebugLog pColumn
 		    dim v as Variant = Me.Data(pColumn.DefineEncoding(Encodings.UTF8))
@@ -3237,7 +3237,7 @@ Inherits QueryBuilder
 		    try
 		      rs = pDatabase.SelectSQL(sqlSel)
 		    catch err as DatabaseException
-		      System.DebugLog me.TableName + " - " + sqlSel + " : " + err.Message
+		      DebugLog me.TableName + " - " + sqlSel + " : " + err.Message
 		      mLogs = mLogs + "Base data SELECT error on " + me.TableName + ": " + err.Message + EndOfLine
 		      return false
 		    end try
@@ -3251,7 +3251,7 @@ Inherits QueryBuilder
 		          exit while
 		        wend
 		      catch ex as RuntimeException
-		        System.DebugLog me.TableName + " base data COUNT read: " + ex.Message
+		        DebugLog me.TableName + " base data COUNT read: " + ex.Message
 		      end try
 		      rs.Close
 		    end if
@@ -3283,7 +3283,7 @@ Inherits QueryBuilder
 		    try
 		      rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
 		    Catch e as DatabaseException
-		      System.DebugLog "Db " + TableName + " not exist"
+		      DebugLog "Db " + TableName + " not exist"
 		      SchemaToCreateTable = true
 		    end try
 		    dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
@@ -3507,6 +3507,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableUpdate(pDatabase as Database) As Boolean
+		  mInvalidIndexReport = ""
+
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
 		      if not CreateTable(pDatabase) then
@@ -3545,30 +3547,51 @@ Inherits QueryBuilder
 		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      foreignKeyColumns = MySQLForeignKeyColumns(pDatabase)
 		      
-		      // we remove indexes only when they are not required by a foreign key constraint
+		      dim expectedIndexColumns() as String
+
+		      For Each dIndex as DictionaryEntry in SchemaIndex
+		        dim fields() as string = dIndex.Value
+		        expectedIndexColumns.Add(MySQLNormalizeIndexColumns(Join(fields, ",")))
+		      Next
 		      
-		      Try
-		        For Each row As DictionaryEntry In currentIndexes
-		          dim indexName as String = row.Key.StringValue
-		          dim indexMeta as Dictionary = Dictionary(row.Value)
-		          dim indexColumns as String = indexMeta.Lookup("Columns", "")
-		          
-		          if indexName <> "PRIMARY" and Not MySQLIndexNeededByForeignKey(indexName, indexColumns, foreignKeyColumns) then
-		            dim ddd as string = "ALTER TABLE `" + me.TableName + "` DROP INDEX `"+indexName+"`;"
-		            pDatabase.ExecuteSQL(ddd)
+		      if HasUniqueKeys and mUniqueColumns <> "" then
+		        expectedIndexColumns.Add(MySQLNormalizeIndexColumns(mUniqueColumns))
+		      end if
+
+		      For Each row As DictionaryEntry In currentIndexes
+		        dim indexName as String = row.Key.StringValue
+		        dim indexMeta as Dictionary = Dictionary(row.Value)
+		        dim indexColumns as String = indexMeta.Lookup("Columns", "")
+		        dim indexExpected as Boolean = false
+
+		        For Each expectedColumns as String in expectedIndexColumns
+		          if expectedColumns = indexColumns then
+		            indexExpected = true
+		            Exit
 		          end if
 		        Next
-		      Catch derror As DatabaseException
-		        System.DebugLog "Error by droping keys on " + me.TableName + " : " + derror.Message
-		        mLogs =  mlogs + "Error by droping keys on " + me.TableName + " : " + derror.Message + EndOfLine
-		      End Try
+
+		        if indexName <> "PRIMARY" and Not indexExpected and Not MySQLIndexNeededByForeignKey(indexName, indexColumns, foreignKeyColumns) then
+		          dim nonUnique as Boolean = indexMeta.Lookup("NonUnique", true)
+		          dim indexType as String = "non unique"
+		          if Not nonUnique then indexType = "unique"
+
+		          mInvalidIndexReport = mInvalidIndexReport + "Table: " + me.TableName + " | Index: " + indexName + " | Colonnes: " + indexColumns + " | Type: " + indexType + " | Provenance: index MySQL existant non declare ou non concordant avec SchemaIndex, et non requis par une foreign key." + EndOfLine
+		        end if
+		      Next
+
+		      if mInvalidIndexReport.Trim <> "" then
+		        mInvalidIndexReport = "[ORM_INVALID_INDEXES]" + EndOfLine + mInvalidIndexReport
+		        DebugLog mInvalidIndexReport
+		        mLogs = mLogs + mInvalidIndexReport + EndOfLine
+		      end if
 		      
 		      // remove unused columns
 		      for each dField as DictionaryEntry in SchemaToRemoveColumn
 		        Try
 		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Catch lockError As DatabaseException
-		          System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		          DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
 		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
 		        End Try
 		        Dim sql As String
@@ -3576,19 +3599,19 @@ Inherits QueryBuilder
 		        'dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
 		        
-		        System.DebugLog sql
+		        DebugLog sql
 		        
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
-		          System.DebugLog "drop "+me.TableName+" DB error : " + Error.Message
+		          DebugLog "drop "+me.TableName+" DB error : " + Error.Message
 		          mLogs =  mlogs + "drop "+me.TableName+" DB error : " + Error.Message + EndOfLine
 		        end try
 		        
 		        Try
 		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		        Catch unlockError As DatabaseException
-		          System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		          DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		          mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		        End Try
 		      next dField
@@ -3598,7 +3621,7 @@ Inherits QueryBuilder
 		        Try
 		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Catch lockError As DatabaseException
-		          System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		          DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
 		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
 		        End Try
 		        Dim sql As String
@@ -3614,18 +3637,18 @@ Inherits QueryBuilder
 		        end if
 		        
 		        sql = sql + ";"
-		        System.DebugLog sql
+		        DebugLog sql
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
-		          System.DebugLog "DB ADD "+me.TableName+"  error : " + Error.Message
+		          DebugLog "DB ADD "+me.TableName+"  error : " + Error.Message
 		          mLogs =  mlogs + "DB ADD "+me.TableName+"  error : " + Error.Message + EndOfLine
 		        end try
 		        
 		        Try
 		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		        Catch unlockError As DatabaseException
-		          System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		          DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		          mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		        End Try
 		      next
@@ -3636,7 +3659,7 @@ Inherits QueryBuilder
 		        Try
 		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Catch lockError As DatabaseException
-		          System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		          DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
 		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
 		        End Try
 		        
@@ -3650,7 +3673,7 @@ Inherits QueryBuilder
 		        sql = sql + field.Type(pDatabase) +field.Length
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase)  +";"
-		        System.DebugLog sql
+		        DebugLog sql
 		        
 		        try
 		          pDatabase.ExecuteSQL(sql)
@@ -3660,17 +3683,17 @@ Inherits QueryBuilder
 		          Try
 		            pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		          Catch unlockError As DatabaseException
-		            System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		            DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		            mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		          End Try
-		          System.DebugLog "db alter "+me.TableName+ " : "+ error.Message
+		          DebugLog "db alter "+me.TableName+ " : "+ error.Message
 		          mLogs =  mlogs + "db alter "+me.TableName+ " : "+ error.Message + EndOfLine
 		        end try
 		        
 		        Try
 		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		        Catch unlockError As DatabaseException
-		          System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		          DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		          mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		        End Try
 		        
@@ -3678,32 +3701,32 @@ Inherits QueryBuilder
 		      Try
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		      Catch lockError As DatabaseException
-		        System.DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
+		        DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
 		        mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
 		      End Try
 		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      try
 		        if HasPrimaryKeys then
 		          if Not MySQLIndexExists(currentIndexes, "PRIMARY") then
-		            System.DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
+		            DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
 		            pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
 		            currentIndexes = MySQLCurrentIndexes(pDatabase)
 		          end if
 		        end if
 		      Catch Error as DatabaseException
-		        System.DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
+		        DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
 		        mLogs =  mlogs + "PrimaryKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		      end try
 		      try
 		        if HasUniqueKeys then
 		          if Not MySQLHasIndexColumns(currentIndexes, mUniqueColumns, true) then
-		            System.DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
+		            DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
 		            pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
 		            currentIndexes = MySQLCurrentIndexes(pDatabase)
 		          end if
 		        end if
 		      Catch Error as DatabaseException
-		        System.DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
+		        DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
 		        mLogs =  mlogs + "UniqueKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		      end try
 		      
@@ -3726,11 +3749,11 @@ Inherits QueryBuilder
 		          sql = sql.Left(sql.Length - 2) + ");"
 		          
 		          try
-		            System.DebugLog sql
+		            DebugLog sql
 		            pDatabase.ExecuteSQL(sql)
 		            currentIndexes = MySQLCurrentIndexes(pDatabase)
 		          Catch Error as DatabaseException
-		            System.DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
+		            DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
 		            mLogs =  mlogs + "Indexing on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		          end try
 		        end if
@@ -3741,7 +3764,7 @@ Inherits QueryBuilder
 		      Try
 		        pDatabase.ExecuteSQL("UNLOCK TABLES;")
 		      Catch unlockError As DatabaseException
-		        System.DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		        DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		        mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		      End Try
 		      
@@ -3779,7 +3802,7 @@ Inherits QueryBuilder
 		        try
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
-		          System.DebugLog "DB error : " + Error.Message
+		          DebugLog "DB error : " + Error.Message
 		        end try
 		      next
 		      
@@ -3836,7 +3859,7 @@ Inherits QueryBuilder
 		                pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"';")
 		                pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
 		              else
-		                System.DebugLog "kErreur insertion données dans : " +me.TableName
+		                DebugLog "kErreur insertion données dans : " +me.TableName
 		                mLogs =  mlogs + "kErreur insertion données dans : " +me.TableName + EndOfLine
 		              end if
 		              
@@ -4055,7 +4078,7 @@ Inherits QueryBuilder
 		    Next
 		    
 		    If pChanged.KeyCount > 0 Then
-		      if app.DebugMode then System.DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
+		      if app.DebugMode then DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
 		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
 		    
@@ -4163,10 +4186,11 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h1
-		Protected Sub ReportUpdateCacheProgress(pPrimaryKey As Variant)
+		Protected Sub ReportUpdateCacheProgress(pPrimaryKey As Variant, pPrimaryKeyName As String = "")
 		  If UpdateCacheThread = Nil Then Return
+		  If pPrimaryKeyName.Trim = "" Then pPrimaryKeyName = Me.PrimaryKey
 
-		  UpdateCacheThread.AddUserInterfaceUpdate("UpdateCacheRowTag" : pPrimaryKey)
+		  UpdateCacheThread.AddUserInterfaceUpdate("UpdateCacheCompletedPrimaryKey" : pPrimaryKeyName, "UpdateCacheCompletedRowTag" : pPrimaryKey)
 		End Sub
 	#tag EndMethod
 
@@ -4391,6 +4415,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		mRelations As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		mInvalidIndexReport As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h1

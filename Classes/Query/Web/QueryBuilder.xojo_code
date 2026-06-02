@@ -102,7 +102,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    System.DebugLog pStatement
+		    DebugLog pStatement
 		    
 		    pDatabase.SQLExecute(pStatement)
 		    
@@ -131,7 +131,7 @@ Implements QueryExpression
 		    
 		    Dim pStatement As String = Compile
 		    
-		    System.DebugLog pStatement
+		    DebugLog pStatement
 		    
 		    Dim pRecordSet As RecordSet
 		    

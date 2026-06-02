@@ -248,15 +248,15 @@ Inherits TestGroup
 		  
 		  Assert.AreEqual(NewORM.TableName(), OriginalORM.TableName(), NewORM.TableName() + " " + OriginalORM.TableName())
 		  Assert.AreEqual(username, OriginalORM.Data("username"), "The original ORM's username should be " + username)
-		  System.DebugLog(NewORM.Data("username"))
+		  DebugLog(NewORM.Data("username"))
 		  Assert.AreEqual(NewORM.Data("username"), username, "The new ORM's username should be " + username)
 		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NewORM.Data("username").StringValue, "Both ORMs should have the same data.")
 		  
 		  Call NewORM.Data("username", username + password)
 		  Assert.AreEqual(NewORM.Data("username"), username + password, "The new ORM's username should now be " + username + password)
 		  Assert.AreEqual(OriginalORM.Data("username"), username, "The original ORM's username should still be " + username)
-		  System.DebugLog(OriginalORM.Data("username"))
-		  System.DebugLog(NewORM.Data("username"))
+		  DebugLog(OriginalORM.Data("username"))
+		  DebugLog(NewORM.Data("username"))
 		  Assert.IsFalse(NewORM.Data("username") = OriginalORM.Data("username"), "Both ORMs should have different usernames.")
 		End Sub
 	#tag EndMethod
@@ -308,9 +308,9 @@ Inherits TestGroup
 		  Assert.IsTrue pProject.Has(pUser, ORMTestDatabase)
 		  
 		  // Update
-		  System.DebugLog pUserProject.Dump
+		  DebugLog pUserProject.Dump
 		  pUserProject.user = pAnotherUser
-		  System.DebugLog pUserProject.Dump
+		  DebugLog pUserProject.Dump
 		  
 		  Call pUserProject.Update(ORMTestDatabase)
 		  
