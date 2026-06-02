@@ -11,7 +11,7 @@ Inherits QueryBuilder
 	#tag Event
 		Sub Open()
 		  mChanged.RemoveAll
-		  
+
 		  RaiseEvent Open
 		End Sub
 	#tag EndEvent
@@ -4162,6 +4162,14 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Sub ReportUpdateCacheProgress(pPrimaryKey As Variant)
+		  If UpdateCacheThread = Nil Then Return
+
+		  UpdateCacheThread.AddUserInterfaceUpdate("UpdateCacheRowTag" : pPrimaryKey)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Sub UpdateCache(pDatabase as Database, pDebut as DateTime, pFin as DateTime)
 		  Raise New ORMException("UpdateCache not implemented in this model")
@@ -4435,6 +4443,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaToRemoveColumn As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		UpdateCacheThread As Thread
 	#tag EndProperty
 
 
