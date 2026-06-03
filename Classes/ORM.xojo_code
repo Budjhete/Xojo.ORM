@@ -1420,12 +1420,26 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function AcquireEditLock(pDatabase As Database, context As String = "", durationMinutes As Integer = 30) As ModelORMRecordLock
+		  If Not ShouldUseRecordLock Then Return Nil
+
+		  Dim activeLock As ModelORMRecordLock = ModelORMRecordLock.AcquireForORM(pDatabase, Me, ORM.CurrentEditSessionKey, ORM.CurrentEditUtilisateurNo, ORM.CurrentEditUsername, context, durationMinutes)
+		  If activeLock <> Nil And activeLock.sessionKey.Trim <> ORM.CurrentEditSessionKey.Trim Then
+		    Raise New ORMException("La fiche " + Me.TableName + " est verrouillee par " + LockOwnerName(activeLock) + ".")
+		  End If
+
+		  Return activeLock
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function Delete(pDatabase As Database, pCommit As Boolean = True) As ORM
 		  if Not Loaded() then
 		    Raise new ORMException("Cannot delete " + TableName() + " model because it is not loaded.")
 		  end
 		  
 		  If Not RaiseEvent Deleting() Then
+		    Call ValidateEditLock(pDatabase, "delete")
 		    
 		    DB.Delete(Me.TableName).Where(Me.Pks).Execute(pDatabase, pCommit)
 		    
@@ -1445,6 +1459,65 @@ Inherits QueryBuilder
 		  
 		  Return Me
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function CurrentEditLock(pDatabase As Database) As ModelORMRecordLock
+		  If Not ShouldUseRecordLock Then Return Nil
+
+		  Return ModelORMRecordLock.ActiveLock(pDatabase, Me.TableName, ModelORMRecordLock.RecordKeyFor(Me))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function LockOwnerName(activeLock As ModelORMRecordLock) As String
+		  If activeLock Is Nil Then Return "un autre utilisateur"
+		  If activeLock.username.Trim <> "" Then Return activeLock.username.Trim
+		  If activeLock.utilisateurNo > 0 Then Return "utilisateur #" + activeLock.utilisateurNo.ToString
+
+		  Return "un autre utilisateur"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function ReleaseEditLock(pDatabase As Database) As Boolean
+		  If Not ShouldUseRecordLock Then Return True
+
+		  Return ModelORMRecordLock.ReleaseForORM(pDatabase, Me, ORM.CurrentEditSessionKey)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function ShouldUseRecordLock() As Boolean
+		  If Not ORM.RecordLocksEnabled Then Return False
+		  If Not Me.Loaded Then Return False
+		  If ORM.CurrentEditSessionKey.Trim = "" Then Return False
+		  If Me.TableName.Trim = "" Then Return False
+		  If Me.TableName.Trim.Lowercase = "ormrecordlock" Then Return False
+
+		  Return ModelORMRecordLock.RecordKeyFor(Me).Trim <> ""
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function TouchEditLock(pDatabase As Database, durationMinutes As Integer = 30) As Boolean
+		  If Not ShouldUseRecordLock Then Return False
+
+		  Return ModelORMRecordLock.TouchForORM(pDatabase, Me, ORM.CurrentEditSessionKey, durationMinutes)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub ValidateEditLock(pDatabase As Database, actionName As String)
+		  #Pragma Unused actionName
+
+		  If Not ShouldUseRecordLock Then Return
+
+		  Dim activeLock As ModelORMRecordLock = ModelORMRecordLock.LockedByOtherSession(pDatabase, Me, ORM.CurrentEditSessionKey)
+		  If activeLock <> Nil Then
+		    Raise New ORMException("La fiche " + Me.TableName + " est verrouillee par " + LockOwnerName(activeLock) + ".")
+		  End If
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -4065,6 +4138,7 @@ Inherits QueryBuilder
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
+		    Call ValidateEditLock(pDatabase, "update")
 		    
 		    pDatabase.BeginTransaction
 		    
@@ -4128,6 +4202,7 @@ Inherits QueryBuilder
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
+		    Call ValidateEditLock(pDatabase, "update")
 		    
 		    pDatabase.Begin
 		    
@@ -4394,6 +4469,18 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		Shared CurrentEditSessionKey As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		Shared CurrentEditUtilisateurNo As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		Shared CurrentEditUsername As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = false
 	#tag EndProperty
 
@@ -4435,6 +4522,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		ParentORM As ORM
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		Shared RecordLocksEnabled As Boolean = True
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
