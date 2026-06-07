@@ -3259,13 +3259,13 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function SyncBaseDataAfterTableUpdate(pDatabase as Database) As Boolean
-		  // Après migration de schéma: réapplique les données de base.
+		  // Après migration de schéma: réapplique seulement les données obligatoires.
 		  // SchemaMadantoryData: si BaseDataMandatorySyncEnabled, upsert (insert ou mise à jour des colonnes non-PK).
-		  // Sinon, même comportement que SchemaDefaultDatas: insertion seulement si la ligne (clé primaire logique) n'existe pas.
-		  // SchemaDefaultDatas: toujours insertion si absent, ne pas écraser les choix utilisateur.
+		  // Sinon, insertion seulement si la ligne (clé primaire logique) n'existe pas.
+		  // SchemaDefaultDatas est réservé à la création initiale de la table/base.
 		  #Pragma BreakOnExceptions False
 		  
-		  if SchemaMadantoryData.LastIndex < 0 and SchemaDefaultDatas.LastIndex < 0 then
+		  if SchemaMadantoryData.LastIndex < 0 then
 		    return true
 		  end if
 		  
@@ -3276,12 +3276,6 @@ Inherits QueryBuilder
 		  
 		  for each rowV as Variant in SchemaMadantoryData
 		    if not SyncOneBaseDataRow(pDatabase, colNames, rowV, BaseDataMandatorySyncEnabled) then
-		      return false
-		    end if
-		  next
-		  
-		  for each rowV as Variant in SchemaDefaultDatas
-		    if not SyncOneBaseDataRow(pDatabase, colNames, rowV, false) then
 		      return false
 		    end if
 		  next
@@ -3602,6 +3596,8 @@ Inherits QueryBuilder
 		      dim currentIndexes as Dictionary
 		      dim foreignKeyColumns as Dictionary
 		      
+		      dim expectedIndexColumns() as String
+
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
 		        
@@ -3614,14 +3610,13 @@ Inherits QueryBuilder
 		          HasUniqueKeys = true
 		          mUniqueKeys = mUniqueKeys + "`"+schemaEntry.key+"`,"
 		          mUniqueColumns = mUniqueColumns + "`"+schemaEntry.key+"`,"
+		          expectedIndexColumns.Add(MySQLNormalizeIndexColumns(schemaEntry.Key.StringValue))
 		        end if
 		      next
 		      
 		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      foreignKeyColumns = MySQLForeignKeyColumns(pDatabase)
 		      
-		      dim expectedIndexColumns() as String
-
 		      For Each dIndex as DictionaryEntry in SchemaIndex
 		        dim fields() as string = dIndex.Value
 		        expectedIndexColumns.Add(MySQLNormalizeIndexColumns(Join(fields, ",")))
