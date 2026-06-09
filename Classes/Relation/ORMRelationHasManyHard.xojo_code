@@ -15,7 +15,7 @@ Inherits ORMRelationHasMany
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target64Bit))
 		Sub Remove(pORM as ORM, pSocket as KanjoSocket)
 		  // Calling the overridden superclass method.
 		  Super.Remove(pORM, pSocket)
@@ -23,7 +23,7 @@ Inherits ORMRelationHasMany
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Remove(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  // Calling the overridden superclass method.
 		  // Note that this may need modifications if there are multiple  choices.

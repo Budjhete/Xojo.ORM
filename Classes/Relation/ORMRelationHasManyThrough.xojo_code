@@ -15,7 +15,7 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Add(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  DB.Insert(mPivotTableName, mForeignColumn, mFarColumn)._
 		  Values(pORM.Pk, mORM.Pk)._
@@ -49,7 +49,7 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit)) )
+	#tag Method, Flags = &h0, CompatibilityFlags = API2Only and ( (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) )
 		Sub remove(pORM as ORM, pSocket as KanjoSocket)
 		  
 		End Sub

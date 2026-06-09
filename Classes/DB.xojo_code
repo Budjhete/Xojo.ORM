@@ -27,7 +27,7 @@ Protected Module DB
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Attributes( Deprecated )  Sub Begin(Extends pDatabase As SQLiteDatabase)
 		  // Begin a transaction
 		  
@@ -277,7 +277,7 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Function Distinct(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("DISTINCT ( " + QueryCompiler.Column(pColumn) + " )")
 		End Function
@@ -601,7 +601,7 @@ Protected Module DB
 		  
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1 Then // patch de marde car Xojo est trop nono pour voir les chiffres
-		    #If Not TargetIOS
+		    #If Not TargetIOS And Not TargetAndroid
 		      If pDB isa MySQLCommunityServer And IsNumeric(pDatabaseFieldValue) Then
 		        Return pDatabaseFieldValue.CurrencyValue
 		      End If

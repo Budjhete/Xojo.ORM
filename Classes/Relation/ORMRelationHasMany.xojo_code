@@ -17,7 +17,7 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Add(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  Dim D as new Dictionary
 		  d.Value(mForeignColumn) = pORM.Pk
@@ -61,7 +61,7 @@ Implements ORMRelation
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Remove(pORM As ORM, pDatabase As SQLiteDatabase, pCommit As Boolean)
 		  Dim d as Dictionary
 		  d.Value(mForeignColumn) = Nil

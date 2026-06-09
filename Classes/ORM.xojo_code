@@ -463,7 +463,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor()
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -488,7 +488,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pCriterias as Dictionary, LoadFromJSON as Boolean = False)
 		  // Basic ORM constructor
 		  
@@ -551,7 +551,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPk As integer, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -680,7 +680,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pIdentificationMethod as String)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -703,7 +703,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPrimaryKey as String, pKeyValue as integer)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -716,7 +716,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPk As String, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -728,7 +728,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPrimaryKey as String, pKeyValue as String)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -961,7 +961,7 @@ Inherits QueryBuilder
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		        #If Not TargetIOS
+		        #If Not TargetIOS And Not TargetAndroid
 		      ElseIf pDatabase IsA MySQLCommunityServer Then
 		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
 		        #EndIf
@@ -1077,7 +1077,7 @@ Inherits QueryBuilder
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		        #If Not TargetIOS
+		        #If Not TargetIOS And Not TargetAndroid
 		      ElseIf pDatabase IsA MySQLCommunityServer Then
 		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
 		        #EndIf
@@ -1130,7 +1130,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Create(pDatabase As SQLiteDatabase) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  'System.DebugLog "ORM.create isloaded ?"
@@ -1347,7 +1347,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Data() As Dictionary
 		  Dim pData As Dictionary = Initial()
 		  
@@ -1389,7 +1389,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Data(pColumn As String, pValue As Variant) As ORM
+		Function Data(pColumn As String, pValue As Variant, pReturnSelf As Boolean = True) As ORM
 		  If Not RaiseEvent Changing(pColumn) Then
 		    
 		    // If it is different than the original data, it has changed
@@ -2194,8 +2194,17 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Protected Function HasMany(pORM As ORM, ParamArray pForeignColumns() As String) As ORM
+		  Return Me.HasMany(pORM, pForeignColumns)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1, CompatibilityFlags = (TargetAndroid and (Target64Bit))
+		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
+		  Dim pForeignColumns() As String
+		  pForeignColumns.Add(pForeignColumn)
+
 		  Return Me.HasMany(pORM, pForeignColumns)
 		End Function
 	#tag EndMethod
@@ -2853,7 +2862,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Replace() As Dictionary
 		  '// Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  '
@@ -2967,7 +2976,7 @@ Inherits QueryBuilder
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		        #If Not TargetIOS
+		        #If Not TargetIOS And Not TargetAndroid
 		      ElseIf pDatabase IsA MySQLCommunityServer Then
 		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
 		        #EndIf
@@ -3048,7 +3057,7 @@ Inherits QueryBuilder
 		        // Best guess for SQLite
 		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
 		        // Best guess for MySQL when available
-		        #If Not TargetIOS
+		        #If Not TargetIOS And Not TargetAndroid
 		      ElseIf pDatabase IsA MySQLCommunityServer Then
 		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
 		        #EndIf
@@ -3086,7 +3095,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Replace(pDatabase As SQLiteDatabase) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
@@ -3177,7 +3186,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Save() As Dictionary
 		  dim bSaved as new Dictionary
 		  If Not RaiseEvent Saving Then
@@ -4067,7 +4076,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target64Bit)) or  (TargetDesktop and (Target64Bit)) or  (TargetIOS and (Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Update() As Dictionary
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
@@ -4188,7 +4197,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Update(pDatabase As SQLiteDatabase) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
 		  
@@ -4272,15 +4281,15 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues() As Variant) As ORM
-		  Call Super.Values(pValues)
+		  Call Super.Values(pValues, True)
 		  
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Variant) As ORM
-		  Call Super.Values(pValues)
+		Function Values(pValues() As Variant, pUseArray As Boolean = True) As ORM
+		  Call Super.Values(pValues, pUseArray)
 		  
 		  Return Me
 		End Function

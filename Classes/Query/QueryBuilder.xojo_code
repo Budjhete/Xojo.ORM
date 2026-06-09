@@ -25,7 +25,7 @@ Implements QueryExpression
 		  For Each pQueryExpression As QueryExpression In pQueryExpressions
 		    Call Append(pQueryExpression)
 		  Next
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -33,7 +33,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Append(pQueryExpression As QueryExpression) As QueryBuilder
 		  mQuery.Add(pQueryExpression)
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -42,28 +42,28 @@ Implements QueryExpression
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
 		  Dim pStatements() As String
 		  Dim pNice As Integer
-		  
+
 		  // Sort statements
 		  While pStatements.LastIndex < mQuery.LastIndex
-		    
+
 		    For i As Integer = 0 To mQuery.LastIndex
-		      
+
 		      Dim pQueryExpression As QueryExpression = mQuery(i)
-		      
+
 		      If pQueryExpression.Nice() = pNice Then
 		        pStatements.Add(pQueryExpression.Compile(pLastQueryExpression))
 		        pLastQueryExpression = pQueryExpression
 		      End If
-		      
+
 		    Next
-		    
+
 		    pNice = pNice + 1
-		    
+
 		  Wend
-		  
-		  
+
+
 		  Return String.FromArray(pStatements, " ")
-		  
+
 		End Function
 	#tag EndMethod
 
@@ -82,13 +82,13 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Copy() As QueryBuilder
 		  // Returns a copy of this QueryBuilder
-		  
+
 		  Dim pQueryBuilder As New QueryBuilder
-		  
+
 		  For Each pQueryExpression As QueryExpression In Me.mQuery
 		    pQueryBuilder.mQuery.Add(pQueryExpression)
 		  Next
-		  
+
 		  Return pQueryBuilder
 		End Function
 	#tag EndMethod
@@ -99,17 +99,17 @@ Implements QueryExpression
 		  // which will not get any result from the database
 		  #Pragma BreakOnExceptions False
 		  If Not RaiseEvent Executing Then
-		    
+
 		    Dim pStatement As String = Compile
-		    
+
 		    Try
 		      pDatabase.ExecuteSQL(pStatement)
-		      
+
 		    Catch dberror As DatabaseException
 		      // DB Connection error
 		      Raise New ORMException(dberror.message, pStatement, dberror.ErrorNumber)
 		    End Try
-		    
+
 		    If pCommit Then
 		      try
 		        pDatabase.CommitTransaction
@@ -117,13 +117,13 @@ Implements QueryExpression
 		        DebugLog dberror.message
 		      end try
 		    End If
-		    
+
 		    Call Reset
-		    
+
 		    RaiseEvent Executed(Nil)
-		    
+
 		  End If
-		  
+
 		  #Pragma BreakOnExceptions Default
 		End Sub
 	#tag EndMethod
@@ -132,82 +132,84 @@ Implements QueryExpression
 		Attributes( Deprecated )  Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RecordSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
-		  
-		  
+
+
 		  If Not RaiseEvent Executing Then
-		    
+
 		    Dim pStatement As String = Compile
-		    
+
 		    DebugLog System.Ticks.ToString + " " + pStatement
-		    
+
 		    dim count as integer = 0
 		    Dim pRecordSet As RecordSet
-		    
+
 		    // Initialize the cache
 		    If mCache Is Nil Then
 		      mCache = New Dictionary
 		    End If
-		    
+
 		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
 		    Dim pNow As Date = DateTime.Now
-		    
+
 		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
-		      
+
 		      // Get the result from the cache
 		      pRecordSet = pCache.Value("recordset")
 		      count = count + 1
 		    Else
-		      StartAgain:
-		      
-		      count = count + 1
-		      
-		      pRecordSet = pDatabase.SQLSelect(pStatement)
-		      
-		      // Check for error
-		      If pDatabase.Error Then
-		        if pDatabase.ErrorCode = 1055 then
-		          'pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
-		          pRecordSet = pDatabase.SQLSelect(pStatement)
-		        elseif pDatabase.ErrorCode = 48879 then
-		          Dim tDatabase as Database
-		          if pDatabase isa MySQLCommunityServer then
-		            tDatabase = new MySQLCommunityServer
-		            tDatabase.UserName = pDatabase.UserName
-		            tDatabase.Password = pDatabase.Password
-		            tDatabase.Host = pDatabase.Host
-		            MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
-		          else
-		            tDatabase = new SQLiteDatabase
-		            SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
-		          End If
-		          tDatabase.DatabaseName = pDatabase.DatabaseName
-		          
-		          if tDatabase.Connect then
-		            'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
-		            pRecordSet = tDatabase.SQLSelect(pStatement)
-		            'tDatabase.Close
-		          else
-		            Raise New ORMException(tDatabase.ErrorMessage, pStatement)
-		          End If
-		          
-		          
-		        elseif pDatabase.ErrorCode = 2006 then
-		          if pDatabase.Connect then
-		            'if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		      Dim pRetry As Boolean
+		      Do
+		        pRetry = False
+		        count = count + 1
+
+		        pRecordSet = pDatabase.SQLSelect(pStatement)
+
+		        // Check for error
+		        If pDatabase.Error Then
+		          if pDatabase.ErrorCode = 1055 then
+		            'pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));")
 		            pRecordSet = pDatabase.SQLSelect(pStatement)
+		          elseif pDatabase.ErrorCode = 48879 then
+		            Dim tDatabase as Database
+		            if pDatabase isa MySQLCommunityServer then
+		              tDatabase = new MySQLCommunityServer
+		              tDatabase.UserName = pDatabase.UserName
+		              tDatabase.Password = pDatabase.Password
+		              tDatabase.Host = pDatabase.Host
+		              MySQLCommunityServer(tDatabase).Port = MySQLCommunityServer(pDatabase).port
+		            else
+		              tDatabase = new SQLiteDatabase
+		              SQLiteDatabase(tDatabase).DatabaseFile = SQLiteDatabase(pDatabase).DatabaseFile
+		            End If
+		            tDatabase.DatabaseName = pDatabase.DatabaseName
+
+		            if tDatabase.Connect then
+		              'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		              pRecordSet = tDatabase.SQLSelect(pStatement)
+		              'tDatabase.Close
+		            else
+		              Raise New ORMException(tDatabase.ErrorMessage, pStatement)
+		            End If
+
+
+		          elseif pDatabase.ErrorCode = 2006 then
+		            if pDatabase.Connect then
+		              'if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		              pRecordSet = pDatabase.SQLSelect(pStatement)
+		            else
+		              Raise New ORMException(pDatabase.ErrorMessage, pStatement)
+		            End If
+		          elseif count < 3 AND (pDatabase.ErrorCode = 2003 or pDatabase.ErrorCode = 2013) then
+		            pRetry = True
 		          else
 		            Raise New ORMException(pDatabase.ErrorMessage, pStatement)
 		          End If
-		        elseif count < 3 AND (pDatabase.ErrorCode = 2003 or pDatabase.ErrorCode = 2013) then
-		          GoTo StartAgain
-		        else
-		          Raise New ORMException(pDatabase.ErrorMessage, pStatement)
+
 		        End If
-		        
-		      End If
-		      
+		      Loop Until Not pRetry
+
 		    End If
-		    
+
 		    // Cache the result
 		    If pExpiration <> Nil Then
 		      dim dExp as New Dictionary()
@@ -215,13 +217,13 @@ Implements QueryExpression
 		      dExp.Value("recordset") = pRecordSet
 		      mCache.Value(pStatement) = dExp
 		    End If
-		    
+
 		    Call Reset
-		    
+
 		    RaiseEvent Executed(pRecordSet)
-		    
+
 		    Return pRecordSet
-		    
+
 		  End If
 		End Function
 	#tag EndMethod
@@ -230,39 +232,37 @@ Implements QueryExpression
 		Function Execute(pDatabase As Database, pExpiration As DateTime = Nil) As RowSet
 		  // Execute the QueryBuilder and return a RecordSet
 		  // You may specify an expiration for caching the response
-		  
-		  
+
+
 		  If Not RaiseEvent Executing Then
-		    
+
 		    Dim pStatement As String = Compile
-		    
+
 		    DebugLog System.Ticks.ToString + " " + pStatement
-		    
+
 		    dim count as integer = 0
 		    Dim pRecordSet As RowSet
-		    
+
 		    // Initialize the cache
 		    If mCache Is Nil Then
 		      mCache = New Dictionary
 		    End If
-		    
+
 		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
 		    Dim pNow As DateTime = DateTime.Now
-		    
+
 		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
-		      
+
 		      // Get the result from the cache
 		      pRecordSet = pCache.Value("recordset")
 		      count = count + 1
 		    Else
-		      StartAgain:
-		      
 		      count = count + 1
-		      
+
 		      Try
-		        
+
 		        pRecordSet = pDatabase.SelectSQL(pStatement)
-		        
+
 		        // Check for error
 		      Catch Errorr as DatabaseException
 		        'if Error.ErrorNumber = 1055 then
@@ -303,11 +303,11 @@ Implements QueryExpression
 		        'else
 		        Raise New ORMException(Errorr.message, pStatement)
 		        'End If
-		        
+
 		      End Try
-		      
+
 		    End If
-		    
+
 		    // Cache the result
 		    If pExpiration <> Nil Then
 		      dim dExp as New Dictionary()
@@ -315,13 +315,13 @@ Implements QueryExpression
 		      dExp.Value("recordset") = pRecordSet
 		      mCache.Value(pStatement) = dExp
 		    End If
-		    
+
 		    Call Reset
-		    
+
 		    RaiseEvent Executed(pRecordSet)
-		    
+
 		    Return pRecordSet
-		    
+
 		  End If
 		End Function
 	#tag EndMethod
@@ -360,7 +360,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function GroupBy(pColumn As Variant) As QueryBuilder
 		  mQuery.Add( new GroupByQueryExpression(Array(pColumn)) )
-		  
+
 		  return me
 		  //Return GroupBy(Array(pColumn))
 		End Function
@@ -369,11 +369,11 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Having(pCriterias As Dictionary) As QueryBuilder
 		  // Applies a dictionary of criterias
-		  
+
 		  For Each pKey As Variant In pCriterias.Keys()
 		    Call Having(pKey, "=", pCriterias.Value(pKey))
 		  Next
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -406,7 +406,7 @@ Implements QueryExpression
 		Function Inflate(pQueryBuilder As QueryBuilder) As QueryBuilder
 		  // Inflate this QueryBuilder on another QueryBuilder
 		  Call pQueryBuilder.Reset.Append(mQuery)
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -468,7 +468,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As QueryBuilder
 		  mQuery.Add(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
-		  
+
 		  return Me
 		End Function
 	#tag EndMethod
@@ -476,7 +476,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Limit(pLimit As Integer) As QueryBuilder
 		  mQuery.Add(new LimitQueryExpression(pLimit))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -484,7 +484,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Limit(pOffset as integer, pLimit As Integer) As QueryBuilder
 		  mQuery.Add(new LimitQueryExpression(pOffset, pLimit))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -528,7 +528,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() as Variant, pDirections() as String, pComparators() as String) As QueryBuilder
 		  mQuery.Add(new OrderByQueryExpression(pColumns, pDirections, pComparators))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -536,7 +536,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrderBy(pColumn as Variant, pDirection as String = "ASC", pComparator as String = "") As QueryBuilder
 		  mQuery.Add( new OrderByQueryExpression(Array(pColumn), Array(pDirection), Array(pComparator)) )
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -544,7 +544,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrHaving(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Add(new OrHavingQueryExpression(pLeft, pOperator, pRight))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -552,7 +552,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrOn(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Add(new OrOnQueryExpression(pLeft, pOperator, pRight))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -560,7 +560,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrOn(pLeft as Variant, pOperator as String, pRight as Variant, pType as DataType) As QueryBuilder
 		  mQuery.Add(new OrOnQueryExpression(pLeft, pOperator, pRight, pType))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -568,7 +568,7 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function OrWhere(pLeft As Variant, pOperator As String, pRight As Variant) As QueryBuilder
 		  mQuery.Add(new OrWhereQueryExpression(pLeft, pOperator, pRight))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -589,7 +589,7 @@ Implements QueryExpression
 		Function Reset() As QueryBuilder
 		  // Réinitalise le Query Builder
 		  Redim mQuery(-1)
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -597,20 +597,20 @@ Implements QueryExpression
 	#tag Method, Flags = &h0
 		Function Set(pValues As Dictionary) As QueryBuilder
 		  mQuery.Add(new SetQueryExpression(pValues))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Set(ParamArray pValues As Pair) As QueryBuilder
-		  
+
 		  Dim pDictionary As New Dictionary
-		  
+
 		  For Each pValue As Pair In pValues
 		    pDictionary.Value(pValue.Left) = pValue.Right
 		  Next
-		  
+
 		  Return Set(pDictionary)
 		End Function
 	#tag EndMethod
@@ -628,27 +628,27 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function Values(pValues() As Variant) As QueryBuilder
+		Function Values(pValues() As Variant, pUseArray As Boolean = True) As QueryBuilder
 		  mQuery.Add(new ValuesQueryExpression(pValues))
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Values(ParamArray pValues As Variant) As QueryBuilder
-		  Return Values(pValues)
+		  Return Values(pValues, True)
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
 		Function Where(pCriterias As Dictionary) As QueryBuilder
 		  // Applies a dictionary of criterias
-		  
+
 		  For Each pKey As Variant In pCriterias.Keys()
 		    Call Where(pKey, "=", pCriterias.Value(pKey))
 		  Next
-		  
+
 		  Return Me
 		End Function
 	#tag EndMethod
