@@ -443,14 +443,14 @@ End
 #tag Events tNom
 	#tag Event
 		Sub TextChange()
-		  Call mUserTest.Data("nom", Me.Text)
+		  Call mUserTest.SetData("nom", Me.Text)
 		End Sub
 	#tag EndEvent
 #tag EndEvents
 #tag Events tPrimaryKey
 	#tag Event
 		Sub TextChange()
-		  Call mUserTest.Data("id", Me.Text)
+		  Call mUserTest.SetData("id", Me.Text)
 		End Sub
 	#tag EndEvent
 #tag EndEvents

@@ -76,7 +76,7 @@ Inherits ORM
 		#tag EndGetter
 		#tag Setter
 			Set
-			  Call Data("username", value)
+			  Call SetData("username", value)
 			End Set
 		#tag EndSetter
 		username As String

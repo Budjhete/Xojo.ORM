@@ -305,7 +305,7 @@ Protected Module DB
 		  
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
-		    If pDatabaseFieldValue.IsNumeric Then
+		    If pDatabaseFieldValue <> Nil And pDatabaseFieldValue.StringValue.IsNumeric Then
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
@@ -550,7 +550,7 @@ Protected Module DB
 		  
 		  // Perform type detection for unknown data type
 		  If pColumnType = -1  Then // patch de marde car Xojo est trop nono pour voir les chiffres
-		    If pDatabaseFieldValue.IsNumeric Then
+		    If pDatabaseFieldValue <> Nil And pDatabaseFieldValue.StringValue.IsNumeric Then
 		      Return pDatabaseFieldValue.CurrencyValue
 		    End If
 		  End If
@@ -858,7 +858,7 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Function Value(pValue As Variant) As QueryExpression
 		  Return DB.Expression(QueryCompiler.Value(pValue))
 		End Function

@@ -3,9 +3,7 @@ Protected Class RightJoinQueryExpression
 Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  #Pragma Unused pLastQueryExpression
-		  
-		  Return "RIGHT " + Super.Compile()
+		  Return "RIGHT " + Super.Compile(pLastQueryExpression)
 		End Function
 	#tag EndMethod
 

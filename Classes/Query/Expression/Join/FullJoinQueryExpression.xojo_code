@@ -3,9 +3,7 @@ Protected Class FullJoinQueryExpression
 Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  #Pragma Unused pLastQueryExpression
-		  
-		  Return "FULL " + Super.Compile()
+		  Return "FULL " + Super.Compile(pLastQueryExpression)
 		End Function
 	#tag EndMethod
 

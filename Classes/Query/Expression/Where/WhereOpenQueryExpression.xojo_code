@@ -6,15 +6,15 @@ Inherits OpenQueryExpression
 		  Select Case pLastQueryExpression
 		    
 		  Case IsA WhereQueryExpression, IsA WhereCloseQueryExpression
-		    Return "AND " + Super.Compile()
+		    Return "AND " + Super.Compile(pLastQueryExpression)
 		    
 		  case IsA WhereOpenQueryExpression
 		    
-		    Return Super.Compile()
+		    Return Super.Compile(pLastQueryExpression)
 		    
 		  End Select
 		  
-		  Return "WHERE " + Super.Compile()
+		  Return "WHERE " + Super.Compile(pLastQueryExpression)
 		End Function
 	#tag EndMethod
 

@@ -6,11 +6,11 @@ Inherits OpenQueryExpression
 		  Select Case pLastQueryExpression
 		    
 		  Case IsA OnQueryExpression, IsA OnCloseQueryExpression
-		    Return "AND " + Super.Compile()
+		    Return "AND " + Super.Compile(pLastQueryExpression)
 		    
 		  End Select
 		  
-		  Return "ON " + Super.Compile()
+		  Return "ON " + Super.Compile(pLastQueryExpression)
 		End Function
 	#tag EndMethod
 

@@ -3,9 +3,7 @@ Protected Class InnerJoinQueryExpression
 Inherits JoinQueryExpression
 	#tag Method, Flags = &h0
 		Function Compile(pLastQueryExpression As QueryExpression = Nil) As String
-		  #Pragma Unused pLastQueryExpression
-		  
-		  Return "INNER " + Super.Compile()
+		  Return "INNER " + Super.Compile(pLastQueryExpression)
 		End Function
 	#tag EndMethod
 

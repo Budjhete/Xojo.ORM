@@ -100,7 +100,7 @@ Protected Class ORMField
 	#tag Method, Flags = &h0
 		Function Length() As String
 		  if mLength="" then return ""
-		  if mType = TypeList.BOOLEAN or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
+		  if mType = TypeList.boolean or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
 		  
 		  dim normalizedLength as String = mLength
 		  if mType = TypeList.DECIMAL then
@@ -173,7 +173,7 @@ Protected Class ORMField
 		      Return "BLOB"
 		    case TypeList.LONGBLOB
 		      Return "LONGBLOB"
-		    case TypeList.BOOLEAN
+		    case TypeList.boolean
 		      Return "TINYINT(1)"
 		    case TypeList.DATETIME
 		      Return "DATETIME"
@@ -194,7 +194,7 @@ Protected Class ORMField
 		      Return "INTEGER"
 		    case TypeList.BLOB, TypeList.LONGBLOB
 		      Return "BLOB"
-		    case TypeList.BOOLEAN
+		    case TypeList.boolean
 		      Return "BOOLEAN"
 		    case Typelist.TIMESTAMP, TypeList.DATETIME
 		      Return "TIMESTAMP"

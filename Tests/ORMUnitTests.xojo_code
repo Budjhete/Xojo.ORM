@@ -179,7 +179,7 @@ Inherits TestGroup
 		Sub DeleteTest()
 		  Dim pUser As New UserTest
 		  
-		  Call pUser.Data("username", "Paul-Willy Jean").Data("password", "Jean").Create(ORMTestDatabase)
+		  Call pUser.SetData("username", "Paul-Willy Jean").SetData("password", "Jean").Create(ORMTestDatabase)
 		  
 		  Assert.IsTrue pUser.Loaded, "Created model is not loaded."
 		  Assert.IsFalse pUser.Changed, "Created model is changed."
@@ -195,7 +195,7 @@ Inherits TestGroup
 		Sub FindTest()
 		  Dim pUser As New UserTest
 		  
-		  Call pUser.Data("username", "james").Data("password", "james22").Create(ORMTestDatabase)
+		  Call pUser.SetData("username", "james").SetData("password", "james22").Create(ORMTestDatabase)
 		  
 		  Assert.IsTrue pUser.Loaded
 		  
@@ -240,8 +240,8 @@ Inherits TestGroup
 		  Dim username As String = "Kanjo"
 		  Dim password As String = "ca"
 		  
-		  Call OriginalORM.Data("username", username)
-		  Call OriginalORM.Data("password", password)
+		  Call OriginalORM.SetData("username", username)
+		  Call OriginalORM.SetData("password", password)
 		  
 		  Dim NewORM As New UserTest()
 		  Call OriginalORM.Inflate(NewORM)
@@ -252,7 +252,7 @@ Inherits TestGroup
 		  Assert.AreEqual(NewORM.Data("username"), username, "The new ORM's username should be " + username)
 		  Assert.AreEqual(OriginalORM.Data("username").StringValue, NewORM.Data("username").StringValue, "Both ORMs should have the same data.")
 		  
-		  Call NewORM.Data("username", username + password)
+		  Call NewORM.SetData("username", username + password)
 		  Assert.AreEqual(NewORM.Data("username"), username + password, "The new ORM's username should now be " + username + password)
 		  Assert.AreEqual(OriginalORM.Data("username"), username, "The original ORM's username should still be " + username)
 		  DebugLog(OriginalORM.Data("username"))
@@ -327,13 +327,13 @@ Inherits TestGroup
 		Sub ReloadTest()
 		  Dim pUserTest As New UserTest()
 		  
-		  Call pUserTest.Data("username", "Paul-Willy Jean").Data("password", "1234").Save(ORMTestDatabase)
+		  Call pUserTest.SetData("username", "Paul-Willy Jean").SetData("password", "1234").Save(ORMTestDatabase)
 		  
 		  Assert.IsTrue pUserTest.Loaded
 		  
 		  Dim pAnotherUserTest As New UserTest()
 		  Call pAnotherUserTest.Where("id", "=", pUserTest.Pk()).Find(ORMTestDatabase)
-		  Call pAnotherUserTest.Data("username", "JeanChartier").Update(ORMTestDatabase)
+		  Call pAnotherUserTest.SetData("username", "JeanChartier").Update(ORMTestDatabase)
 		  
 		  Assert.AreDifferent(pUserTest.Data("username"), pAnotherUserTest.Data("username"))
 		  
@@ -415,7 +415,7 @@ Inherits TestGroup
 		Sub SaveTest()
 		  Dim pUser As New UserTest()
 		  
-		  Call pUser.Data("username","Paul-Willy Jean").Data("password", "pile4626")
+		  Call pUser.SetData("username","Paul-Willy Jean").SetData("password", "pile4626")
 		  Assert.AreEqual("Paul-Willy Jean", pUser.Data("username"))
 		  Assert.AreEqual("pile4626", pUser.Data("password"))
 		  Assert.IsTrue pUser.Changed
@@ -447,14 +447,14 @@ Inherits TestGroup
 		Sub UpdateLoadedTest()
 		  Dim pModel As New UserTest()
 		  
-		  Call pModel.Data("username", "Jean Dupont")
-		  Call pModel.Data("password", pModel.Data("username"))
+		  Call pModel.SetData("username", "Jean Dupont")
+		  Call pModel.SetData("password", pModel.Data("username"))
 		  
 		  Call pModel.Create(ORMTestDatabase)
 		  
 		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
 		  
-		  Call pModel.Data("password", "paul2012")
+		  Call pModel.SetData("password", "paul2012")
 		  
 		  Assert.IsTrue pModel.Changed()
 		  
@@ -469,8 +469,8 @@ Inherits TestGroup
 		Sub UpdateUnloadedTest()
 		  Dim pModel As New UserTest()
 		  
-		  Call pModel.Data("username", "Jean Dupont")
-		  Call pModel.Data("password", pModel.Data("username"))
+		  Call pModel.SetData("username", "Jean Dupont")
+		  Call pModel.SetData("password", pModel.Data("username"))
 		  
 		  Assert.AreEqual(pModel.Data("username"), "Jean Dupont")
 		  
