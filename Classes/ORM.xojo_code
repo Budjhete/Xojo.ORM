@@ -3601,7 +3601,7 @@ Inherits QueryBuilder
 		      dim currentIndexes as Dictionary
 		      dim foreignKeyColumns as Dictionary
 		      
-		      dim expectedIndexColumns() as String
+		      dim expectedIndexKeys as new Dictionary
 
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
@@ -3615,7 +3615,7 @@ Inherits QueryBuilder
 		          HasUniqueKeys = true
 		          mUniqueKeys = mUniqueKeys + "`"+schemaEntry.key+"`,"
 		          mUniqueColumns = mUniqueColumns + "`"+schemaEntry.key+"`,"
-		          expectedIndexColumns.Add(MySQLNormalizeIndexColumns(schemaEntry.Key.StringValue))
+		          expectedIndexKeys.Value(MySQLNormalizeIndexColumns(schemaEntry.Key.StringValue) + "|unique") = true
 		        end if
 		      next
 		      
@@ -3624,31 +3624,23 @@ Inherits QueryBuilder
 		      
 		      For Each dIndex as DictionaryEntry in SchemaIndex
 		        dim fields() as string = dIndex.Value
-		        expectedIndexColumns.Add(MySQLNormalizeIndexColumns(Join(fields, ",")))
+		        expectedIndexKeys.Value(MySQLNormalizeIndexColumns(Join(fields, ",")) + "|non unique") = true
 		      Next
 		      
 		      if HasUniqueKeys and mUniqueColumns <> "" then
-		        expectedIndexColumns.Add(MySQLNormalizeIndexColumns(mUniqueColumns))
+		        expectedIndexKeys.Value(MySQLNormalizeIndexColumns(mUniqueColumns) + "|unique") = true
 		      end if
 
 		      For Each row As DictionaryEntry In currentIndexes
 		        dim indexName as String = row.Key.StringValue
 		        dim indexMeta as Dictionary = Dictionary(row.Value)
 		        dim indexColumns as String = indexMeta.Lookup("Columns", "")
-		        dim indexExpected as Boolean = false
-
-		        For Each expectedColumns as String in expectedIndexColumns
-		          if expectedColumns = indexColumns then
-		            indexExpected = true
-		            Exit
-		          end if
-		        Next
+		        dim nonUnique as Boolean = indexMeta.Lookup("NonUnique", true)
+		        dim indexType as String = "non unique"
+		        if Not nonUnique then indexType = "unique"
+		        dim indexExpected as Boolean = expectedIndexKeys.HasKey(indexColumns + "|" + indexType)
 
 		        if indexName <> "PRIMARY" and Not indexExpected and Not MySQLIndexNeededByForeignKey(indexName, indexColumns, foreignKeyColumns) then
-		          dim nonUnique as Boolean = indexMeta.Lookup("NonUnique", true)
-		          dim indexType as String = "non unique"
-		          if Not nonUnique then indexType = "unique"
-
 		          mInvalidIndexReport = mInvalidIndexReport + "Table: " + me.TableName + " | Index: " + indexName + " | Colonnes: " + indexColumns + " | Type: " + indexType + " | Provenance: index MySQL existant non declare ou non concordant avec SchemaIndex, et non requis par une foreign key." + EndOfLine
 		        end if
 		      Next
