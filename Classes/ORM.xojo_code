@@ -3599,9 +3599,6 @@ Inherits QueryBuilder
 		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `unique"+System.Random.InRange(0, 1000).ToString+"`("
 		      dim mUniqueColumns as String
 		      dim currentIndexes as Dictionary
-		      dim foreignKeyColumns as Dictionary
-		      
-		      dim expectedIndexKeys as new Dictionary
 
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
@@ -3615,41 +3612,8 @@ Inherits QueryBuilder
 		          HasUniqueKeys = true
 		          mUniqueKeys = mUniqueKeys + "`"+schemaEntry.key+"`,"
 		          mUniqueColumns = mUniqueColumns + "`"+schemaEntry.key+"`,"
-		          expectedIndexKeys.Value(MySQLNormalizeIndexColumns(schemaEntry.Key.StringValue) + "|unique") = true
 		        end if
 		      next
-		      
-		      currentIndexes = MySQLCurrentIndexes(pDatabase)
-		      foreignKeyColumns = MySQLForeignKeyColumns(pDatabase)
-		      
-		      For Each dIndex as DictionaryEntry in SchemaIndex
-		        dim fields() as string = dIndex.Value
-		        expectedIndexKeys.Value(MySQLNormalizeIndexColumns(Join(fields, ",")) + "|non unique") = true
-		      Next
-		      
-		      if HasUniqueKeys and mUniqueColumns <> "" then
-		        expectedIndexKeys.Value(MySQLNormalizeIndexColumns(mUniqueColumns) + "|unique") = true
-		      end if
-
-		      For Each row As DictionaryEntry In currentIndexes
-		        dim indexName as String = row.Key.StringValue
-		        dim indexMeta as Dictionary = Dictionary(row.Value)
-		        dim indexColumns as String = indexMeta.Lookup("Columns", "")
-		        dim nonUnique as Boolean = indexMeta.Lookup("NonUnique", true)
-		        dim indexType as String = "non unique"
-		        if Not nonUnique then indexType = "unique"
-		        dim indexExpected as Boolean = expectedIndexKeys.HasKey(indexColumns + "|" + indexType)
-
-		        if indexName <> "PRIMARY" and Not indexExpected and Not MySQLIndexNeededByForeignKey(indexName, indexColumns, foreignKeyColumns) then
-		          mInvalidIndexReport = mInvalidIndexReport + "Table: " + me.TableName + " | Index: " + indexName + " | Colonnes: " + indexColumns + " | Type: " + indexType + " | Provenance: index MySQL existant non declare ou non concordant avec SchemaIndex, et non requis par une foreign key." + EndOfLine
-		        end if
-		      Next
-
-		      if mInvalidIndexReport.Trim <> "" then
-		        mInvalidIndexReport = "[ORM_INVALID_INDEXES]" + EndOfLine + mInvalidIndexReport
-		        DebugLog mInvalidIndexReport
-		        mLogs = mLogs + mInvalidIndexReport + EndOfLine
-		      end if
 		      
 		      // remove unused columns
 		      for each dField as DictionaryEntry in SchemaToRemoveColumn
