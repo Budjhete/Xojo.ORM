@@ -3596,7 +3596,9 @@ Inherits QueryBuilder
 		      dim HasPrimaryKeys as boolean = false
 		      dim HasUniqueKeys as Boolean = false
 		      Dim mPrimaryKeys as String = "ALTER TABLE `"+me.TableName+"` ADD PRIMARY KEY ("
-		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `unique"+System.Random.InRange(0, 1000).ToString+"`("
+		      dim mPrimaryColumns as String
+		      dim mUniqueIndexName as String = "unique" + System.Random.InRange(0, 1000).ToString
+		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `" + mUniqueIndexName + "`("
 		      dim mUniqueColumns as String
 		      dim currentIndexes as Dictionary
 
@@ -3606,6 +3608,7 @@ Inherits QueryBuilder
 		        if schemaField.PrimaryKey then
 		          HasPrimaryKeys = true
 		          mPrimaryKeys = mPrimaryKeys + "`"+schemaEntry.key+"`,"
+		          mPrimaryColumns = mPrimaryColumns + "`"+schemaEntry.key+"`,"
 		        end if
 		        
 		        if schemaField.Unique then
@@ -3727,19 +3730,25 @@ Inherits QueryBuilder
 		        End Try
 		        
 		      next
+		      // information_schema cannot be inspected reliably once LOCK TABLES is active.
+		      // Load the current keys first, then keep this snapshot current after each ADD.
+		      #Pragma BreakOnExceptions False
+		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      Try
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		      Catch lockError As DatabaseException
 		        DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
 		        mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
 		      End Try
-		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      try
 		        if HasPrimaryKeys then
 		          if Not MySQLIndexExists(currentIndexes, "PRIMARY") then
 		            DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
 		            pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
-		            currentIndexes = MySQLCurrentIndexes(pDatabase)
+		            dim primaryMeta as new Dictionary
+		            primaryMeta.Value("Columns") = MySQLNormalizeIndexColumns(mPrimaryColumns)
+		            primaryMeta.Value("NonUnique") = false
+		            currentIndexes.Value("PRIMARY") = primaryMeta
 		          end if
 		        end if
 		      Catch Error as DatabaseException
@@ -3748,10 +3757,15 @@ Inherits QueryBuilder
 		      end try
 		      try
 		        if HasUniqueKeys then
-		          if Not MySQLHasIndexColumns(currentIndexes, mUniqueColumns, true) then
+		          // Existing companies can legitimately carry a non-unique legacy index.
+		          // Treat the indexed columns as present instead of forcing uniqueness on old data.
+		          if Not MySQLHasIndexColumns(currentIndexes, mUniqueColumns) then
 		            DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
 		            pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
-		            currentIndexes = MySQLCurrentIndexes(pDatabase)
+		            dim uniqueMeta as new Dictionary
+		            uniqueMeta.Value("Columns") = MySQLNormalizeIndexColumns(mUniqueColumns)
+		            uniqueMeta.Value("NonUnique") = false
+		            currentIndexes.Value(mUniqueIndexName) = uniqueMeta
 		          end if
 		        end if
 		      Catch Error as DatabaseException
@@ -3761,7 +3775,6 @@ Inherits QueryBuilder
 		      
 		      
 		      // INDEXING DB
-		      #Pragma BreakOnExceptions False
 		      for each dField as DictionaryEntry in SchemaIndex
 		        dim fields() as string = dField.Value
 		        dim desiredColumns as String = MySQLNormalizeIndexColumns(Join(fields, ","))
@@ -3780,7 +3793,10 @@ Inherits QueryBuilder
 		          try
 		            DebugLog sql
 		            pDatabase.ExecuteSQL(sql)
-		            currentIndexes = MySQLCurrentIndexes(pDatabase)
+		            dim indexMeta as new Dictionary
+		            indexMeta.Value("Columns") = desiredColumns
+		            indexMeta.Value("NonUnique") = true
+		            currentIndexes.Value(dField.Key.StringValue) = indexMeta
 		          Catch Error as DatabaseException
 		            DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
 		            mLogs =  mlogs + "Indexing on  "+me.TableName+" error : " + Error.Message + EndOfLine
