@@ -686,8 +686,11 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function Instance(pDatabase as Database) As Database
+		Function Instance(pDatabase as Database, pContext As String = "") As Database
 		  Var tDatabase as Database
+		  Dim connectionContext As String = pContext.Trim
+		  If connectionContext = "" Then connectionContext = "Contexte non fourni"
+		  Dim connectionStarted As Double = System.Microseconds
 		  
 		  if pDatabase isa MySQLCommunityServer then
 		    tDatabase = new MySQLCommunityServer
@@ -702,10 +705,16 @@ Protected Module DB
 		  end if
 		  tDatabase.DatabaseName = pDatabase.DatabaseName
 		  
+		  Dim connectionConnectedAt As Double
 		  Try
 		    tDatabase.Connect
+		    connectionConnectedAt = System.Microseconds
 		    
 		  Catch error As DatabaseException
+		    connectionConnectedAt = System.Microseconds
+		    If tDatabase IsA MySQLCommunityServer Then
+		      DebugLog "MySQL connection failed | factory=DB.Instance | context=" + connectionContext + " | connect_ms=" + Format((connectionConnectedAt - connectionStarted) / 1000.0, "0.0") + " | host=" + MySQLCommunityServer(tDatabase).Host + ":" + MySQLCommunityServer(tDatabase).Port.ToString + " | database=" + MySQLCommunityServer(tDatabase).DatabaseName + " | error=" + error.Message
+		    End If
 		    
 		    MessageBox("Error connecting to Database: " + error.Message)
 		    
@@ -713,7 +722,9 @@ Protected Module DB
 		  End Try
 		  
 		  if tDatabase isa MySQLCommunityServer then
+		    Dim connectionSetupStarted As Double = System.Microseconds
 		    tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		    DebugLog "MySQL connection opened | factory=DB.Instance | context=" + connectionContext + " | connect_ms=" + Format((connectionConnectedAt - connectionStarted) / 1000.0, "0.0") + " | setup_ms=" + Format((System.Microseconds - connectionSetupStarted) / 1000.0, "0.0") + " | host=" + MySQLCommunityServer(tDatabase).Host + ":" + MySQLCommunityServer(tDatabase).Port.ToString + " | database=" + MySQLCommunityServer(tDatabase).DatabaseName
 		    'try
 		    'tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
 		    'Catch error as DatabaseException
