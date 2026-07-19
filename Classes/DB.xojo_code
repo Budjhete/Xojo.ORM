@@ -19,6 +19,7 @@ Protected Module DB
 		  If pDatabase IsA MySQLCommunityServer Then
 		    if NOT MySQLCommunityServer(pDatabase).IsConnected then
 		      pDatabase.Connect
+		      If MySQLCommunityServer(pDatabase).IsConnected Then InitializeMySQLSession(pDatabase)
 		    End If
 		    pDatabase.ExecuteSQL("START TRANSACTION")
 		  Else
@@ -143,17 +144,10 @@ Protected Module DB
 		          
 		          System.Log(System.LogLevelSuccess, "Connection to " + pDatabase.Host + " has succeed.")
 		          
-		          pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		          InitializeMySQLSession(pDatabase)
 		          'pDatabase.ExecuteSQL("SET character_set_connection = 'utf8'")
 		          'pDatabase.ExecuteSQL("SET character_set_results = 'utf8'")
 		          'pDatabase.ExecuteSQL("SET character_set_client = 'utf8'")
-		          #Pragma BreakOnExceptions False
-		          try
-		            pDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
-		          Catch error As DatabaseException
-		            DebugLog "Can't execute sql_mode : " + error.Message
-		          End Try
-		          #Pragma BreakOnExceptions Default
 		          Return pDatabase
 		        else
 		          if trycount<2 then
@@ -180,6 +174,133 @@ Protected Module DB
 		    
 		  End If
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub InitializeMySQLSession(pDatabase As Database)
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return
+
+		  pDatabase.ExecuteSQL(kMySQLSessionInitializationSQL)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub ClearMySQLSchemaSnapshot(pDatabase As Database)
+		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If snapshotKey = "" Then Return
+		  EnsureMySQLSchemaSnapshotCache
+
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    If mMySQLSchemaSnapshots.HasKey(snapshotKey) Then mMySQLSchemaSnapshots.Remove(snapshotKey)
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Sub EnsureMySQLSchemaSnapshotCache()
+		  If mMySQLSchemaSnapshots Is Nil Then mMySQLSchemaSnapshots = New Dictionary
+		  If mMySQLSchemaSnapshotLock Is Nil Then
+		    mMySQLSchemaSnapshotLock = New CriticalSection
+		    mMySQLSchemaSnapshotLock.Type = Thread.Types.Preemptive
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLSchemaSnapshotKey(pDatabase As Database) As String
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return ""
+
+		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
+		  Return mysql.Host + ":" + mysql.Port.ToString + "/" + mysql.DatabaseName
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MySQLSchemaSnapshotMatches(pDatabase As Database) As Boolean
+		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If snapshotKey = "" Then Return False
+		  EnsureMySQLSchemaSnapshotCache
+
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    Return mMySQLSchemaSnapshots.HasKey(snapshotKey)
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MySQLTableSchemaSnapshot(pDatabase As Database, pTableName As String) As Dictionary
+		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If snapshotKey = "" Then Return Nil
+		  EnsureMySQLSchemaSnapshotCache
+
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    Dim snapshot As Dictionary = Dictionary(mMySQLSchemaSnapshots.Lookup(snapshotKey, Nil))
+		    If snapshot Is Nil Then Return Nil
+		    Return Dictionary(snapshot.Lookup(pTableName, Nil))
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub PrepareMySQLSchemaSnapshot(pDatabase As Database)
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return
+
+		  Dim startedAt As Double = System.Microseconds
+		  Dim snapshot As New Dictionary
+		  Dim rows As RowSet
+		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
+
+		  rows = pDatabase.SelectSQL( _
+		  "SELECT c.TABLE_NAME, c.COLUMN_NAME, c.COLUMN_TYPE, c.IS_NULLABLE, c.COLUMN_KEY, " + _
+		  "c.COLUMN_DEFAULT, c.EXTRA, COALESCE(u.IS_UNIQUE, 0) AS IS_UNIQUE " + _
+		  "FROM information_schema.COLUMNS c " + _
+		  "LEFT JOIN (" + _
+		  "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, 1 AS IS_UNIQUE " + _
+		  "FROM information_schema.STATISTICS " + _
+		  "WHERE NON_UNIQUE = 0 AND INDEX_NAME <> 'PRIMARY' " + _
+		  "GROUP BY TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME" + _
+		  ") u ON u.TABLE_SCHEMA = c.TABLE_SCHEMA AND u.TABLE_NAME = c.TABLE_NAME AND u.COLUMN_NAME = c.COLUMN_NAME " + _
+		  "WHERE c.TABLE_SCHEMA = ? ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION", mysql.DatabaseName)
+
+		  If rows <> Nil Then
+		    For Each row As DatabaseRow In rows
+		      Dim tableName As String = row.Column("TABLE_NAME").StringValue
+		      Dim columns As Dictionary = Dictionary(snapshot.Lookup(tableName, Nil))
+		      If columns Is Nil Then
+		        columns = New Dictionary
+		        snapshot.Value(tableName) = columns
+		      End If
+
+		      Dim metadata As New Dictionary
+		      metadata.Value("Type") = row.Column("COLUMN_TYPE").StringValue
+		      metadata.Value("Key") = row.Column("COLUMN_KEY").StringValue
+		      metadata.Value("Null") = row.Column("IS_NULLABLE").StringValue
+		      metadata.Value("Default") = row.Column("COLUMN_DEFAULT").StringValue
+		      metadata.Value("Extra") = row.Column("EXTRA").StringValue
+		      metadata.Value("Unique") = row.Column("IS_UNIQUE").BooleanValue
+		      columns.Value(row.Column("COLUMN_NAME").StringValue) = metadata
+		    Next
+		    rows.Close
+		  End If
+
+		  EnsureMySQLSchemaSnapshotCache
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    mMySQLSchemaSnapshots.Value(MySQLSchemaSnapshotKey(pDatabase)) = snapshot
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		  DebugLog "MySQL schema snapshot loaded | tables=" + snapshot.KeyCount.ToString + " | duration_ms=" + Format((System.Microseconds - startedAt) / 1000.0, "0.0")
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
@@ -723,7 +844,7 @@ Protected Module DB
 		  
 		  if tDatabase isa MySQLCommunityServer then
 		    Dim connectionSetupStarted As Double = System.Microseconds
-		    tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		    InitializeMySQLSession(tDatabase)
 		    DebugLog "MySQL connection opened | factory=DB.Instance | context=" + connectionContext + " | connect_ms=" + Format((connectionConnectedAt - connectionStarted) / 1000.0, "0.0") + " | setup_ms=" + Format((System.Microseconds - connectionSetupStarted) / 1000.0, "0.0") + " | host=" + MySQLCommunityServer(tDatabase).Host + ":" + MySQLCommunityServer(tDatabase).Port.ToString + " | database=" + MySQLCommunityServer(tDatabase).DatabaseName
 		    'try
 		    'tDatabase.ExecuteSQL("SET GLOBAL sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''))")
@@ -738,6 +859,9 @@ Protected Module DB
 		  Return tDatabase
 		End Function
 	#tag EndMethod
+
+	#tag Constant, Name = kMySQLSessionInitializationSQL, Type = String, Dynamic = False, Default = \"SET NAMES utf8mb4", Scope = Private
+	#tag EndConstant
 
 	#tag Method, Flags = &h0
 		Function Length(pColumn As Variant) As QueryExpression
@@ -885,6 +1009,14 @@ Protected Module DB
 
 	#tag Property, Flags = &h0
 		DatabaseSchemaCache As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mMySQLSchemaSnapshotLock As CriticalSection
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mMySQLSchemaSnapshots As Dictionary
 	#tag EndProperty
 
 

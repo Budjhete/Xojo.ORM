@@ -3350,41 +3350,63 @@ Inherits QueryBuilder
 		  
 		  dim rows as RowSet 
 		  SchemaCurrent = new Dictionary
+		  SchemaToCreateTable = false
 		  
 		  if (pDatabase isa MySQLCommunityServer) then
-		    try
-		      rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
-		    Catch e as DatabaseException
-		      DebugLog "Db " + TableName + " not exist"
-		      SchemaToCreateTable = true
-		    end try
-		    dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
-		    " stat.table_name = tco.table_name and stat.index_name = tco.constraint_name where stat.non_unique = 0 and stat.table_schema not in ('information_schema', 'sys', 'performance_schema', 'mysql') and constraint_type = 'UNIQUE' and stat.table_name = '"+TableName+"' group by stat.table_name, stat.column_name")
-		    dim dU as new Dictionary
-		    if rowsU <> Nil then
-		      if rowsU.RowCount>0 then
-		        For Each rowU As DatabaseRow In rowsU
-		          dU.Value( rowU.Column("column_name").StringValue) = true
-		        Next
-		      end if
-		    end if
-		    
-		    If rows <> Nil Then
-		      if rows.RowCount>0 then
-		        For Each row As DatabaseRow In rows
-		          dim col as new ORMField
-		          col.Type = FieldType(row.Column("Type").StringValue)
-		          col.PrimaryKey = row.Column("Key").StringValue = "PRI"
-		          col.NotNull = row.Column("Null").StringValue = "NO"
-		          col.Length = FieldLength(row.Column("Type").StringValue)
-		          col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8)
-		          col.Extra = FieldExtra(row.Column("Extra").StringValue)
-		          col.Unique = dU.Lookup(row.Column("Field").StringValue, false)
-		          SchemaCurrent.value(row.Column("Field").StringValue) = col
-		        Next
-		        rows.Close
-		      else
+		    If DB.MySQLSchemaSnapshotMatches(pDatabase) Then
+		      Dim tableSnapshot As Dictionary = DB.MySQLTableSchemaSnapshot(pDatabase, TableName)
+		      If tableSnapshot Is Nil Then
 		        SchemaToCreateTable = true
+		      Else
+		        For Each columnEntry As DictionaryEntry In tableSnapshot
+		          Dim metadata As Dictionary = Dictionary(columnEntry.Value)
+		          Dim columnType As String = metadata.Lookup("Type", "").StringValue
+		          Dim col As New ORMField
+		          col.Type = FieldType(columnType)
+		          col.PrimaryKey = metadata.Lookup("Key", "").StringValue = "PRI"
+		          col.NotNull = metadata.Lookup("Null", "YES").StringValue = "NO"
+		          col.Length = FieldLength(columnType)
+		          col.DefaultValue = metadata.Lookup("Default", "").StringValue.DefineEncoding(Encodings.UTF8)
+		          col.Extra = FieldExtra(metadata.Lookup("Extra", "").StringValue)
+		          col.Unique = metadata.Lookup("Unique", False).BooleanValue
+		          SchemaCurrent.Value(columnEntry.Key.StringValue) = col
+		        Next
+		      End If
+		    Else
+		      try
+		        rows = pDatabase.SelectSQL("DESCRIBE "+ TableName+";")
+		      Catch e as DatabaseException
+		        DebugLog "Db " + TableName + " not exist"
+		        SchemaToCreateTable = true
+		      end try
+		      dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
+		      " stat.table_name = tco.table_name and stat.index_name = tco.constraint_name where stat.non_unique = 0 and stat.table_schema not in ('information_schema', 'sys', 'performance_schema', 'mysql') and constraint_type = 'UNIQUE' and stat.table_name = '"+TableName+"' group by stat.table_name, stat.column_name")
+		      dim dU as new Dictionary
+		      if rowsU <> Nil then
+		        if rowsU.RowCount>0 then
+		          For Each rowU As DatabaseRow In rowsU
+		            dU.Value( rowU.Column("column_name").StringValue) = true
+		          Next
+		        end if
+		      end if
+
+		      If rows <> Nil Then
+		        if rows.RowCount>0 then
+		          For Each row As DatabaseRow In rows
+		            dim col as new ORMField
+		            col.Type = FieldType(row.Column("Type").StringValue)
+		            col.PrimaryKey = row.Column("Key").StringValue = "PRI"
+		            col.NotNull = row.Column("Null").StringValue = "NO"
+		            col.Length = FieldLength(row.Column("Type").StringValue)
+		            col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8)
+		            col.Extra = FieldExtra(row.Column("Extra").StringValue)
+		            col.Unique = dU.Lookup(row.Column("Field").StringValue, false)
+		            SchemaCurrent.value(row.Column("Field").StringValue) = col
+		          Next
+		          rows.Close
+		        else
+		          SchemaToCreateTable = true
+		        End If
 		      End If
 		    End If
 		  else

@@ -184,7 +184,7 @@ Implements QueryExpression
 		            tDatabase.DatabaseName = pDatabase.DatabaseName
 
 		            if tDatabase.Connect then
-		              'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		              DB.InitializeMySQLSession(tDatabase)
 		              pRecordSet = tDatabase.SQLSelect(pStatement)
 		              'tDatabase.Close
 		            else
@@ -194,7 +194,7 @@ Implements QueryExpression
 
 		          elseif pDatabase.ErrorCode = 2006 then
 		            if pDatabase.Connect then
-		              'if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		              DB.InitializeMySQLSession(pDatabase)
 		              pRecordSet = pDatabase.SQLSelect(pStatement)
 		            else
 		              Raise New ORMException(pDatabase.ErrorMessage, pStatement)
@@ -283,7 +283,7 @@ Implements QueryExpression
 		        'tDatabase.DatabaseName = pDatabase.DatabaseName
 		        '
 		        'if tDatabase.Connect then
-		        'if pDatabase isa MySQLCommunityServer then tDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		        'DB.InitializeMySQLSession(tDatabase)
 		        'pRecordSet = tDatabase.SelectSQL(pStatement)
 		        ''tDatabase.Close
 		        'else
@@ -293,7 +293,7 @@ Implements QueryExpression
 		        '
 		        'elseif Error.ErrorNumber = 2006 then
 		        'if pDatabase.Connect then
-		        'if pDatabase isa MySQLCommunityServer then pDatabase.ExecuteSQL("SET NAMES 'utf8'")
+		        'DB.InitializeMySQLSession(pDatabase)
 		        'pRecordSet = pDatabase.SelectSQL(pStatement)
 		        'else
 		        'Raise New ORMException(pDatabase.ErrorMessage, pStatement)
