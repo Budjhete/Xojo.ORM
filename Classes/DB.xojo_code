@@ -188,7 +188,7 @@ Protected Module DB
 		Sub ClearMySQLSchemaSnapshot(pDatabase As Database)
 		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
 		  If snapshotKey = "" Then Return
-		  EnsureMySQLSchemaSnapshotCache
+		  InitializeMySQLSchemaSnapshotCache
 
 		  mMySQLSchemaSnapshotLock.Enter
 		  Try
@@ -199,8 +199,8 @@ Protected Module DB
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Sub EnsureMySQLSchemaSnapshotCache()
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub InitializeMySQLSchemaSnapshotCache()
 		  If mMySQLSchemaSnapshots Is Nil Then mMySQLSchemaSnapshots = New Dictionary
 		  If mMySQLSchemaSnapshotLock Is Nil Then
 		    mMySQLSchemaSnapshotLock = New CriticalSection
@@ -222,7 +222,7 @@ Protected Module DB
 		Function MySQLSchemaSnapshotMatches(pDatabase As Database) As Boolean
 		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
 		  If snapshotKey = "" Then Return False
-		  EnsureMySQLSchemaSnapshotCache
+		  InitializeMySQLSchemaSnapshotCache
 
 		  mMySQLSchemaSnapshotLock.Enter
 		  Try
@@ -237,7 +237,7 @@ Protected Module DB
 		Function MySQLTableSchemaSnapshot(pDatabase As Database, pTableName As String) As Dictionary
 		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
 		  If snapshotKey = "" Then Return Nil
-		  EnsureMySQLSchemaSnapshotCache
+		  InitializeMySQLSchemaSnapshotCache
 
 		  mMySQLSchemaSnapshotLock.Enter
 		  Try
@@ -292,7 +292,7 @@ Protected Module DB
 		    rows.Close
 		  End If
 
-		  EnsureMySQLSchemaSnapshotCache
+		  InitializeMySQLSchemaSnapshotCache
 		  mMySQLSchemaSnapshotLock.Enter
 		  Try
 		    mMySQLSchemaSnapshots.Value(MySQLSchemaSnapshotKey(pDatabase)) = snapshot
