@@ -1638,14 +1638,6 @@ Inherits QueryBuilder
 		      pColumns.Add(TableName + "." + pColumn.StringValue)
 		    Next
 		    
-		    dim pRecordSetType as RowSet = pDatabase.TableColumns(Me.TableName)
-		    
-		    while not pRecordSetType.AfterLastRow
-		      pColumnType.Value(pRecordSetType.Column("ColumnName").StringValue) = pRecordSetType.Column("FieldType").IntegerValue
-		      pRecordSetType.MoveToNextRow
-		    wend
-		    pRecordSetType.Close
-		    
 		    // Add SELECT and LIMIT 1 to the query
 		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
 		    From(Me.TableName). _
