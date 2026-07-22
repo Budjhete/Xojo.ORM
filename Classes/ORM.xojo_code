@@ -1351,6 +1351,22 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Function DataValuesAreEqual(pLeft As Variant, pRight As Variant) As Boolean
+		  If pLeft = Nil Then Return pRight = Nil
+		  If pRight = Nil Then Return False
+
+		  Dim pLeftIsText As Boolean = pLeft.Type = Variant.TypeString Or pLeft.Type = Variant.TypeText
+		  Dim pRightIsText As Boolean = pRight.Type = Variant.TypeString Or pRight.Type = Variant.TypeText
+
+		  If pLeftIsText And pRightIsText Then
+		    Return pLeft.StringValue.Compare(pRight.StringValue, ComparisonOptions.CaseSensitive) = 0
+		  End If
+
+		  Return pLeft = pRight
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Deflate(pORM As ORM) As ORM
 		  // @deprecated
@@ -1402,7 +1418,7 @@ Inherits QueryBuilder
 		    
 		    pChanged.Add(QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key)))
 		    
-		    If Me.Initial(DataEntry.Key.StringValue) <> Me.Data(DataEntry.Key.StringValue) Then
+		    If Not DataValuesAreEqual(Me.Initial(DataEntry.Key.StringValue), Me.Data(DataEntry.Key.StringValue)) Then
 		      pChanged(pChanged.LastIndex) = pChanged(pChanged.LastIndex) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
 		    End If
 		    
@@ -1661,7 +1677,7 @@ Inherits QueryBuilder
 		        end if
 		        
 		        // @todo check if mChanged.Clear is not more appropriate
-		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
+		        If mChanged.HasKey(pColumn) And DataValuesAreEqual(mChanged.Value(pColumn), mData.Value(pColumn)) Then
 		          mChanged.Remove(pColumn)
 		        End If
 		        
@@ -1736,7 +1752,7 @@ Inherits QueryBuilder
 		        end if
 		        
 		        // @todo check if mChanged.Clear is not more appropriate
-		        If mChanged.HasKey(pColumn) And mChanged.Value(pColumn) = mData.Value(pColumn) Then
+		        If mChanged.HasKey(pColumn) And DataValuesAreEqual(mChanged.Value(pColumn), mData.Value(pColumn)) Then
 		          mChanged.Remove(pColumn)
 		        End If
 		        
@@ -3225,7 +3241,7 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Changing(pColumn) Then
 
 		    // If it is different than the original data, it has changed
-		    If Initial(pColumn) <> pValue Then
+		    If Not DataValuesAreEqual(Initial(pColumn), pValue) Then
 		      mChanged.Value(pColumn) = pValue
 		    ElseIf mChanged.HasKey(pColumn) Then
 		      mChanged.Remove(pColumn)

@@ -176,6 +176,48 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub DataTextCaseSensitiveChangeTest()
+		  Dim pUser As New UserTest
+		  pUser.username = "Un nom de client"
+		  Call pUser.Create(ORMTestDatabase)
+
+		  Assert.IsFalse pUser.Changed, "Created model is changed."
+
+		  pUser.username = "Un nom de client"
+		  Assert.IsFalse pUser.Changed, "Identical text should not be changed."
+
+		  pUser.username = "Un Nom de Client"
+		  Assert.IsTrue pUser.Changed("username"), "A case-only text edit was not detected."
+		  Assert.IsTrue pUser.Changed, "A case-only text edit did not mark the model as changed."
+
+		  Call pUser.Reload(ORMTestDatabase)
+		  Assert.IsTrue pUser.Changed("username"), "Reload discarded a pending case-only text edit."
+		  Assert.IsTrue pUser.username.Compare("Un Nom de Client", ComparisonOptions.CaseSensitive) = 0, "Reload changed the pending text casing."
+
+		  pUser.username = "Un nom de client"
+		  Assert.IsFalse pUser.Changed, "Restoring the original casing did not clear the change."
+
+		  pUser.Data("password") = ""
+		  Assert.IsTrue pUser.Changed("password"), "Nil and empty text should remain different."
+		  pUser.Data("password") = Nil
+		  Assert.IsFalse pUser.Changed, "Restoring Nil did not clear the change."
+
+		  Dim pOriginalPk As Integer = pUser.Pk.IntegerValue
+		  pUser.Data("id") = pOriginalPk + 1
+		  Assert.IsTrue pUser.Changed("id"), "A numeric change was not detected."
+		  pUser.Data("id") = pOriginalPk
+		  Assert.IsFalse pUser.Changed, "Restoring the numeric value did not clear the change."
+
+		  pUser.username = "Un Nom de Client"
+		  Call pUser.Update(ORMTestDatabase)
+		  Assert.IsFalse pUser.Changed, "Updated model is changed."
+
+		  Dim pReloadedUser As New UserTest(pUser.Pk.IntegerValue, ORMTestDatabase)
+		  Assert.IsTrue pReloadedUser.username.Compare("Un Nom de Client", ComparisonOptions.CaseSensitive) = 0, "The saved text casing was not preserved."
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub DeleteTest()
 		  Dim pUser As New UserTest
 		  
