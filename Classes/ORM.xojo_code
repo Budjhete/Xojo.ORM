@@ -3848,6 +3848,16 @@ Inherits QueryBuilder
 		    end if
 		    
 		  else
+		    // Une reconstruction SQLite interrompue peut laisser la table temporaire en place.
+		    // Toujours repartir de la table source avant la mise à jour du modèle.
+		    Try
+		      pDatabase.ExecuteSQL("DROP TABLE IF EXISTS `" + me.TableName + "_TMP`;")
+		    Catch error As DatabaseException
+		      DebugLog "Temporary table cleanup on " + me.TableName + " error: " + error.Message
+		      mLogs = mLogs + "Temporary table cleanup on " + me.TableName + " error: " + error.Message + EndOfLine
+		      Return False
+		    End Try
+
 		    if SchemaToCreateTable then
 		      if not CreateTable(pDatabase) then
 		        return false

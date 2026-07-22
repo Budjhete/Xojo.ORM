@@ -224,12 +224,15 @@ Protected Module DB
 		  If snapshotKey = "" Then Return False
 		  InitializeMySQLSchemaSnapshotCache
 
+		  Dim snapshotMatches As Boolean
 		  mMySQLSchemaSnapshotLock.Enter
 		  Try
-		    Return mMySQLSchemaSnapshots.HasKey(snapshotKey)
+		    snapshotMatches = mMySQLSchemaSnapshots.HasKey(snapshotKey)
 		  Finally
 		    mMySQLSchemaSnapshotLock.Leave
 		  End Try
+
+		  Return snapshotMatches
 		End Function
 	#tag EndMethod
 
@@ -239,14 +242,16 @@ Protected Module DB
 		  If snapshotKey = "" Then Return Nil
 		  InitializeMySQLSchemaSnapshotCache
 
+		  Dim tableSnapshot As Dictionary
 		  mMySQLSchemaSnapshotLock.Enter
 		  Try
 		    Dim snapshot As Dictionary = Dictionary(mMySQLSchemaSnapshots.Lookup(snapshotKey, Nil))
-		    If snapshot Is Nil Then Return Nil
-		    Return Dictionary(snapshot.Lookup(pTableName, Nil))
+		    If snapshot <> Nil Then tableSnapshot = Dictionary(snapshot.Lookup(pTableName, Nil))
 		  Finally
 		    mMySQLSchemaSnapshotLock.Leave
 		  End Try
+
+		  Return tableSnapshot
 		End Function
 	#tag EndMethod
 
