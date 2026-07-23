@@ -148,7 +148,7 @@ Inherits QueryBuilder
 		  end
 		  
 		  If Not RaiseEvent Updating() Then
-		    pDatabase.BeginTransaction
+		    If Not ExternalTransaction Then pDatabase.BeginTransaction
 		    
 		    dim pD as new Dictionary
 		    If mData.HasKey("estActif") Then
@@ -168,7 +168,7 @@ Inherits QueryBuilder
 		    // Clear mChanged, they are merged in mData
 		    mChanged.RemoveAll
 		    
-		    pDatabase.CommitTransaction
+		    If Not ExternalTransaction Then pDatabase.CommitTransaction
 		    
 		    RaiseEvent Updated()
 		  End If
@@ -858,7 +858,7 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Creating Then
 		    'System.DebugLog "ORM.create not creating"
 		    
-		    pDatabase.BeginTransaction
+		    If Not ExternalTransaction Then pDatabase.BeginTransaction
 		    DebugLog "ORM.create database.begin"
 		    
 		    
@@ -951,7 +951,7 @@ Inherits QueryBuilder
 		    'System.DebugLog "ORM.Create.mRemoved cleared"
 		    
 		    
-		    pDatabase.CommitTransaction
+		    If Not ExternalTransaction Then pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    DebugLog "ORM.Create Done"
@@ -2897,7 +2897,7 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    pDatabase.BeginTransaction
+		    If Not ExternalTransaction Then pDatabase.BeginTransaction
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
@@ -2957,7 +2957,7 @@ Inherits QueryBuilder
 		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
 		    mRemoved.RemoveAll
 		    
-		    pDatabase.CommitTransaction
+		    If Not ExternalTransaction Then pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    
@@ -4104,7 +4104,7 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Updating() Then
 		    Call ValidateEditLock(pDatabase, "update")
 		    
-		    pDatabase.BeginTransaction
+		    If Not ExternalTransaction Then pDatabase.BeginTransaction
 		    
 		    Dim pChanged As New Dictionary
 		    
@@ -4147,7 +4147,7 @@ Inherits QueryBuilder
 		    mRemoved = nil
 		    mRemoved = new Dictionary
 		    
-		    pDatabase.CommitTransaction
+		    If Not ExternalTransaction Then pDatabase.CommitTransaction
 		    
 		    RaiseEvent Updated()
 		    
@@ -4450,6 +4450,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		FinishLoaded As Boolean = false
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		ExternalTransaction As Boolean = False
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
