@@ -204,7 +204,7 @@ Protected Module DB
 		  If mMySQLSchemaSnapshots Is Nil Then mMySQLSchemaSnapshots = New Dictionary
 		  If mMySQLSchemaSnapshotLock Is Nil Then
 		    mMySQLSchemaSnapshotLock = New CriticalSection
-		    mMySQLSchemaSnapshotLock.Type = Thread.Types.Preemptive
+		    mMySQLSchemaSnapshotLock.Type = CriticalSection.Types.Preemptive
 		  End If
 		End Sub
 	#tag EndMethod
