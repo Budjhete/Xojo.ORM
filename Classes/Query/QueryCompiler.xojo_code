@@ -114,7 +114,24 @@ Protected Module QueryCompiler
 	#tag Method, Flags = &h0
 		Function Value(pValue As Variant) As String
 		  If pValue.IsArray Then
-		    
+		    #If TargetAndroid
+		      Select Case pValue.ArrayElementType
+		      Case 2, 3, 6
+		        Dim pIntegerValues() As Integer = pValue
+		        Dim pIntegerVariants() As Variant
+		        For Each pIntegerValue As Integer In pIntegerValues
+		          pIntegerVariants.Add(pIntegerValue)
+		        Next
+		        Return "( " + QueryCompiler.Values(pIntegerVariants) + " )"
+		      Else
+		        Dim pStringValues() As String = pValue
+		        Dim pStringVariants() As Variant
+		        For Each pStringValue As String In pStringValues
+		          pStringVariants.Add(pStringValue)
+		        Next
+		        Return "( " + QueryCompiler.Values(pStringVariants) + " )"
+		      End Select
+		    #Else
 		    select case pValue.ArrayElementType
 		    case 2, 3, 6
 		      dim i() as integer = pValue
@@ -124,6 +141,7 @@ Protected Module QueryCompiler
 		      dim s() as String = pValue
 		      Return "( " + QueryCompiler.Values(s) + " )"
 		    end select
+		    #EndIf
 		  End If
 		  
 		  Dim pType as Integer = pValue.Type
@@ -182,7 +200,7 @@ Protected Module QueryCompiler
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Function Values(pValues() As Integer) As String
 		  // Compile values
 		  Dim pCompiledValues() As String
@@ -198,7 +216,7 @@ Protected Module QueryCompiler
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
 		Function Values(pValues() As String) As String
 		  // Compile values
 		  Dim pCompiledValues() As String

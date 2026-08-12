@@ -11,6 +11,24 @@ Inherits OnQueryExpression
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0
+		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant)
+		  Super.Constructor(pLeftColumn, pOperator, pRightColumn)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant, pDataType As DB.DataType)
+		  Super.Constructor(pLeftColumn, pOperator, pRightColumn, pDataType)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetAndroid and (Target64Bit))
+		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant, pDataType As Variant)
+		  Super.Constructor(pLeftColumn, pOperator, pRightColumn, pDataType)
+		End Sub
+	#tag EndMethod
+
 
 	#tag ViewBehavior
 		#tag ViewProperty

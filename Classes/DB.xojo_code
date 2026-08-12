@@ -731,6 +731,10 @@ Protected Module DB
 		      If pDB isa MySQLCommunityServer And IsNumeric(pDatabaseFieldValue) Then
 		        Return pDatabaseFieldValue.CurrencyValue
 		      End If
+		    #ElseIf TargetAndroid
+		      If pDatabaseFieldValue <> Nil And pDatabaseFieldValue.StringValue.IsNumeric Then
+		        Return pDatabaseFieldValue.CurrencyValue
+		      End If
 		    #Else
 		      If IsNumeric(pDatabaseFieldValue) Then
 		        Return pDatabaseFieldValue.CurrencyValue

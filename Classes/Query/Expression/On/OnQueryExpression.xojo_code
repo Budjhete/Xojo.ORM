@@ -29,11 +29,47 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Sub Constructor(pLeftColumn as Variant, pOperator as String, pRightColumn as Variant, pDataType as DataType)
+		Sub Constructor(pLeftColumn as Variant, pOperator as String, pRightColumn as Variant, pDataType as DB.DataType)
 		  mLeftColumn = pLeftColumn
 		  mOperator = pOperator
 		  mRightColumn = pRightColumn
 		  mDatatype = pDataType
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetAndroid and (Target64Bit))
+		Sub Constructor(pLeftColumn As Variant, pOperator As String, pRightColumn As Variant, pDataType As Variant)
+		  mLeftColumn = pLeftColumn
+		  mOperator = pOperator
+		  mRightColumn = pRightColumn
+		  Select Case pDataType.IntegerValue
+		  Case 1
+		    mDatatype = DB.DataType.TextType
+		  Case 2
+		    mDatatype = DB.DataType.IntegerType
+		  Case 3
+		    mDatatype = DB.DataType.VarCharType
+		  Case 4
+		    mDatatype = DB.DataType.CharType
+		  Case 5
+		    mDatatype = DB.DataType.DoubleType
+		  Case 6
+		    mDatatype = DB.DataType.DateType
+		  Case 7
+		    mDatatype = DB.DataType.TimeType
+		  Case 8
+		    mDatatype = DB.DataType.TimeStampType
+		  Case 9
+		    mDatatype = DB.DataType.CurrencyType
+		  Case 10
+		    mDatatype = DB.DataType.BooleanType
+		  Case 11
+		    mDatatype = DB.DataType.DecimalType
+		  Case 12
+		    mDatatype = DB.DataType.BlobType
+		  Else
+		    mDatatype = DB.DataType.Expression
+		  End Select
 		End Sub
 	#tag EndMethod
 
@@ -47,9 +83,9 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h1
 		Protected Function Predicate() As String
-		  if mDatatype = DataType.IntegerType or mRightColumn.IsNumeric then
+		  if mDatatype = DB.DataType.IntegerType or mRightColumn.IsNumeric then
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
-		  elseif mDatatype = DataType.TextType or mDatatype = DataType.CharType or mDatatype = DataType.VarCharType  then
+		  elseif mDatatype = DB.DataType.TextType or mDatatype = DB.DataType.CharType or mDatatype = DB.DataType.VarCharType  then
 		    Return QueryCompiler.Column(mLeftColumn) + " " + QueryCompiler.Operator(mLeftColumn, mOperator, mRightColumn) + " " + mRightColumn.StringValue
 		    
 		  else
@@ -60,7 +96,7 @@ Implements QueryExpression
 
 
 	#tag Property, Flags = &h21
-		Private mDatatype As DataType
+		Private mDatatype As DB.DataType
 	#tag EndProperty
 
 	#tag Property, Flags = &h21

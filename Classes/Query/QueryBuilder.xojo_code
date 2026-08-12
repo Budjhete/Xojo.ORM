@@ -251,7 +251,21 @@ Implements QueryExpression
 		    Dim pCache As Dictionary = mCache.Lookup(pStatement, Nil)
 		    Dim pNow As DateTime = DateTime.Now
 
+		  #If TargetAndroid
+		    Dim pCachedExpiration As DateTime
+		    If pCache <> Nil Then pCachedExpiration = pCache.Value("expiration").DateTimeValue
+		    Dim pUseCache As Boolean
+		    If pExpiration <> Nil Then
+		      If pCache <> Nil Then
+		        If pCachedExpiration <> Nil Then
+		          pUseCache = pNow < pCachedExpiration
+		        End If
+		      End If
+		    End If
+		    If pUseCache Then
+		  #Else
 		    If pExpiration <> Nil And pCache <> Nil And pNow < pCache.Value("expiration") Then
+		  #EndIf
 
 		      // Get the result from the cache
 		      pRecordSet = pCache.Value("recordset")
@@ -467,7 +481,12 @@ Implements QueryExpression
 
 	#tag Method, Flags = &h0
 		Function LeftOuterJoin(pTableName As String, pTableAlias As String) As QueryBuilder
-		  mQuery.Add(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
+		  #If TargetAndroid
+		    Dim pTableNameValue As Variant = pTableName
+		    mQuery.Add(new LeftOuterJoinQueryExpression(pTableNameValue, pTableAlias))
+		  #Else
+		    mQuery.Add(new LeftOuterJoinQueryExpression(pTableName, pTableAlias))
+		  #EndIf
 
 		  return Me
 		End Function
@@ -508,8 +527,15 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn as Variant, pOperator as String, pValue as Variant, pType as DataType) As QueryBuilder
-		  Return Append(new OnQueryExpression(pColumn, pOperator, pValue, pType))
+		Function On(pColumn as Variant, pOperator as String, pValue as Variant, pType as DB.DataType) As QueryBuilder
+		  #If TargetAndroid
+		    Dim pColumnValue As Variant = pColumn
+		    Dim pRightValue As Variant = pValue
+		    mQuery.Add(New OnQueryExpression(pColumnValue, pOperator, pRightValue, pType))
+		    Return Me
+		  #Else
+		    Return Append(New OnQueryExpression(pColumn, pOperator, pValue, pType))
+		  #EndIf
 		End Function
 	#tag EndMethod
 
@@ -558,7 +584,7 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function OrOn(pLeft as Variant, pOperator as String, pRight as Variant, pType as DataType) As QueryBuilder
+		Function OrOn(pLeft as Variant, pOperator as String, pRight as Variant, pType as DB.DataType) As QueryBuilder
 		  mQuery.Add(new OrOnQueryExpression(pLeft, pOperator, pRight, pType))
 
 		  Return Me
