@@ -526,7 +526,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPks As Dictionary, pDatabase As Database)
 		  // Initialize an ORM with primary keys and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -538,7 +538,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pPks As Dictionary, pDatabase As SQLiteDatabase)
 		  // Initialize an ORM with primary keys and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -584,7 +584,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(ParamArray pCriterias() As Pair)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -688,7 +688,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
+	#tag Method, Flags = &h1000, CompatibilityFlags = TargetAndroid and (Target64Bit)
 		Sub Constructor(pLeft as String, pRight as Variant)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -701,7 +701,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = false
+	#tag Method, Flags = &h1000, CompatibilityFlags = TargetAndroid and (Target64Bit)
 		Sub Constructor(pPk As Variant, pDatabase As Database)
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
@@ -776,7 +776,12 @@ Inherits QueryBuilder
 		  Dim pColumns() As Variant
 		  pColumns.Add(DB.Expression("COUNT(*) AS count"))
 		  
-		  Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Column("count").IntegerValue
+		  #If TargetAndroid Then
+		    Dim pExpiration As DateTime = Nil
+		    Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase, pExpiration).Column("count").Value.IntegerValue
+		  #Else
+		    Return Append(New SelectQueryExpression(pColumns)).From(TableName).Execute(pDatabase).Column("count").IntegerValue
+		  #EndIf
 		  
 		End Function
 	#tag EndMethod
@@ -914,10 +919,18 @@ Inherits QueryBuilder
 		        #EndIf
 		      Else
 		        // Biggest primary key
-		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		        From(Me.TableName). _
-		        OrderBy(Me.PrimaryKey, "DESC"). _
-		        Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
+		        #If TargetAndroid Then
+		          Dim pExpiration As DateTime = Nil
+		          Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		          From(Me.TableName). _
+		          OrderBy(Me.PrimaryKey, "DESC"). _
+		          Execute(pDatabase, pExpiration).Column(Me.PrimaryKey).Value.IntegerValue
+		        #Else
+		          Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		          From(Me.TableName). _
+		          OrderBy(Me.PrimaryKey, "DESC"). _
+		          Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
+		        #EndIf
 		      End If
 		      
 		    End If
@@ -1090,7 +1103,11 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Creating Then
 		    'System.DebugLog "ORM.create not creating"
 		    
-		    pDatabase.Begin
+		    #If TargetAndroid Then
+		      pDatabase.Begin()
+		    #Else
+		      pDatabase.Begin
+		    #EndIf
 		    DebugLog "ORM.create database.begin"
 		    
 		    
@@ -1138,10 +1155,18 @@ Inherits QueryBuilder
 		      
 		      
 		      // Biggest primary key
-		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		      From(Me.TableName). _
-		      OrderBy(Me.PrimaryKey, "DESC"). _
-		      Execute(pDatabase).Column(Me.PrimaryKey).Value
+		      #If TargetAndroid Then
+		        Dim pExpiration As DateTime = Nil
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase, pExpiration).Column(Me.PrimaryKey).Value
+		      #Else
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Column(Me.PrimaryKey).Value
+		      #EndIf
 		      
 		    End If
 		    
@@ -1415,13 +1440,18 @@ Inherits QueryBuilder
 		  Dim pChanged() As string
 		  
 		  For Each DataEntry As DictionaryEntry In Me.Data
-		    
-		    pChanged.Add(QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key)))
-		    
-		    If Not DataValuesAreEqual(Me.Initial(DataEntry.Key.StringValue), Me.Data(DataEntry.Key.StringValue)) Then
-		      pChanged(pChanged.LastIndex) = pChanged(pChanged.LastIndex) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
-		    End If
-		    
+		    #If TargetAndroid Then
+		      Dim pChange As String = QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key))
+		      If Not DataValuesAreEqual(Me.Initial(DataEntry.Key.StringValue), Me.Data(DataEntry.Key.StringValue)) Then
+		        pChange = pChange + " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
+		      End If
+		      pChanged.Add(pChange)
+		    #Else
+		      pChanged.Add(QueryCompiler.Column(DataEntry.Key) + ": " + QueryCompiler.Value(Me.Initial(DataEntry.Key)))
+		      If Not DataValuesAreEqual(Me.Initial(DataEntry.Key.StringValue), Me.Data(DataEntry.Key.StringValue)) Then
+		        pChanged(pChanged.LastIndex) = pChanged(pChanged.LastIndex) +  " => " + QueryCompiler.Value(Me.Data(DataEntry.Key.StringValue))
+		      End If
+		    #EndIf
 		  Next
 		  
 		  pDump = pDump + "Changed: " + String.FromArray(pChanged, ", ") + EndOfLine
@@ -1554,7 +1584,11 @@ Inherits QueryBuilder
 		    'case 0 //null
 		    'Return NIL
 		  case 1
-		    Return ORMField.TypeList.boolean
+		    #If TargetAndroid Then
+		      Return CType(3, ORMField.TypeList)
+		    #Else
+		      Return ORMField.TypeList.boolean
+		    #EndIf
 		  case 2
 		    Return ORMField.TypeList.INTEGER
 		  case 3
@@ -1576,7 +1610,11 @@ Inherits QueryBuilder
 		  case 11
 		    Return ORMField.TypeList.DECIMAL
 		  case 12
-		    Return ORMField.TypeList.boolean
+		    #If TargetAndroid Then
+		      Return CType(3, ORMField.TypeList)
+		    #Else
+		      Return ORMField.TypeList.boolean
+		    #EndIf
 		  case 13
 		    Return ORMField.TypeList.DECIMAL
 		  case 14
@@ -1603,7 +1641,11 @@ Inherits QueryBuilder
 		Function FieldType(pValue as String) As ORMField.TypeList
 		  
 		  if pValue.Contains("tinyint") then
-		    Return ORMField.TypeList.boolean
+		    #If TargetAndroid Then
+		      Return CType(3, ORMField.TypeList)
+		    #Else
+		      Return ORMField.TypeList.boolean
+		    #EndIf
 		  elseif pValue.Contains("varchar") then
 		    Return ORMField.TypeList.VARCHAR
 		  elseif pValue.Contains("smallint") then
@@ -1655,10 +1697,17 @@ Inherits QueryBuilder
 		    Next
 		    
 		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
-		    From(Me.TableName). _
-		    Limit(1). _
-		    Execute(pDatabase)
+		    #If TargetAndroid Then
+		      Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
+		      From(Me.TableName). _
+		      Limit(1). _
+		      Execute(pDatabase, pExpiration)
+		    #Else
+		      Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
+		      From(Me.TableName). _
+		      Limit(1). _
+		      Execute(pDatabase)
+		    #EndIf
 		    
 		    // Clear any existing data
 		    mData.RemoveAll
@@ -1870,12 +1919,12 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
-		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pORM.TableName)._
-		  Where(pORM.Pks). _
-		  Where(pForeignColumn, "=", Me.Pk)._
-		  Execute(pDatabase)._
-		  Column("count").BooleanValue
+		  #If TargetAndroid Then
+		    Dim pExpiration As DateTime = Nil
+		    Return DB.Find(DB.Expression("COUNT(*) AS count")).From(pORM.TableName).Where(pORM.Pks).Where(pForeignColumn, "=", Me.Pk).Execute(pDatabase, pExpiration).Column("count").Value.BooleanValue
+		  #Else
+		    Return DB.Find(DB.Expression("COUNT(*) AS count")).From(pORM.TableName).Where(pORM.Pks).Where(pForeignColumn, "=", Me.Pk).Execute(pDatabase).Column("count").BooleanValue
+		  #EndIf
 		End Function
 	#tag EndMethod
 
@@ -1902,11 +1951,12 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pDatabase As Database) As Boolean
 		  // Tells if this model has at least one HasManyThrough relationship
-		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pPivotTableName)._
-		  Where(pForeignColumn, "=", Me.Pk)._
-		  Execute(pDatabase)._
-		  Column("count").BooleanValue
+		  #If TargetAndroid Then
+		    Dim pExpiration As DateTime = Nil
+		    Return DB.Find(DB.Expression("COUNT(*) AS count")).From(pPivotTableName).Where(pForeignColumn, "=", Me.Pk).Execute(pDatabase, pExpiration).Column("count").Value.BooleanValue
+		  #Else
+		    Return DB.Find(DB.Expression("COUNT(*) AS count")).From(pPivotTableName).Where(pForeignColumn, "=", Me.Pk).Execute(pDatabase).Column("count").BooleanValue
+		  #EndIf
 		End Function
 	#tag EndMethod
 
@@ -1925,12 +1975,12 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
-		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pPivotTableName)._
-		  Where(pForeignColumn, "=", Me.Pk)._
-		  AndWhere(pFarColumn, "=", pORM.Pk)._
-		  Execute(pDatabase)._
-		  Column("count").BooleanValue
+		  #If TargetAndroid Then
+		    Dim pExpiration As DateTime = Nil
+		    Return DB.Find(DB.Expression("COUNT(*) AS count")).From(pPivotTableName).Where(pForeignColumn, "=", Me.Pk).AndWhere(pFarColumn, "=", pORM.Pk).Execute(pDatabase, pExpiration).Column("count").Value.BooleanValue
+		  #Else
+		    Return DB.Find(DB.Expression("COUNT(*) AS count")).From(pPivotTableName).Where(pForeignColumn, "=", Me.Pk).AndWhere(pFarColumn, "=", pORM.Pk).Execute(pDatabase).Column("count").BooleanValue
+		  #EndIf
 		End Function
 	#tag EndMethod
 
@@ -2562,7 +2612,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
-		Function On(pColumn as Variant, pOperator as String, pValue as Variant, pType as DataType) As ORM
+		Function On(pColumn as Variant, pOperator as String, pValue as Variant, pType as DB.DataType) As ORM
 		  Call Super.On(pColumn, pOperator, pValue, pType)
 		  
 		  Return Me
@@ -2603,7 +2653,11 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function OrderBy(pColumns() as Variant, pDirections() as String, pComparators() as String) As ORM
-		  Call Super.OrderBy(pColumns, pDirections, pComparators)
+		  #If TargetAndroid Then
+		    Call Me.Append(New OrderByQueryExpression(pColumns, pDirections, pComparators))
+		  #Else
+		    Call Super.OrderBy(pColumns, pDirections, pComparators)
+		  #EndIf
 		  
 		  Return Me
 		End Function
@@ -2943,10 +2997,18 @@ Inherits QueryBuilder
 		        #EndIf
 		      Else
 		        // Biggest primary key
-		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		        From(Me.TableName). _
-		        OrderBy(Me.PrimaryKey, "DESC"). _
-		        Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
+		        #If TargetAndroid Then
+		          Dim pExpiration As DateTime = Nil
+		          Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		          From(Me.TableName). _
+		          OrderBy(Me.PrimaryKey, "DESC"). _
+		          Execute(pDatabase, pExpiration).Column(Me.PrimaryKey).Value.IntegerValue
+		        #Else
+		          Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		          From(Me.TableName). _
+		          OrderBy(Me.PrimaryKey, "DESC"). _
+		          Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
+		        #EndIf
 		      End If
 		      
 		    End If
@@ -3066,7 +3128,11 @@ Inherits QueryBuilder
 		  
 		  If Not RaiseEvent Creating Then
 		    
-		    pDatabase.Begin
+		    #If TargetAndroid Then
+		      pDatabase.Begin()
+		    #Else
+		      pDatabase.Begin
+		    #EndIf
 		    
 		    // Take a merge of mData and mChanged
 		    Dim pRaw As Dictionary = Me.Data
@@ -3094,10 +3160,18 @@ Inherits QueryBuilder
 		    // todo: check if the primary key is auto increment
 		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
 		      // Biggest primary key
-		      Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		      From(Me.TableName). _
-		      OrderBy(Me.PrimaryKey, "DESC"). _
-		      Execute(pDatabase).Column(Me.PrimaryKey).Value
+		      #If TargetAndroid Then
+		        Dim pExpiration As DateTime = Nil
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase, pExpiration).Column(Me.PrimaryKey).Value
+		      #Else
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Column(Me.PrimaryKey).Value
+		      #EndIf
 		      
 		    End If
 		    
@@ -3158,6 +3232,18 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Save() As Dictionary
+		  #If TargetAndroid Then
+		    If Not RaiseEvent Saving Then
+		      If Loaded() Then
+		        Return Update()
+		      ElseIf mReplaced Then
+		        Return Replace()
+		      Else
+		        Return Create()
+		      End If
+		    End If
+		    Return New Dictionary
+		  #Else
 		  dim bSaved as new Dictionary
 		  If Not RaiseEvent Saving Then
 		    
@@ -3171,6 +3257,7 @@ Inherits QueryBuilder
 		    
 		  End If
 		  Return bSaved
+		  #EndIf
 		End Function
 	#tag EndMethod
 
@@ -3327,7 +3414,11 @@ Inherits QueryBuilder
 		      try
 		        // COUNT(*) produit exactement une ligne; première colonne = le nombre.
 		        while not rs.AfterLastRow
-		          exists = (rs.ColumnAt(0).IntegerValue > 0)
+		          #If TargetAndroid Then
+		            exists = (rs.ColumnAt(0).Value.IntegerValue > 0)
+		          #Else
+		            exists = (rs.ColumnAt(0).IntegerValue > 0)
+		          #EndIf
 		          exit while
 		        wend
 		      catch ex as RuntimeException
@@ -3444,9 +3535,15 @@ Inherits QueryBuilder
 		      if rows.RowCount>0 then
 		        For Each row As DatabaseRow In rows
 		          dim col as new ORMField
-		          col.Type = FieldType(row.Column("FieldType").IntegerValue)
-		          col.PrimaryKey = row.Column("IsPrimary").BooleanValue
-		          col.NotNull = row.Column("NotNull").BooleanValue
+		          #If TargetAndroid Then
+		            col.Type = FieldType(row.Column("FieldType").Value.IntegerValue)
+		            col.PrimaryKey = row.Column("IsPrimary").Value.BooleanValue
+		            col.NotNull = row.Column("NotNull").Value.BooleanValue
+		          #Else
+		            col.Type = FieldType(row.Column("FieldType").IntegerValue)
+		            col.PrimaryKey = row.Column("IsPrimary").BooleanValue
+		            col.NotNull = row.Column("NotNull").BooleanValue
+		          #EndIf
 		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8)
 		          col.Unique = dU.Lookup(row.Column("ColumnName").StringValue, false)
 		          SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
@@ -3518,7 +3615,11 @@ Inherits QueryBuilder
 		      'System.DebugLog "Iterator has a BUG!"
 		      'Exit
 		      'End
-		      pColumns.Value(c.Column("ColumnName").StringValue) = c.Column("FieldType").IntegerValue
+		      #If TargetAndroid Then
+		        pColumns.Value(c.Column("ColumnName").StringValue) = c.Column("FieldType").Value.IntegerValue
+		      #Else
+		        pColumns.Value(c.Column("ColumnName").StringValue) = c.Column("FieldType").IntegerValue
+		      #EndIf
 		    Next
 		    db.DatabaseSchemaCache.Value(me.TableName) = pColumns
 		    Return pColumns
@@ -3918,7 +4019,11 @@ Inherits QueryBuilder
 		              dim colVal as string
 		              if rr.ColumnAt(i).Value<>nil then
 		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then 
-		                  dim z as integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
+		                  #If TargetAndroid Then
+		                    dim z as integer = If(rr.ColumnAt(i).Value.BooleanValue, 1, 0)
+		                  #Else
+		                    dim z as integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
+		                  #EndIf
 		                  colval = z.ToString + ","
 		                else
 		                  colval =  "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
@@ -4224,7 +4329,11 @@ Inherits QueryBuilder
 		  If Not RaiseEvent Updating() Then
 		    Call ValidateEditLock(pDatabase, "update")
 		    
-		    pDatabase.Begin
+		    #If TargetAndroid Then
+		      pDatabase.Begin()
+		    #Else
+		      pDatabase.Begin
+		    #EndIf
 		    
 		    Dim pChanged As New Dictionary
 		    

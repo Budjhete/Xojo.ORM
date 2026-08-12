@@ -74,7 +74,20 @@ Implements QueryExpression
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000
-		Sub Constructor(ParamArray pQuery As QueryExpression)
+		Sub Constructor()
+		  Dim pQuery() As QueryExpression
+		  Me.Constructor(pQuery)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h1000
+		Sub Constructor(pFirstQuery As QueryExpression, ParamArray pAdditionalQueries As QueryExpression)
+		  Dim pQuery() As QueryExpression
+		  pQuery.Add(pFirstQuery)
+		  For Each pAdditionalQuery As QueryExpression In pAdditionalQueries
+		    pQuery.Add(pAdditionalQuery)
+		  Next
+
 		  Me.Constructor(pQuery)
 		End Sub
 	#tag EndMethod
