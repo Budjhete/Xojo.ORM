@@ -100,7 +100,11 @@ Protected Class ORMField
 	#tag Method, Flags = &h0
 		Function Length() As String
 		  if mLength="" then return ""
-		  if mType = TypeList.boolean or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
+		  #if TargetAndroid
+		    if mType = CType(3, TypeList) or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
+		  #else
+		    if mType = TypeList.boolean or mType = TypeList.DATETIME or mType = TypeList.BLOB or mType = TypeList.LONGBLOB or mType = TypeList.LONGTEXT or mType = TypeList.TIMESTAMP or mType = TypeList.DATETIME then return ""
+		  #endif
 		  
 		  dim normalizedLength as String = mLength
 		  if mType = TypeList.DECIMAL then
