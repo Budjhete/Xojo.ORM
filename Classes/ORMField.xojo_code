@@ -250,6 +250,7 @@ Protected Class ORMField
 		  TEXT
 		  INTEGER
 		  BOOLEAN
+		  BOOL = 3
 		  DECIMAL
 		  BLOB
 		  DATETIME

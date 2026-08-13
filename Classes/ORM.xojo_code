@@ -476,17 +476,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
-		Sub Constructor()
-		  // ORM constructor with a ParamArray of initial criteria
-		  // Also used for the empty constructor
-		  
-		  Dim pDictionary As New Dictionary
-		  
-		  Me.Constructor(pDictionary)
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(pRecordSet As DatabaseRow)
 		  // Initialize the ORM from a RowSet row (For Each row As DatabaseRow In rowSet)
@@ -569,7 +558,13 @@ Inherits QueryBuilder
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
-		  Me.Constructor(Me.PrimaryKey, pPk)
+		  #If TargetAndroid Then
+		    Dim d As New Dictionary
+		    d.Value(Me.PrimaryKey) = pPk
+		    Me.Constructor(d)
+		  #Else
+		    Me.Constructor(Me.PrimaryKey, pPk)
+		  #EndIf
 		  
 		  Call Me.Find(pDatabase)
 		  
@@ -584,7 +579,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
+	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Constructor(ParamArray pCriterias() As Pair)
 		  // ORM constructor with a ParamArray of initial criteria
 		  // Also used for the empty constructor
@@ -643,7 +638,13 @@ Inherits QueryBuilder
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
-		  Me.Constructor(Me.PrimaryKey, pPk)
+		  #If TargetAndroid Then
+		    Dim d As New Dictionary
+		    d.Value(Me.PrimaryKey) = pPk
+		    Me.Constructor(d)
+		  #Else
+		    Me.Constructor(Me.PrimaryKey, pPk)
+		  #EndIf
 		  
 		  Call Me.Find(pDatabase)
 		  
@@ -668,7 +669,13 @@ Inherits QueryBuilder
 		  // Initialize an ORM with a primary key and the call Find
 		  // This can be used to fetch your model by its primary key on a single line
 		  
-		  Me.Constructor(Me.PrimaryKey, pPk)
+		  #If TargetAndroid Then
+		    Dim d As New Dictionary
+		    d.Value(Me.PrimaryKey) = pPk
+		    Me.Constructor(d)
+		  #Else
+		    Me.Constructor(Me.PrimaryKey, pPk)
+		  #EndIf
 		  
 		  Call Me.Find(pDatabase)
 		  
@@ -1585,7 +1592,7 @@ Inherits QueryBuilder
 		    'Return NIL
 		  case 1
 		    #If TargetAndroid Then
-		      Return CType(3, ORMField.TypeList)
+		      Return ORMField.TypeList.BOOL
 		    #Else
 		      Return ORMField.TypeList.boolean
 		    #EndIf
@@ -1611,7 +1618,7 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.DECIMAL
 		  case 12
 		    #If TargetAndroid Then
-		      Return CType(3, ORMField.TypeList)
+		      Return ORMField.TypeList.BOOL
 		    #Else
 		      Return ORMField.TypeList.boolean
 		    #EndIf
@@ -1642,7 +1649,7 @@ Inherits QueryBuilder
 		  
 		  if pValue.Contains("tinyint") then
 		    #If TargetAndroid Then
-		      Return CType(3, ORMField.TypeList)
+		      Return ORMField.TypeList.BOOL
 		    #Else
 		      Return ORMField.TypeList.boolean
 		    #EndIf
