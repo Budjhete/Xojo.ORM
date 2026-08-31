@@ -2126,7 +2126,7 @@ Inherits QueryBuilder
 		      if st="NULL" or st = "CURRENT_TIMESTAMP" then
 		        sql = sql +""+st+", "
 		      else
-		        sql = sql +"'"+st+"', "
+		        sql = sql +"'"+BaseDataEscapeSQLString(st)+"', "
 		      end if
 		    next
 		    sql = sql.Left(sql.Length-2) + ");"
@@ -2148,7 +2148,7 @@ Inherits QueryBuilder
 		      if st="NULL" or st = "CURRENT_TIMESTAMP" then
 		        sql = sql +""+st+", "
 		      else
-		        sql = sql +"'"+st+"', "
+		        sql = sql +"'"+BaseDataEscapeSQLString(st)+"', "
 		      end if
 		    next
 		    sql = sql.Left(sql.Length-2) + ");"
