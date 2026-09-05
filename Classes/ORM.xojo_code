@@ -1221,6 +1221,18 @@ Inherits QueryBuilder
 		    sql = sql.left(sql.Length -1)
 		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		    if SchemaUniqueIndex <> nil then
+		      for each dUnique as DictionaryEntry in SchemaUniqueIndex
+		        dim uniqueFields() as String = dUnique.Value
+		        if uniqueFields.LastIndex >= 0 then
+		          dim namedUnique as String = "UNIQUE KEY `" + dUnique.Key.StringValue + "` ("
+		          For Each fieldName As String In uniqueFields
+		            namedUnique = namedUnique + "`" + fieldName + "`,"
+		          Next
+		          sql = sql + ", " + EndOfLine + namedUnique.Left(namedUnique.Length - 1) + ")"
+		        end if
+		      next
+		    end if
 		    
 		    sql = sql +");"
 		    try
@@ -1279,6 +1291,18 @@ Inherits QueryBuilder
 		    sql = sql.left(sql.Length -1)
 		    if HasPrimaryKeys and CanHavePrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		    if SchemaUniqueIndex <> nil then
+		      for each dUnique as DictionaryEntry in SchemaUniqueIndex
+		        dim uniqueFields() as String = dUnique.Value
+		        if uniqueFields.LastIndex >= 0 then
+		          dim namedUnique as String = "CONSTRAINT `" + dUnique.Key.StringValue + "` UNIQUE ("
+		          For Each fieldName As String In uniqueFields
+		            namedUnique = namedUnique + "`" + fieldName + "`,"
+		          Next
+		          sql = sql + ", " + EndOfLine + namedUnique.Left(namedUnique.Length - 1) + ")"
+		        end if
+		      next
+		    end if
 		    
 		    sql = sql +");"
 		    Try
@@ -2537,6 +2561,49 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function SQLiteHasUniqueIndexColumns(pDatabase as Database, pColumns as String) As Boolean
+		  dim expectedColumns as String = MySQLNormalizeIndexColumns(pColumns)
+		  if expectedColumns = "" then
+		    Return false
+		  end if
+
+		  Try
+		    dim tableNameSQL as String = me.TableName.ReplaceAll("'", "''")
+		    dim indexes as RowSet = pDatabase.SelectSQL("PRAGMA index_list('" + tableNameSQL + "');")
+
+		    if indexes <> nil then
+		      For Each indexRow As DatabaseRow In indexes
+		        if indexRow.Column("unique").BooleanValue then
+		          dim indexName as String = indexRow.Column("name").StringValue
+		          dim indexNameSQL as String = indexName.ReplaceAll("'", "''")
+		          dim indexColumns as RowSet = pDatabase.SelectSQL("PRAGMA index_info('" + indexNameSQL + "');")
+		          dim currentColumns() as String
+
+		          if indexColumns <> nil then
+		            For Each columnRow As DatabaseRow In indexColumns
+		              currentColumns.Add(columnRow.Column("name").StringValue)
+		            Next
+		            indexColumns.Close
+		          end if
+
+		          if MySQLNormalizeIndexColumns(String.FromArray(currentColumns, ",")) = expectedColumns then
+		            indexes.Close
+		            Return true
+		          end if
+		        end if
+		      Next
+		      indexes.Close
+		    end if
+		  Catch error As DatabaseException
+		    DebugLog "Error loading SQLite indexes on " + me.TableName + " : " + error.Message
+		    mLogs = mLogs + "Error loading SQLite indexes on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+
+		  Return false
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, Description = 50617274206F66205265706F7274732E44617461536574
 		Function NextRecord() As Boolean
 		  // Part of the Reports.Dataset interface.
@@ -3470,6 +3537,23 @@ Inherits QueryBuilder
 		    else
 		      dim cCurrent as ORMField = SchemaCurrent.value(dField.Key)
 		      dim cReal as ORMField = dField.Value
+
+		      // Named unique indexes are validated separately in TableUpdate.
+		      // Do not reinterpret their columns as the legacy single UNIQUE group.
+		      if cCurrent.Unique and Not cReal.Unique and SchemaUniqueIndex <> nil then
+		        for each dUnique as DictionaryEntry in SchemaUniqueIndex
+		          dim uniqueFields() as String = dUnique.Value
+		          For Each fieldName As String In uniqueFields
+		            if fieldName = dField.Key.StringValue then
+		              cCurrent.Unique = false
+		              Exit For
+		            end if
+		          Next
+		          if Not cCurrent.Unique then
+		            Exit For
+		          end if
+		        next
+		      end if
 		      
 		      if FieldNeedAlter(cCurrent, cReal, pDatabase) then
 		        SchemaToAlter.Value(dField.Key) = cReal
@@ -3591,6 +3675,18 @@ Inherits QueryBuilder
 		  sql = sql.left(sql.Length -1)
 		  if HasPrimaryKeys then sql = sql + ", "+Text.EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		  if HasUniqueKeys then sql = sql + ", "+Text.EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
+		  if SchemaUniqueIndex <> nil then
+		    for each dUnique as DictionaryEntry in SchemaUniqueIndex
+		      dim uniqueFields() as String = dUnique.Value
+		      if uniqueFields.LastIndex >= 0 then
+		        dim namedUnique as String = "UNIQUE ("
+		        For Each fieldName As String In uniqueFields
+		          namedUnique = namedUnique + "`" + fieldName + "`,"
+		        Next
+		        sql = sql + ", " + Text.EndOfLine + namedUnique.Left(namedUnique.Length - 1) + ")"
+		      end if
+		    next
+		  end if
 		  
 		  sql = sql +");"
 		  pDatabase.ExecuteSQL(sql)
@@ -3631,6 +3727,7 @@ Inherits QueryBuilder
 		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `" + mUniqueIndexName + "`("
 		      dim mUniqueColumns as String
 		      dim currentIndexes as Dictionary
+		      dim uniqueIndexError as Boolean = false
 
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
@@ -3802,6 +3899,43 @@ Inherits QueryBuilder
 		        DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
 		        mLogs =  mlogs + "UniqueKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		      end try
+
+		      if SchemaUniqueIndex <> nil then
+		        for each dUnique as DictionaryEntry in SchemaUniqueIndex
+		          dim uniqueFields() as String = dUnique.Value
+		          if uniqueFields.LastIndex >= 0 then
+		            dim desiredColumns as String = MySQLNormalizeIndexColumns(String.FromArray(uniqueFields, ","))
+		            dim uniqueIndexName as String = dUnique.Key.StringValue
+
+		            if Not MySQLHasIndexColumns(currentIndexes, desiredColumns, true) then
+		              if MySQLIndexExists(currentIndexes, uniqueIndexName) then
+		                DebugLog "Unique index " + uniqueIndexName + " on " + me.TableName + " has incompatible columns or is not unique."
+		                mLogs = mLogs + "Unique index " + uniqueIndexName + " on " + me.TableName + " has incompatible columns or is not unique." + EndOfLine
+		                uniqueIndexError = true
+		              else
+		                dim uniqueSQL as String = "ALTER TABLE `" + me.TableName + "` ADD UNIQUE INDEX `" + uniqueIndexName + "` ("
+		                For Each fieldName As String In uniqueFields
+		                  uniqueSQL = uniqueSQL + "`" + fieldName + "`,"
+		                Next
+		                uniqueSQL = uniqueSQL.Left(uniqueSQL.Length - 1) + ");"
+
+		                Try
+		                  DebugLog uniqueSQL
+		                  pDatabase.ExecuteSQL(uniqueSQL)
+		                  dim uniqueMeta as new Dictionary
+		                  uniqueMeta.Value("Columns") = desiredColumns
+		                  uniqueMeta.Value("NonUnique") = false
+		                  currentIndexes.Value(uniqueIndexName) = uniqueMeta
+		                Catch error As DatabaseException
+		                  DebugLog "Unique index " + uniqueIndexName + " on " + me.TableName + " error : " + error.Message
+		                  mLogs = mLogs + "Unique index " + uniqueIndexName + " on " + me.TableName + " error : " + error.Message + EndOfLine
+		                  uniqueIndexError = true
+		                End Try
+		              end if
+		            end if
+		          end if
+		        next
+		      end if
 		      
 		      
 		      // INDEXING DB
@@ -3844,6 +3978,9 @@ Inherits QueryBuilder
 		      End Try
 		      
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		      if uniqueIndexError then
+		        Return false
+		      end if
 		      
 		    end if
 		    
@@ -3960,6 +4097,40 @@ Inherits QueryBuilder
 		        
 		      end if
 		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON;")
+
+		      dim uniqueIndexError as Boolean = false
+		      if SchemaUniqueIndex <> nil then
+		        for each dUnique as DictionaryEntry in SchemaUniqueIndex
+		          dim uniqueFields() as String = dUnique.Value
+		          if uniqueFields.LastIndex >= 0 then
+		            dim desiredColumns as String = String.FromArray(uniqueFields, ",")
+		            if Not SQLiteHasUniqueIndexColumns(pDatabase, desiredColumns) then
+		              dim uniqueSQL as String = "CREATE UNIQUE INDEX IF NOT EXISTS `" + dUnique.Key.StringValue + "` ON `" + me.TableName + "` ("
+		              For Each fieldName As String In uniqueFields
+		                uniqueSQL = uniqueSQL + "`" + fieldName + "`,"
+		              Next
+		              uniqueSQL = uniqueSQL.Left(uniqueSQL.Length - 1) + ");"
+
+		              Try
+		                DebugLog uniqueSQL
+		                pDatabase.ExecuteSQL(uniqueSQL)
+		                if Not SQLiteHasUniqueIndexColumns(pDatabase, desiredColumns) then
+		                  DebugLog "Unique index " + dUnique.Key.StringValue + " on " + me.TableName + " was not created."
+		                  mLogs = mLogs + "Unique index " + dUnique.Key.StringValue + " on " + me.TableName + " was not created." + EndOfLine
+		                  uniqueIndexError = true
+		                end if
+		              Catch error As DatabaseException
+		                DebugLog "Unique index " + dUnique.Key.StringValue + " on " + me.TableName + " error : " + error.Message
+		                mLogs = mLogs + "Unique index " + dUnique.Key.StringValue + " on " + me.TableName + " error : " + error.Message + EndOfLine
+		                uniqueIndexError = true
+		              End Try
+		            end if
+		          end if
+		        next
+		      end if
+		      if uniqueIndexError then
+		        Return false
+		      end if
 		      
 		    end if
 		    
@@ -4570,6 +4741,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaIndex As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaUniqueIndex As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
