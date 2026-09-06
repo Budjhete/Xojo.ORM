@@ -3587,7 +3587,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableColumns(pDatabase As Database) As Dictionary
-		  if db.DatabaseSchemaCache.Lookup(me.TableName, nil)<>nil then Return db.DatabaseSchemaCache.Value(me.TableName)
+		  If DB.DatabaseSchemaCache Is Nil Then DB.DatabaseSchemaCache = New Dictionary
+		  If DB.DatabaseSchemaCache.HasKey(Me.TableName) Then Return DB.DatabaseSchemaCache.Value(Me.TableName)
 		  
 		  Dim pColumns As new Dictionary
 		  Try
