@@ -1189,6 +1189,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CreateTable(pDatabase as Database, pSuffix as String = "") As Boolean
+		  NormalizeLegacySchemaIndexes
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
 		    Dim sql As String
@@ -3682,6 +3683,18 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub NormalizeLegacySchemaIndexes()
+		  If SchemaIndexes Is Nil Then SchemaIndexes = New Dictionary
+		  If SchemaUniqueIndex Is Nil Then Return
+
+		  For Each indexEntry As DictionaryEntry In SchemaUniqueIndex
+		    Dim indexColumns() As String = indexEntry.Value
+		    SchemaIndexes.Value(indexEntry.Key.StringValue) = New ORMIndex(indexColumns, True)
+		  Next
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function TableName() As String
 		  Raise New ORMException("TableName must be implemented or be called from its implementation.")
@@ -3691,6 +3704,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableUpdate(pDatabase as Database) As Boolean
 		  mInvalidIndexReport = ""
+		  NormalizeLegacySchemaIndexes
 
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
@@ -4734,6 +4748,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaIndexes As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaUniqueIndex As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0

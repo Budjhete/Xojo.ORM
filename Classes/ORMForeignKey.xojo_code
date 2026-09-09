@@ -83,16 +83,16 @@ Protected Class ORMForeignKey
 	#tag EndProperty
 
 
-	#tag Constant, Name = ActionCascade, Type = String, Dynamic = False, Default = \"CASCADE", Scope = Public
+	#tag Constant, Name = ActionCascade, Type = String, Dynamic = False, Default = "CASCADE", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = ActionNoAction, Type = String, Dynamic = False, Default = \"NO ACTION", Scope = Public
+	#tag Constant, Name = ActionNoAction, Type = String, Dynamic = False, Default = "NO ACTION", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = ActionRestrict, Type = String, Dynamic = False, Default = \"RESTRICT", Scope = Public
+	#tag Constant, Name = ActionRestrict, Type = String, Dynamic = False, Default = "RESTRICT", Scope = Public
 	#tag EndConstant
 
-	#tag Constant, Name = ActionSetNull, Type = String, Dynamic = False, Default = \"SET NULL", Scope = Public
+	#tag Constant, Name = ActionSetNull, Type = String, Dynamic = False, Default = "SET NULL", Scope = Public
 	#tag EndConstant
 
 
