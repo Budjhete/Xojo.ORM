@@ -506,6 +506,9 @@ Inherits QueryBuilder
 		  // Basic ORM constructor
 		  
 		  Super.Constructor
+		  If SchemaIndex Is Nil Then SchemaIndex = New Dictionary
+		  If SchemaIndexes Is Nil Then SchemaIndexes = New Dictionary
+		  If SchemaForeignKeys Is Nil Then SchemaForeignKeys = New Dictionary
 		  
 		  mData = New Dictionary
 		  mChanged = New Dictionary
@@ -1186,6 +1189,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CreateTable(pDatabase as Database, pSuffix as String = "") As Boolean
+		  NormalizeLegacySchemaIndexes
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
 		    Dim sql As String
@@ -1221,18 +1225,17 @@ Inherits QueryBuilder
 		    sql = sql.left(sql.Length -1)
 		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
-		    if SchemaUniqueIndex <> nil then
-		      for each dUnique as DictionaryEntry in SchemaUniqueIndex
-		        dim uniqueFields() as String = dUnique.Value
-		        if uniqueFields.LastIndex >= 0 then
-		          dim namedUnique as String = "UNIQUE KEY `" + dUnique.Key.StringValue + "` ("
-		          For Each fieldName As String In uniqueFields
-		            namedUnique = namedUnique + "`" + fieldName + "`,"
-		          Next
-		          sql = sql + ", " + EndOfLine + namedUnique.Left(namedUnique.Length - 1) + ")"
-		        end if
-		      next
-		    end if
+
+		    For Each indexEntry As DictionaryEntry In SchemaIndex
+		      Var indexColumns() As String = indexEntry.Value
+		      sql = sql + ", " + EndOfLine + SQLIndexDefinition(indexEntry.Key.StringValue, New ORMIndex(indexColumns), True)
+		    Next
+		    For Each indexEntry As DictionaryEntry In SchemaIndexes
+		      sql = sql + ", " + EndOfLine + SQLIndexDefinition(indexEntry.Key.StringValue, ORMIndex(indexEntry.Value), True)
+		    Next
+		    For Each foreignKeyEntry As DictionaryEntry In SchemaForeignKeys
+		      sql = sql + ", " + EndOfLine + SQLForeignKeyDefinition(foreignKeyEntry.Key.StringValue, ORMForeignKey(foreignKeyEntry.Value))
+		    Next
 		    
 		    sql = sql +");"
 		    try
@@ -1291,18 +1294,16 @@ Inherits QueryBuilder
 		    sql = sql.left(sql.Length -1)
 		    if HasPrimaryKeys and CanHavePrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
-		    if SchemaUniqueIndex <> nil then
-		      for each dUnique as DictionaryEntry in SchemaUniqueIndex
-		        dim uniqueFields() as String = dUnique.Value
-		        if uniqueFields.LastIndex >= 0 then
-		          dim namedUnique as String = "CONSTRAINT `" + dUnique.Key.StringValue + "` UNIQUE ("
-		          For Each fieldName As String In uniqueFields
-		            namedUnique = namedUnique + "`" + fieldName + "`,"
-		          Next
-		          sql = sql + ", " + EndOfLine + namedUnique.Left(namedUnique.Length - 1) + ")"
-		        end if
-		      next
-		    end if
+
+		    For Each indexEntry As DictionaryEntry In SchemaIndexes
+		      Var configuredIndex As ORMIndex = ORMIndex(indexEntry.Value)
+		      If configuredIndex.Unique Then
+		        sql = sql + ", " + EndOfLine + "CONSTRAINT `" + indexEntry.Key.StringValue + "` UNIQUE (" + SQLColumnList(configuredIndex.Columns) + ")"
+		      End If
+		    Next
+		    For Each foreignKeyEntry As DictionaryEntry In SchemaForeignKeys
+		      sql = sql + ", " + EndOfLine + SQLForeignKeyDefinition(foreignKeyEntry.Key.StringValue, ORMForeignKey(foreignKeyEntry.Value))
+		    Next
 		    
 		    sql = sql +");"
 		    Try
@@ -1323,6 +1324,41 @@ Inherits QueryBuilder
 		  If Not ShouldUseRecordLock Then Return Nil
 
 		  Return ModelORMRecordLock.ActiveLock(pDatabase, Me.TableName, ModelORMRecordLock.RecordKeyFor(Me))
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLColumnList(pColumns() As String) As String
+		  Var result As String
+		  For Each columnName As String In pColumns
+		    If columnName.Trim = "" Then Raise New ORMException("A schema column cannot be empty.")
+		    If result <> "" Then result = result + ", "
+		    result = result + "`" + columnName.Trim + "`"
+		  Next
+
+		  If result = "" Then Raise New ORMException("A schema constraint must contain at least one column.")
+		  Return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLForeignKeyDefinition(pName As String, pForeignKey As ORMForeignKey) As String
+		  If pForeignKey Is Nil Then Raise New ORMException("Foreign key " + pName + " has no definition.")
+		  Return "CONSTRAINT `" + pName + "` FOREIGN KEY (" + SQLColumnList(pForeignKey.Columns) + ") REFERENCES `" + pForeignKey.ReferencedTable + "` (" + SQLColumnList(pForeignKey.ReferencedColumns) + ") ON UPDATE " + pForeignKey.OnUpdate + " ON DELETE " + pForeignKey.OnDelete
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLIndexDefinition(pName As String, pIndex As ORMIndex, pInsideCreateTable As Boolean) As String
+		  If pIndex Is Nil Then Raise New ORMException("Index " + pName + " has no definition.")
+		  Var prefix As String
+		  If pInsideCreateTable Then
+		    prefix = If(pIndex.Unique, "UNIQUE KEY ", "KEY ")
+		  Else
+		    prefix = If(pIndex.Unique, "UNIQUE INDEX ", "INDEX ")
+		  End If
+
+		  Return prefix + "`" + pName + "` (" + SQLColumnList(pIndex.Columns) + ")"
 		End Function
 	#tag EndMethod
 
@@ -1535,9 +1571,8 @@ Inherits QueryBuilder
 		    Return true
 		  end if
 
-		  if pCurrent.Unique <> pExpected.Unique then
-		    Return true
-		  end if
+		  // Uniqueness belongs to an index, not to a column. It is synchronized by
+		  // the legacy ORMField.Unique block or by the named SchemaIndexes entries.
 
 		  if pCurrent.PrimaryKey <> pExpected.PrimaryKey then
 		    Return true
@@ -2451,16 +2486,22 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Function MySQLForeignKeyColumns(pDatabase as Database) As Dictionary
+		Private Function MySQLCurrentForeignKeys(pDatabase as Database) As Dictionary
 		  dim foreignKeys as new Dictionary
 
 		  Try
-		    dim sql as String = "SELECT constraint_name AS `Constraint`, GROUP_CONCAT(column_name ORDER BY ordinal_position) AS `Columns` FROM information_schema.key_column_usage WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' AND referenced_table_name IS NOT NULL GROUP BY constraint_name;"
+		    dim sql as String = "SELECT k.constraint_name AS `Constraint`, GROUP_CONCAT(k.column_name ORDER BY k.ordinal_position) AS `Columns`, k.referenced_table_name AS `ReferencedTable`, GROUP_CONCAT(k.referenced_column_name ORDER BY k.ordinal_position) AS `ReferencedColumns`, r.update_rule AS `UpdateRule`, r.delete_rule AS `DeleteRule` FROM information_schema.key_column_usage k JOIN information_schema.referential_constraints r ON r.constraint_schema = k.constraint_schema AND r.table_name = k.table_name AND r.constraint_name = k.constraint_name WHERE k.table_schema = '" + pDatabase.DatabaseName + "' AND k.table_name = '" + me.TableName + "' AND k.referenced_table_name IS NOT NULL GROUP BY k.constraint_name, k.referenced_table_name, r.update_rule, r.delete_rule;"
 		    dim rows as RowSet = pDatabase.SelectSQL(sql)
 
 		    if rows <> nil then
 		      For Each row As DatabaseRow In rows
-		        foreignKeys.Value(row.Column("Constraint").StringValue) = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		        dim meta as new Dictionary
+		        meta.Value("Columns") = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		        meta.Value("ReferencedTable") = row.Column("ReferencedTable").StringValue.Lowercase
+		        meta.Value("ReferencedColumns") = MySQLNormalizeIndexColumns(row.Column("ReferencedColumns").StringValue)
+		        meta.Value("UpdateRule") = row.Column("UpdateRule").StringValue.Uppercase
+		        meta.Value("DeleteRule") = row.Column("DeleteRule").StringValue.Uppercase
+		        foreignKeys.Value(row.Column("Constraint").StringValue) = meta
 		      Next
 		      rows.Close
 		    end if
@@ -2470,6 +2511,21 @@ Inherits QueryBuilder
 		  End Try
 
 		  Return foreignKeys
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLForeignKeyMatches(pForeignKeys As Dictionary, pName As String, pExpected As ORMForeignKey) As Boolean
+		  If pForeignKeys Is Nil Or pExpected Is Nil Then Return False
+		  If Not pForeignKeys.HasKey(pName) Then Return False
+
+		  Var meta As Dictionary = Dictionary(pForeignKeys.Value(pName))
+		  If meta Is Nil Then Return False
+		  Return meta.Lookup("Columns", "").StringValue = MySQLNormalizeIndexColumns(String.FromArray(pExpected.Columns, ",")) And _
+		  meta.Lookup("ReferencedTable", "").StringValue = pExpected.ReferencedTable.Lowercase And _
+		  meta.Lookup("ReferencedColumns", "").StringValue = MySQLNormalizeIndexColumns(String.FromArray(pExpected.ReferencedColumns, ",")) And _
+		  meta.Lookup("UpdateRule", "").StringValue = pExpected.OnUpdate.Uppercase And _
+		  meta.Lookup("DeleteRule", "").StringValue = pExpected.OnDelete.Uppercase
 		End Function
 	#tag EndMethod
 
@@ -2519,7 +2575,8 @@ Inherits QueryBuilder
 		  dim normalizedIndexColumns as String = MySQLNormalizeIndexColumns(pIndexColumns)
 
 		  For Each entry As DictionaryEntry In pForeignKeys
-		    dim fkColumns as String = MySQLNormalizeIndexColumns(entry.Value.StringValue)
+		    dim foreignKeyMeta as Dictionary = Dictionary(entry.Value)
+		    dim fkColumns as String = MySQLNormalizeIndexColumns(foreignKeyMeta.Lookup("Columns", "").StringValue)
 
 		    if entry.Key.StringValue = pIndexName then
 		      Return true
@@ -3591,7 +3648,8 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function TableColumns(pDatabase As Database) As Dictionary
-		  if db.DatabaseSchemaCache.Lookup(me.TableName, nil)<>nil then Return db.DatabaseSchemaCache.Value(me.TableName)
+		  If DB.DatabaseSchemaCache Is Nil Then DB.DatabaseSchemaCache = New Dictionary
+		  If DB.DatabaseSchemaCache.HasKey(Me.TableName) Then Return DB.DatabaseSchemaCache.Value(Me.TableName)
 		  
 		  Dim pColumns As new Dictionary
 		  Try
@@ -3697,6 +3755,18 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h21
+		Private Sub NormalizeLegacySchemaIndexes()
+		  If SchemaIndexes Is Nil Then SchemaIndexes = New Dictionary
+		  If SchemaUniqueIndex Is Nil Then Return
+
+		  For Each indexEntry As DictionaryEntry In SchemaUniqueIndex
+		    Dim indexColumns() As String = indexEntry.Value
+		    If indexColumns.LastIndex >= 0 Then SchemaIndexes.Value(indexEntry.Key.StringValue) = New ORMIndex(indexColumns, True)
+		  Next
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function TableName() As String
 		  Raise New ORMException("TableName must be implemented or be called from its implementation.")
@@ -3706,6 +3776,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TableUpdate(pDatabase as Database) As Boolean
 		  mInvalidIndexReport = ""
+		  NormalizeLegacySchemaIndexes
 
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
@@ -3728,6 +3799,7 @@ Inherits QueryBuilder
 		      dim mUniqueColumns as String
 		      dim currentIndexes as Dictionary
 		      dim uniqueIndexError as Boolean = false
+		      dim currentForeignKeys as Dictionary
 
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
@@ -3861,6 +3933,7 @@ Inherits QueryBuilder
 		      // Load the current keys first, then keep this snapshot current after each ADD.
 		      #Pragma BreakOnExceptions False
 		      currentIndexes = MySQLCurrentIndexes(pDatabase)
+		      currentForeignKeys = MySQLCurrentForeignKeys(pDatabase)
 		      Try
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		      Catch lockError As DatabaseException
@@ -3968,6 +4041,52 @@ Inherits QueryBuilder
 		        end if
 		        
 		      next
+
+		      For Each indexEntry As DictionaryEntry In SchemaIndexes
+		        // Legacy unique indexes were validated above, including equivalent names.
+		        If SchemaUniqueIndex <> Nil Then
+		          If SchemaUniqueIndex.HasKey(indexEntry.Key) Then Continue
+		        End If
+		        Var configuredIndex As ORMIndex = ORMIndex(indexEntry.Value)
+		        Var indexName As String = indexEntry.Key.StringValue
+		        Var configuredColumns As String = MySQLNormalizeIndexColumns(String.FromArray(configuredIndex.Columns, ","))
+
+		        If MySQLIndexExists(currentIndexes, indexName) Then
+		          Var currentIndex As Dictionary = Dictionary(currentIndexes.Value(indexName))
+		          Var currentColumns As String = currentIndex.Lookup("Columns", "").StringValue
+		          Var currentUnique As Boolean = Not currentIndex.Lookup("NonUnique", True).BooleanValue
+		          If currentColumns <> configuredColumns Or currentUnique <> configuredIndex.Unique Then
+		            mInvalidIndexReport = "Index " + indexName + " on " + Me.TableName + " does not match its model definition."
+		            mLogs = mLogs + mInvalidIndexReport + EndOfLine
+		            Try
+		              pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		            Catch unlockError As DatabaseException
+		              DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		            End Try
+		            pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		            Return False
+		          End If
+		        Else
+		          Var addIndexSQL As String = "ALTER TABLE `" + Me.TableName + "` ADD " + SQLIndexDefinition(indexName, configuredIndex, False) + ";"
+		          Try
+		            DebugLog addIndexSQL
+		            pDatabase.ExecuteSQL(addIndexSQL)
+		            Var indexMeta As New Dictionary
+		            indexMeta.Value("Columns") = configuredColumns
+		            indexMeta.Value("NonUnique") = Not configuredIndex.Unique
+		            currentIndexes.Value(indexName) = indexMeta
+		          Catch error As DatabaseException
+		            mLogs = mLogs + "Indexing on " + Me.TableName + " error : " + error.Message + EndOfLine
+		            Try
+		              pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		            Catch unlockError As DatabaseException
+		              DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
+		            End Try
+		            pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		            Return False
+		          End Try
+		        End If
+		      Next
 		      #Pragma BreakOnExceptions True
 		      
 		      Try
@@ -3976,6 +4095,35 @@ Inherits QueryBuilder
 		        DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		        mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		      End Try
+
+		      For Each foreignKeyEntry As DictionaryEntry In SchemaForeignKeys
+		        Var foreignKeyName As String = foreignKeyEntry.Key.StringValue
+		        Var configuredForeignKey As ORMForeignKey = ORMForeignKey(foreignKeyEntry.Value)
+		        If currentForeignKeys.HasKey(foreignKeyName) Then
+		          If Not MySQLForeignKeyMatches(currentForeignKeys, foreignKeyName, configuredForeignKey) Then
+		            mLogs = mLogs + "Foreign key " + foreignKeyName + " on " + Me.TableName + " does not match its model definition." + EndOfLine
+		            pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		            Return False
+		          End If
+		        Else
+		          Var addForeignKeySQL As String = "ALTER TABLE `" + Me.TableName + "` ADD " + SQLForeignKeyDefinition(foreignKeyName, configuredForeignKey) + ";"
+		          Try
+		            DebugLog addForeignKeySQL
+		            pDatabase.ExecuteSQL(addForeignKeySQL)
+		            Var foreignKeyMeta As New Dictionary
+		            foreignKeyMeta.Value("Columns") = MySQLNormalizeIndexColumns(String.FromArray(configuredForeignKey.Columns, ","))
+		            foreignKeyMeta.Value("ReferencedTable") = configuredForeignKey.ReferencedTable.Lowercase
+		            foreignKeyMeta.Value("ReferencedColumns") = MySQLNormalizeIndexColumns(String.FromArray(configuredForeignKey.ReferencedColumns, ","))
+		            foreignKeyMeta.Value("UpdateRule") = configuredForeignKey.OnUpdate.Uppercase
+		            foreignKeyMeta.Value("DeleteRule") = configuredForeignKey.OnDelete.Uppercase
+		            currentForeignKeys.Value(foreignKeyName) = foreignKeyMeta
+		          Catch error As DatabaseException
+		            mLogs = mLogs + "Foreign key on " + Me.TableName + " error : " + error.Message + EndOfLine
+		            pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		            Return False
+		          End Try
+		        End If
+		      Next
 		      
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
 		      if uniqueIndexError then
@@ -4343,7 +4491,9 @@ Inherits QueryBuilder
 		    Next
 		    
 		    If pChanged.KeyCount > 0 Then
-		      if app.DebugMode then DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
+		      #If DebugBuild Then
+		        DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
+		      #EndIf
 		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
 		    
@@ -4732,6 +4882,10 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		SchemaForeignKeys As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		SchemaCurrent As Dictionary
 	#tag EndProperty
 
@@ -4741,6 +4895,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaIndex As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaIndexes As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0

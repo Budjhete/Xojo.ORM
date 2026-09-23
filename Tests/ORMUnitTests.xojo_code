@@ -535,6 +535,32 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub SchemaConstraintDescriptorTest()
+		  Var indexColumns() As String = Array("organisationNo", "code")
+		  Var indexDefinition As New ORMIndex(indexColumns, True)
+		  indexColumns(0) = "changed"
+
+		  Var storedIndexColumns() As String = indexDefinition.Columns
+		  Assert.AreEqual("organisationNo", storedIndexColumns(0))
+		  Assert.AreEqual("code", storedIndexColumns(1))
+		  Assert.IsTrue(indexDefinition.Unique)
+
+		  Var localColumns() As String = Array("roleNo", "organisationNo")
+		  Var referencedColumns() As String = Array("noRole", "organisationNo")
+		  Var foreignKeyDefinition As New ORMForeignKey(localColumns, "PBXRole", referencedColumns, "cascade", "restrict")
+		  localColumns(0) = "changed"
+		  referencedColumns(0) = "changed"
+
+		  Var storedLocalColumns() As String = foreignKeyDefinition.Columns
+		  Var storedReferencedColumns() As String = foreignKeyDefinition.ReferencedColumns
+		  Assert.AreEqual("roleNo", storedLocalColumns(0))
+		  Assert.AreEqual("noRole", storedReferencedColumns(0))
+		  Assert.AreEqual(ORMForeignKey.ActionCascade, foreignKeyDefinition.OnUpdate)
+		  Assert.AreEqual(ORMForeignKey.ActionRestrict, foreignKeyDefinition.OnDelete)
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub XMLValueTest()
 		  Dim pUserTest As New UserTest
 		  

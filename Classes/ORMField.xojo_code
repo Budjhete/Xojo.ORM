@@ -108,8 +108,8 @@ Protected Class ORMField
 
 		    dim decimalParts() as String = normalizedLength.Split(",")
 		    if decimalParts.LastIndex = 1 then
-		      dim precision as Integer = decimalParts(0).Trim.IntegerValue
-		      dim scale as Integer = decimalParts(1).Trim.IntegerValue
+		      dim precision as Integer = decimalParts(0).Trim.ToInteger
+		      dim scale as Integer = decimalParts(1).Trim.ToInteger
 
 		      if precision > 0 and scale > 0 and precision < scale then
 		        precision = scale + 1

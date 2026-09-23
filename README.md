@@ -20,3 +20,28 @@ such ;
 [right here on GitHub](https://github.com/Budjhete/XojoORM/wiki).
 
 NB : you need [XOJOUnit](https://github.com/Budjhete/xojo-unit) project to make it run as is.
+
+Named indexes and foreign keys
+------------------------------
+
+`SchemaIndex` and `ORMField.Unique` remain supported for existing models. New
+models can describe several distinct named indexes and exact foreign keys with
+the opt-in `SchemaIndexes` and `SchemaForeignKeys` dictionaries:
+
+```xojo
+SchemaIndexes.Value("uq_role_organisation_code") = New ORMIndex(Array("organisationNo", "code"), True)
+SchemaIndexes.Value("idx_role_active") = New ORMIndex(Array("organisationNo", "actif"))
+
+SchemaForeignKeys.Value("fk_role_organisation") = New ORMForeignKey( _
+  Array("organisationNo"), _
+  "Organisation", _
+  Array("noOrganisation"), _
+  ORMForeignKey.ActionCascade, _
+  ORMForeignKey.ActionRestrict)
+```
+
+On MySQL/MariaDB, `CreateTable` emits those definitions and `TableUpdate`
+adds a missing named definition. If a definition already exists under the
+requested name but its columns, uniqueness, referenced table, referenced
+columns or actions differ, the update stops and reports the mismatch. It never
+drops or silently rewrites that existing constraint.
