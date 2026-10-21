@@ -138,8 +138,6 @@ Implements QueryExpression
 
 		    Dim pStatement As String = Compile
 
-		    DebugLog System.Ticks.ToString + " " + pStatement
-
 		    dim count as integer = 0
 		    Dim pRecordSet As RecordSet
 
@@ -237,8 +235,6 @@ Implements QueryExpression
 		  If Not RaiseEvent Executing Then
 
 		    Dim pStatement As String = Compile
-
-		    DebugLog System.Ticks.ToString + " " + pStatement
 
 		    dim count as integer = 0
 		    Dim pRecordSet As RowSet
