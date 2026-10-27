@@ -152,6 +152,23 @@ Protected Class ORMField
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MigrationLength(pDatabase As Database, pCurrent As ORMField) As String
+		  Var pExpectedLength As String = Me.Length(pDatabase)
+		  // A deployed VARCHAR may hold legacy values beyond the model's input limit.
+		  // Never reduce its capacity, even when another column attribute needs an ALTER.
+		  If pDatabase IsA MySQLCommunityServer And pCurrent <> Nil Then
+		    If Me.Type = TypeList.VARCHAR And pCurrent.Type = TypeList.VARCHAR Then
+		      Var pCurrentLength As String = pCurrent.Length(pDatabase)
+		      Var pExpectedWidth As Integer = pExpectedLength.ReplaceAll("(", "").ReplaceAll(")", "").ToInteger
+		      Var pCurrentWidth As Integer = pCurrentLength.ReplaceAll("(", "").ReplaceAll(")", "").ToInteger
+		      If pExpectedWidth > 0 And pCurrentWidth > pExpectedWidth Then Return pCurrentLength
+		    End If
+		  End If
+		  Return pExpectedLength
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function NotNull() As String
 		  if mNotNull then
@@ -174,6 +191,8 @@ Protected Class ORMField
 		  // MySQL makes every primary-key column NOT NULL, even if the model omits it.
 		  // SQLite keeps the declared nullability of ordinary text/composite keys.
 		  If pDatabase IsA MySQLCommunityServer And PrimaryKey Then Return "NOT NULL"
+		  // Legacy MySQL/MariaDB TIMESTAMP columns require explicit NULL.
+		  If pDatabase IsA MySQLCommunityServer And mType = TypeList.TIMESTAMP And Not mNotNull Then Return "NULL"
 		  Return Me.NotNull
 		End Function
 	#tag EndMethod
@@ -185,7 +204,7 @@ Protected Class ORMField
 		  If notNullSQL <> "" Then description = description + " " + notNullSQL
 		  Var defaultSQL As String = DefaultValue(pDatabase)
 		  // Nullable columns without an explicit default are equivalent to DEFAULT NULL.
-		  If pDatabase IsA MySQLCommunityServer And defaultSQL = "" And notNullSQL = "" Then defaultSQL = "DEFAULT NULL"
+		  If pDatabase IsA MySQLCommunityServer And defaultSQL = "" And (notNullSQL = "" Or notNullSQL = "NULL") Then defaultSQL = "DEFAULT NULL"
 		  If defaultSQL <> "" Then description = description + " " + defaultSQL
 		  Var extraSQL As String = Extra(pDatabase)
 		  If extraSQL <> "" Then description = description + " " + extraSQL

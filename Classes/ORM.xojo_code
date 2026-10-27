@@ -1205,7 +1205,7 @@ Inherits QueryBuilder
 		      dim field as ORMField = dField.Value
 		      sql = sql + EndOfLine + "`"+ dField.Key + "` " 
 		      sql = sql + field.Type(pDatabase) +field.Length
-		      sql = sql + " " + field.NotNull
+		      sql = sql + " " + field.NotNull(pDatabase)
 		      if field.Type(pDatabase) <> "DECIMAL" then sql = sql + " " + field.DefaultValue(pDatabase)
 		      sql = sql + " " + field.Extra(pDatabase)
 		      sql = sql + ","
@@ -1562,7 +1562,7 @@ Inherits QueryBuilder
 		  
 		  #If Not TargetIOS And Not TargetAndroid Then
 		    if pDatabase isa MySQLCommunityServer then
-		      if pCurrent.Length(pDatabase) <> pExpected.Length(pDatabase) then
+		      if pCurrent.Length(pDatabase) <> pExpected.MigrationLength(pDatabase, pCurrent) then
 		        Return true
 		      end if
 		      
@@ -2466,6 +2466,7 @@ Inherits QueryBuilder
 		  Catch error as DatabaseException
 		    DebugLog "Error loading foreign keys on " + me.TableName + " : " + error.Message
 		    mLogs =  mlogs + "Error loading foreign keys on " + me.TableName + " : " + error.Message + EndOfLine
+		    Raise New ORMException("Cannot read foreign keys on " + Me.TableName + ": " + error.Message)
 		  End Try
 		  
 		  Return foreignKeys
@@ -2492,6 +2493,7 @@ Inherits QueryBuilder
 		  Catch error as DatabaseException
 		    DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
 		    mLogs =  mlogs + "Error loading indexes on " + me.TableName + " : " + error.Message + EndOfLine
+		    Raise New ORMException("Cannot read indexes on " + Me.TableName + ": " + error.Message)
 		  End Try
 		  
 		  Return indexes
@@ -2757,6 +2759,386 @@ Inherits QueryBuilder
 		  Next
 		  
 		  Return pDictionary
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function RepairDuplicateDocumentNumbers(pDatabase As Database, pColumns() As String) As Boolean
+		  // Only models with internal workstation-numbered documents opt into this repair.
+		  If Not SchemaRenumberDuplicateNumbers Then Return False
+		  If pColumns.Count <> 2 Or pColumns.IndexOf("numero") < 0 Or pColumns.IndexOf("type") < 0 Then Return False
+		  If Not Schema.HasKey(PrimaryKey) Or Not Schema.HasKey("numero") Then Return False
+		  Var pKeyField As ORMField = Schema.Value(PrimaryKey)
+		  If Not pKeyField.PrimaryKey Or pKeyField.Type <> ORMField.TypeList.INTEGER Or pKeyField.Extra <> ORMField.ExtraList.AutoIncremente Then Return False
+		  Const Digits As String = "0123456789"
+		  Var pQuotedTable As String = "`" + Me.TableName.ReplaceAll("`", "``") + "`"
+		  Var pQuotedKey As String = "`" + PrimaryKey.ReplaceAll("`", "``") + "`"
+		  Var pIsMySQL As Boolean = pDatabase IsA MySQLCommunityServer
+		  Var pSavepointOpen As Boolean
+		  Var pAutocommitChanged As Boolean
+		  Var pOriginalAutocommit As Integer
+		  Var pOriginalForeignKeyChecks As Integer
+		  Var pSucceeded As Boolean
+		  Var pRows As RowSet
+		  Var pAudit() As String
+		  Try
+		    pRows = pDatabase.SelectSQL("SELECT COUNT(*) FROM (SELECT 1 FROM " + pQuotedTable + " WHERE `numero` IS NOT NULL AND `type` IS NOT NULL GROUP BY `numero`, `type` HAVING COUNT(*)>1) AS duplicate_numbers")
+		    Var pInitialConflicts As Integer = pRows.ColumnAt(0).IntegerValue
+		    pRows.Close
+		    pRows = Nil
+		    If pInitialConflicts = 0 Then Return True
+		    Var pPreserveUpdateColumns As String
+		    If pIsMySQL Then
+		      // Metadata must be inspected before LOCK TABLES; then re-read the actual rows under lock.
+		      pDatabase.ExecuteSQL("UNLOCK TABLES")
+		      pRows = pDatabase.SelectSQL("SELECT @@SESSION.AUTOCOMMIT AS auto_commit, @@SESSION.FOREIGN_KEY_CHECKS AS foreign_keys")
+		      pOriginalAutocommit = pRows.Column("auto_commit").IntegerValue
+		      pOriginalForeignKeyChecks = pRows.Column("foreign_keys").IntegerValue
+		      pRows.Close
+		      pRows = pDatabase.SelectSQL("SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?", Me.TableName)
+		      Var pEngine As String = pRows.ColumnAt(0).StringValue
+		      pRows.Close
+		      If pEngine <> "InnoDB" Then Raise New ORMException("Document renumbering requires InnoDB on " + Me.TableName)
+		      pRows = pDatabase.SelectSQL("SELECT (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA=DATABASE() AND EVENT_OBJECT_TABLE=? AND EVENT_MANIPULATION='UPDATE') + (SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA=DATABASE() AND REFERENCED_TABLE_NAME=? AND REFERENCED_COLUMN_NAME='numero')", Me.TableName, Me.TableName)
+		      Var pDependencies As Integer = pRows.ColumnAt(0).IntegerValue
+		      pRows.Close
+		      If pDependencies > 0 Then Raise New ORMException("Document renumbering requires review of number references or update triggers on " + Me.TableName)
+		      // Preserve automatic ON UPDATE timestamps: the only changed value is numero.
+		      pRows = pDatabase.SelectSQL("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=? AND LOWER(EXTRA) LIKE '%on update%'", Me.TableName)
+		      For Each pRow As DatabaseRow In pRows
+		        Var pName As String = pRow.Column("COLUMN_NAME").StringValue
+		        Var pQuoted As String = "`" + pName.ReplaceAll("`", "``") + "`"
+		        pPreserveUpdateColumns = pPreserveUpdateColumns + ", " + pQuoted + "=" + pQuoted
+		      Next
+		      pRows.Close
+		      pDatabase.ExecuteSQL("SET autocommit=0")
+		      pAutocommitChanged = True
+		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS=1")
+		      pDatabase.ExecuteSQL("LOCK TABLES " + pQuotedTable + " WRITE")
+		    Else
+		      pRows = pDatabase.SelectSQL("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type='trigger' AND tbl_name=?) + (SELECT COUNT(*) FROM sqlite_temp_master WHERE type='trigger' AND tbl_name=?) + (SELECT COUNT(*) FROM sqlite_master AS m JOIN pragma_foreign_key_list(m.name) AS fk WHERE m.type='table' AND fk.`table`=? AND fk.`to`='numero')", Me.TableName, Me.TableName, Me.TableName)
+		      Var pDependencies As Integer = pRows.ColumnAt(0).IntegerValue
+		      pRows.Close
+		      If pDependencies > 0 Then Raise New ORMException("Document renumbering requires review of number references or triggers on " + Me.TableName)
+		    End If
+		    pRows = Nil
+		    pDatabase.ExecuteSQL("SAVEPOINT orm_document_number_repair")
+		    pSavepointOpen = True
+		    // Keep the earliest physical identity in each native-collation group.
+		    // NULL unique-key components do not conflict in MySQL or SQLite.
+		    // Each SELECT references the locked physical table once (MySQL LOCK TABLES rule).
+		    Var pGroupSQL As String = "SELECT `numero`, `type`, MIN(" + pQuotedKey + ") AS first_identity FROM " + pQuotedTable + " WHERE `numero` IS NOT NULL AND `type` IS NOT NULL GROUP BY `numero`, `type` HAVING COUNT(*)>1"
+		    pRows = pDatabase.SelectSQL(pGroupSQL)
+		    Var pGroups() As Dictionary
+		    For Each pRow As DatabaseRow In pRows
+		      Var pGroup As New Dictionary
+		      pGroup.Value("Number") = pRow.Column("numero").StringValue
+		      pGroup.Value("Type") = pRow.Column("type").StringValue
+		      pGroup.Value("FirstIdentity") = pRow.Column("first_identity").Int64Value
+		      pGroups.Add(pGroup)
+		    Next
+		    pRows.Close
+		    pRows = Nil
+		    Var pPlanByIdentity As New Dictionary
+		    Var pIdentities() As Int64
+		    Var pLoserSQL As String = "SELECT " + pQuotedKey + ", `numero`, `type` FROM " + pQuotedTable + " WHERE `numero`=? AND `type`=? AND " + pQuotedKey + "<>? ORDER BY " + pQuotedKey + " DESC"
+		    For Each pGroup As Dictionary In pGroups
+		      Var pGroupNumber As String = pGroup.Value("Number")
+		      Var pGroupType As String = pGroup.Value("Type")
+		      Var pFirstIdentity As Int64 = pGroup.Value("FirstIdentity")
+		      pRows = pDatabase.SelectSQL(pLoserSQL, pGroupNumber, pGroupType, pFirstIdentity)
+		      For Each pRow As DatabaseRow In pRows
+		        Var pNumber As String = pRow.Column("numero").StringValue.DefineEncoding(Encodings.UTF8)
+		        Var pIdentity As Int64 = pRow.Column(PrimaryKey).Int64Value
+		        Var pNumberContext As String = GenerateJSON(New Dictionary("table":Me.TableName, "key":PrimaryKey, "id":pIdentity, "numero":pNumber, "type":pRow.Column("type").StringValue))
+		        If pNumber.Trim = "" Then Raise New ORMException("Empty internal number requires an explicit numbering series: " + pNumberContext)
+		        Var pSuffix As String = pNumber.Middle(2).TrimRight
+		        If pNumber.Length <= 2 Or pSuffix = "" Then Raise New ORMException("Unsupported internal number format: " + pNumberContext)
+		        For pIndex As Integer = 0 To pSuffix.Length - 1
+		          If Digits.IndexOf(pSuffix.Middle(pIndex, 1)) < 0 Then Raise New ORMException("Unsupported internal number format: " + pNumberContext)
+		        Next
+		        Var pPlan As New Dictionary
+		        pPlan.Value("PK") = pIdentity
+		        pPlan.Value("OldNumber") = pNumber
+		        pPlan.Value("Type") = pRow.Column("type").StringValue
+		        pPlan.Value("Prefix") = pNumber.Left(2)
+		        pPlan.Value("Width") = pSuffix.Length
+		        pPlanByIdentity.Value(pIdentity) = pPlan
+		        pIdentities.Add(pIdentity)
+		      Next
+		      pRows.Close
+		      pRows = Nil
+		    Next
+		    Var pPlans() As Dictionary
+		    pIdentities.Sort
+		    For pIndex As Integer = pIdentities.LastIndex DownTo 0
+		      Var pIdentity As Int64 = pIdentities(pIndex)
+		      pPlans.Add(pPlanByIdentity.Value(pIdentity))
+		    Next
+		    Var pNumberField As ORMField = Schema.Value("numero")
+		    Var pCurrentNumberField As ORMField = SchemaCurrent.Value("numero")
+		    Var pCapacity As Integer = pNumberField.MigrationLength(pDatabase, pCurrentNumberField).ReplaceAll("(", "").ReplaceAll(")", "").ToInteger
+		    // Validate every old format before the first UPDATE. Allocate inside this transaction
+		    // so later free-number checks also see candidates assigned to earlier repair rows.
+		    For Each pPlan As Dictionary In pPlans
+		      Var pPrefix As String = pPlan.Value("Prefix")
+		      Var pType As String = pPlan.Value("Type")
+		      Var pMaximum As String = "0"
+		      // Keep the stored column on the left so its native collation also defines the series.
+		      Var pSeriesPredicate As String
+		      If pIsMySQL Then
+		        pSeriesPredicate = "`numero`=CONCAT(?,SUBSTR(`numero`,3))"
+		      Else
+		        pSeriesPredicate = "`numero`=(? || SUBSTR(`numero`,3))"
+		      End If
+		      pRows = pDatabase.SelectSQL("SELECT `numero` FROM " + pQuotedTable + " WHERE " + pSeriesPredicate + " AND `type`=?", pPrefix, pType)
+		      For Each pRow As DatabaseRow In pRows
+		        Var pSuffix As String = pRow.Column("numero").StringValue.Middle(2)
+		        Var pNumeric As Boolean = pSuffix <> ""
+		        For pIndex As Integer = 0 To pSuffix.Length - 1
+		          If Digits.IndexOf(pSuffix.Middle(pIndex, 1)) < 0 Then
+		            pNumeric = False
+		            Exit For
+		          End If
+		        Next
+		        If Not pNumeric Then Continue
+		        While pSuffix.Length > 1 And pSuffix.Left(1) = "0"
+		          pSuffix = pSuffix.Middle(1)
+		        Wend
+		        Var pLarger As Boolean = pSuffix.Length > pMaximum.Length
+		        If pSuffix.Length = pMaximum.Length Then
+		          For pIndex As Integer = 0 To pSuffix.Length - 1
+		            Var pDigit As Integer = Digits.IndexOf(pSuffix.Middle(pIndex, 1))
+		            Var pMaxDigit As Integer = Digits.IndexOf(pMaximum.Middle(pIndex, 1))
+		            If pDigit <> pMaxDigit Then
+		              pLarger = pDigit > pMaxDigit
+		              Exit For
+		            End If
+		          Next
+		        End If
+		        If pLarger Then pMaximum = pSuffix
+		      Next
+		      pRows.Close
+		      pRows = Nil
+		      Var pNewNumber As String
+		      Do
+		        // Decimal-string increment avoids Int64 overflow on long legacy series.
+		        Var pCarry As Boolean = True
+		        For pIndex As Integer = pMaximum.Length - 1 DownTo 0
+		          Var pDigit As Integer = Digits.IndexOf(pMaximum.Middle(pIndex, 1))
+		          If pDigit < 9 Then
+		            pDigit = pDigit + 1
+		            pMaximum = pMaximum.Left(pIndex) + Digits.Middle(pDigit, 1) + pMaximum.Middle(pIndex + 1)
+		            pCarry = False
+		            Exit For
+		          End If
+		          pMaximum = pMaximum.Left(pIndex) + "0" + pMaximum.Middle(pIndex + 1)
+		        Next
+		        If pCarry Then pMaximum = "1" + pMaximum
+		        Var pPadded As String = pMaximum
+		        Var pWidth As Integer = pPlan.Value("Width")
+		        While pPadded.Length < pWidth
+		          pPadded = "0" + pPadded
+		        Wend
+		        pNewNumber = pPrefix + pPadded
+		        If pCapacity <= 0 Or pNewNumber.Length > pCapacity Then Raise New ORMException("No available internal number fits " + Me.TableName + ".numero")
+		        // Native equality retains the column's case/accent/padding semantics.
+		        pRows = pDatabase.SelectSQL("SELECT COUNT(*) FROM " + pQuotedTable + " WHERE `numero`=? AND `type`=?", pNewNumber, pType)
+		        Var pUsed As Boolean = pRows.ColumnAt(0).IntegerValue > 0
+		        pRows.Close
+		        pRows = Nil
+		        If Not pUsed Then Exit
+		      Loop
+		      Var pIdentity As Int64 = pPlan.Value("PK")
+		      Var pOldNumber As String = pPlan.Value("OldNumber")
+		      pDatabase.ExecuteSQL("UPDATE " + pQuotedTable + " SET `numero`=?" + pPreserveUpdateColumns + " WHERE " + pQuotedKey + "=? AND `numero`=? AND `type`=?", pNewNumber, pIdentity, pOldNumber, pType)
+		      If pIsMySQL Then
+		        pRows = pDatabase.SelectSQL("SELECT ROW_COUNT()")
+		      Else
+		        pRows = pDatabase.SelectSQL("SELECT changes()")
+		      End If
+		      Var pAffected As Integer = pRows.ColumnAt(0).IntegerValue
+		      pRows.Close
+		      pRows = Nil
+		      If pAffected <> 1 Then Raise New ORMException("Internal number repair lost its target on " + Me.TableName)
+		      pAudit.Add(Me.TableName + "." + PrimaryKey + "=" + pIdentity.ToString + ": numero " + pOldNumber + " -> " + pNewNumber)
+		    Next
+		    pRows = pDatabase.SelectSQL("SELECT COUNT(*) FROM (SELECT 1 FROM " + pQuotedTable + " WHERE `numero` IS NOT NULL AND `type` IS NOT NULL GROUP BY `numero`, `type` HAVING COUNT(*)>1) AS duplicate_numbers")
+		    Var pRemaining As Integer = pRows.ColumnAt(0).IntegerValue
+		    pRows.Close
+		    pRows = Nil
+		    If pRemaining > 0 Then Raise New ORMException("Duplicate internal numbers remain on " + Me.TableName)
+		    pDatabase.ExecuteSQL("RELEASE SAVEPOINT orm_document_number_repair")
+		    pSavepointOpen = False
+		    // MySQL DDL commits implicitly. Retain verified number repairs if a later index fails.
+		    If pIsMySQL Then pDatabase.ExecuteSQL("COMMIT")
+		    pSucceeded = True
+		    For Each pMessage As String In pAudit
+		      mLogs = mLogs + pMessage + EndOfLine
+		    Next
+		    Return True
+		  Catch pError As RuntimeException
+		    If pError IsA EndException Or pError IsA ThreadEndException Then Raise pError
+		    mLogs = mLogs + "Internal number repair on " + Me.TableName + ": " + pError.Message + EndOfLine
+		    Return False
+		  Finally
+		    Try
+		      If pRows <> Nil Then pRows.Close
+		      If pSavepointOpen Then
+		        pDatabase.ExecuteSQL("ROLLBACK TO SAVEPOINT orm_document_number_repair")
+		        pDatabase.ExecuteSQL("RELEASE SAVEPOINT orm_document_number_repair")
+		      End If
+		    Finally
+		      If pIsMySQL And pAutocommitChanged Then
+		        Try
+		          If Not pSucceeded Then
+		            pDatabase.ExecuteSQL("ROLLBACK")
+		            pDatabase.ExecuteSQL("UNLOCK TABLES")
+		          End If
+		        Finally
+		          Try
+		            pDatabase.ExecuteSQL("SET autocommit=" + pOriginalAutocommit.ToString)
+		          Finally
+		            pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS=" + pOriginalForeignKeyChecks.ToString)
+		          End Try
+		        End Try
+		      End If
+		    End Try
+		  End Try
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function PrimaryKeyDuplicatePlan(pDatabase As Database, pPrimaryColumns() As String) As Dictionary()
+		  // Plan first: an ambiguous group must never leave earlier groups partly deleted.
+		  Var pPlans() As Dictionary
+		  If pPrimaryColumns.LastIndex < 0 Then Return pPlans
+		  Var pQuotedTable As String = "`" + Me.TableName.ReplaceAll("`", "``") + "`"
+		  Var pKeySQL() As String
+		  Var pNullSQL() As String
+		  Var pWhereSQL() As String
+		  Var pIsMySQL As Boolean = pDatabase IsA MySQLCommunityServer
+		  For Each pName As String In pPrimaryColumns
+		    Var pQuoted As String = "`" + pName.ReplaceAll("`", "``") + "`"
+		    pKeySQL.Add(pQuoted)
+		    pNullSQL.Add(pQuoted + " IS NULL")
+		    If pIsMySQL Then
+		      pWhereSQL.Add(pQuoted + " <=> ?")
+		    Else
+		      pWhereSQL.Add(pQuoted + " IS ?")
+		    End If
+		  Next
+		  Var pNullRows As RowSet
+		  Var pGroups As RowSet
+		  Var pRows As RowSet
+		  Try
+		    pNullRows = pDatabase.SelectSQL("SELECT COUNT(*) FROM " + pQuotedTable + " WHERE " + String.FromArray(pNullSQL, " OR "))
+		    Var pNullCount As Integer = pNullRows.ColumnAt(0).IntegerValue
+		    pNullRows.Close
+		    pNullRows = Nil
+		    If pNullCount > 0 Then Raise New ORMException("Primary key migration on " + Me.TableName + " rejected: NULL key values.")
+		    pGroups = pDatabase.SelectSQL("SELECT " + String.FromArray(pKeySQL, ",") + ", COUNT(*) FROM " + pQuotedTable + " GROUP BY " + String.FromArray(pKeySQL, ",") + " HAVING COUNT(*) > 1")
+		    // Read the complete plan before touching any source row.
+		    Var pGroupPlans() As Dictionary
+		    For Each pGroup As DatabaseRow In pGroups
+		      Var pParameters() As Variant
+		      For pIndex As Integer = 0 To pPrimaryColumns.LastIndex
+		        pParameters.Add(pGroup.ColumnAt(pIndex).Value)
+		      Next
+		      Var pPlan As New Dictionary
+		      pPlan.Value("Parameters") = pParameters
+		      pPlan.Value("RemoveCount") = pGroup.ColumnAt(pPrimaryColumns.Count).IntegerValue - 1
+		      pGroupPlans.Add(pPlan)
+		    Next
+		    pGroups.Close
+		    pGroups = Nil
+		    If pGroupPlans.LastIndex < 0 Then Return pPlans
+
+		    Var pOrderColumns() As String
+		    Const CreationColumnNames As String = "datecreation,created_at,createdat,creationdate"
+		    Var pCreationNames() As String = CreationColumnNames.Split(",")
+		    For Each pCandidate As String In pCreationNames
+		      For Each pEntry As DictionaryEntry In Schema
+		        Var pName As String = pEntry.Key.StringValue
+		        If pName.Lowercase <> pCandidate Or pPrimaryColumns.IndexOf(pName) >= 0 Or Not SchemaCurrent.HasKey(pName) Then Continue
+		        Var pField As ORMField = pEntry.Value
+		        If pField.Type = ORMField.TypeList.DATE Or pField.Type = ORMField.TypeList.DATETIME Or pField.Type = ORMField.TypeList.TIMESTAMP Then
+		          pOrderColumns.Add(pName)
+		          Exit For
+		        End If
+		      Next
+		      If pOrderColumns.LastIndex >= 0 Then Exit For
+		    Next
+		    For Each pEntry As DictionaryEntry In Schema
+		      Var pName As String = pEntry.Key.StringValue
+		      Var pField As ORMField = pEntry.Value
+		      If pField.Extra = ORMField.ExtraList.AutoIncremente And pPrimaryColumns.IndexOf(pName) < 0 And SchemaCurrent.HasKey(pName) Then pOrderColumns.Add(pName)
+		    Next
+		    Var pNewestSQL() As String
+		    Var pOldestSQL() As String
+		    For Each pName As String In pOrderColumns
+		      Var pQuoted As String = "`" + pName.ReplaceAll("`", "``") + "`"
+		      pNewestSQL.Add(pQuoted + " DESC")
+		      pOldestSQL.Add(pQuoted + " ASC")
+		    Next
+		    Var pWhere As String = String.FromArray(pWhereSQL, " AND ")
+		    Var pNewest As String
+		    Var pOldest As String
+		    If pNewestSQL.LastIndex >= 0 Then
+		      pNewest = " ORDER BY " + String.FromArray(pNewestSQL, ",")
+		      pOldest = " ORDER BY " + String.FromArray(pOldestSQL, ",")
+		    End If
+		    For Each pPlan As Dictionary In pGroupPlans
+		      Var pParameters() As Variant = pPlan.Value("Parameters")
+		      pRows = pDatabase.SelectSQL("SELECT * FROM " + pQuotedTable + " WHERE " + pWhere + pNewest, pParameters)
+		      Var pWinnerValues() As String
+		      Var pWinnerNulls() As Boolean
+		      Var pWinnerOrder() As String
+		      Var pFirst As Boolean = True
+		      Var pDifferentValues As Boolean
+		      Var pIncompleteOrder As Boolean
+		      For Each pRow As DatabaseRow In pRows
+		        Var pSameValues As Boolean = True
+		        Var pSameOrder As Boolean = True
+		        For pIndex As Integer = 0 To pRows.LastColumnIndex
+		          Var pValue As Variant = pRow.ColumnAt(pIndex).Value
+		          Var pText As String = pRow.ColumnAt(pIndex).StringValue
+		          If pFirst Then
+		            pWinnerValues.Add(pText)
+		            pWinnerNulls.Add(pValue.IsNull)
+		          ElseIf pValue.IsNull <> pWinnerNulls(pIndex) Or pText.Compare(pWinnerValues(pIndex), ComparisonOptions.CaseSensitive) <> 0 Then
+		            pSameValues = False
+		          End If
+		        Next
+		        For pIndex As Integer = 0 To pOrderColumns.LastIndex
+		          Var pValue As Variant = pRow.Column(pOrderColumns(pIndex)).Value
+		          Var pText As String = pRow.Column(pOrderColumns(pIndex)).StringValue
+		          If pValue.IsNull Or pText = "" Then pIncompleteOrder = True
+		          If pFirst Then
+		            pWinnerOrder.Add(pText)
+		          ElseIf pText.Compare(pWinnerOrder(pIndex), ComparisonOptions.CaseSensitive) <> 0 Then
+		            pSameOrder = False
+		          End If
+		        Next
+		        If Not pFirst And Not pSameValues Then
+		          pDifferentValues = True
+		          If pSameOrder Then Raise New ORMException("Primary key migration on " + Me.TableName + " rejected: conflicting duplicates have no unambiguous creation order.")
+		        End If
+		        pFirst = False
+		      Next
+		      pRows.Close
+		      pRows = Nil
+		      If pIncompleteOrder And pDifferentValues Then Raise New ORMException("Primary key migration on " + Me.TableName + " rejected: incomplete creation order.")
+		      pPlan.Value("WhereSQL") = pWhere
+		      pPlan.Value("OrderSQL") = pOldest
+		      pPlans.Add(pPlan)
+		    Next
+		    Return pPlans
+		  Finally
+		    If pRows <> Nil Then pRows.Close
+		    If pGroups <> Nil Then pGroups.Close
+		    If pNullRows <> Nil Then pNullRows.Close
+		  End Try
 		End Function
 	#tag EndMethod
 
@@ -3873,6 +4255,17 @@ Inherits QueryBuilder
 		  mInvalidIndexReport = ""
 		  NormalizeLegacySchemaIndexes
 		  Var schemaUpdateError As Boolean
+		  Var pPrimaryColumns() As String
+		  For Each pEntry As DictionaryEntry In Schema
+		    Var pField As ORMField = pEntry.Value
+		    If pField.PrimaryKey Then
+		      If pDatabase IsA MySQLCommunityServer And pField.Extra = ORMField.ExtraList.AutoIncremente Then
+		        pPrimaryColumns.AddAt(0, pEntry.Key.StringValue)
+		      Else
+		        pPrimaryColumns.Add(pEntry.Key.StringValue)
+		      End If
+		    End If
+		  Next
 		  
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
@@ -3884,12 +4277,13 @@ Inherits QueryBuilder
 		      end if
 		      return true
 		    else
+		      Var pForeignKeySettingRows As RowSet = pDatabase.SelectSQL("SELECT @@SESSION.FOREIGN_KEY_CHECKS")
+		      Var pOriginalForeignKeyChecks As Integer = pForeignKeySettingRows.ColumnAt(0).IntegerValue
+		      pForeignKeySettingRows.Close
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 0;")
+		      Try
 		      
-		      dim HasPrimaryKeys as boolean = false
 		      dim HasUniqueKeys as Boolean = false
-		      Dim mPrimaryKeys as String = "ALTER TABLE `"+me.TableName+"` ADD PRIMARY KEY ("
-		      dim mPrimaryColumns as String
 		      dim mUniqueIndexName as String = "unique" + System.Random.InRange(0, 1000).ToString
 		      Dim mUniqueKeys as String = "ALTER TABLE `"+me.TableName+"` ADD UNIQUE INDEX `" + mUniqueIndexName + "`("
 		      dim mUniqueColumns as String
@@ -3899,12 +4293,6 @@ Inherits QueryBuilder
 		      
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
-		        
-		        if schemaField.PrimaryKey then
-		          HasPrimaryKeys = true
-		          mPrimaryKeys = mPrimaryKeys + "`"+schemaEntry.key+"`,"
-		          mPrimaryColumns = mPrimaryColumns + "`"+schemaEntry.key+"`,"
-		        end if
 		        
 		        if schemaField.Unique then
 		          HasUniqueKeys = true
@@ -3961,7 +4349,7 @@ Inherits QueryBuilder
 		        dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
 		        sql = sql + field.Type(pDatabase) +field.Length
-		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		        sql = sql + " " + field.NotNull(pDatabase) + " " + field.DefaultValue(pDatabase)
 		        if field.Extra = ORMField.ExtraList.AutoIncremente then
 		          sql = sql + " " + field.Extra(pdatabase)  +  " , ADD PRIMARY KEY (`" + dField.Key + "`)"
 		        end if
@@ -3993,17 +4381,41 @@ Inherits QueryBuilder
 		        Catch lockError As DatabaseException
 		          DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
 		          mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
+		          schemaUpdateError = True
+		          Exit For
 		        End Try
 		        
 		        Dim sql As String
 		        
 		        sql = "ALTER TABLE `"+me.TableName+"` CHANGE "
 		        
-		        dim field as ORMField = dField.Value
-		        sql = sql + "`"+ dField.Key + "` " 
-		        sql = sql + "`"+ dField.Key + "` " 
-		        sql = sql + field.Type(pDatabase) +field.Length
-		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
+		        Var field As ORMField = dField.Value
+		        Var pCurrentField As ORMField = SchemaCurrent.Value(dField.Key)
+		        Var pMigrationLength As String = field.MigrationLength(pDatabase, pCurrentField)
+		        If field.Type = ORMField.TypeList.VARCHAR And pCurrentField.Type <> ORMField.TypeList.VARCHAR Then
+		          // Check characters, not bytes, before a TEXT/other-type conversion can shorten data.
+		          Var pCapacity As Integer = pMigrationLength.ReplaceAll("(", "").ReplaceAll(")", "").ToInteger
+		          If pCapacity > 0 Then
+		            Var pQuotedField As String = "`" + dField.Key.StringValue.ReplaceAll("`", "``") + "`"
+		            Var pLengthRows As RowSet
+		            Try
+		              pLengthRows = pDatabase.SelectSQL("SELECT COUNT(*) AS invalid_rows, MAX(CHAR_LENGTH(" + pQuotedField + ")) AS maximum_length FROM `" + Me.TableName.ReplaceAll("`", "``") + "` WHERE CHAR_LENGTH(" + pQuotedField + ") > ?", pCapacity)
+		              Var pTooLongCount As Integer = pLengthRows.Column("invalid_rows").IntegerValue
+		              If pTooLongCount > 0 Then
+		                Var pMaximumLength As Integer = pLengthRows.Column("maximum_length").IntegerValue
+		                mLogs = mLogs + "Cannot convert " + Me.TableName + "." + dField.Key.StringValue + " to VARCHAR(" + pCapacity.ToString + "): " + pTooLongCount.ToString + " rows exceed the limit (maximum " + pMaximumLength.ToString + " characters). Original values preserved." + EndOfLine
+		                schemaUpdateError = True
+		              End If
+		            Finally
+		              If pLengthRows <> Nil Then pLengthRows.Close
+		            End Try
+		            If schemaUpdateError Then Exit For
+		          End If
+		        End If
+		        sql = sql + "`"+ dField.Key + "` "
+		        sql = sql + "`"+ dField.Key + "` "
+		        sql = sql + field.Type(pDatabase) + pMigrationLength
+		        sql = sql + " " + field.NotNull(pDatabase) + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase)  +";"
 		        DebugLog sql
 		        
@@ -4040,33 +4452,207 @@ Inherits QueryBuilder
 		      #Pragma BreakOnExceptions False
 		      currentIndexes = MySQLCurrentIndexes(pDatabase)
 		      currentForeignKeys = MySQLCurrentForeignKeys(pDatabase)
+		      Var pExpectedPrimary As String = MySQLNormalizeIndexColumns(String.FromArray(pPrimaryColumns, ","))
+		      Var pCurrentPrimary As String
+		      If currentIndexes.HasKey("PRIMARY") Then
+		        Var pPrimaryMeta As Dictionary = currentIndexes.Value("PRIMARY")
+		        pCurrentPrimary = pPrimaryMeta.Lookup("Columns", "").StringValue
+		      End If
+		      If pCurrentPrimary <> pExpectedPrimary Then
+		        Var pBackupTable As String
+		        Var pBackupCreated As Boolean
+		        Var pAutocommitChanged As Boolean
+		        Var pOriginalAutocommit As Integer
+		        Var pPrimaryApplied As Boolean
+		        Var pRestoreFailed As Boolean
+		        Var pDeletedPlans() As Dictionary
+		        Var pQuotedTable As String = "`" + Me.TableName.ReplaceAll("`", "``") + "`"
+		        Var pQuotedColumns() As String
+		        For Each pEntry As DictionaryEntry In Schema
+		          pQuotedColumns.Add("`" + pEntry.Key.StringValue.ReplaceAll("`", "``") + "`")
+		        Next
+		        Var pColumnList As String = String.FromArray(pQuotedColumns, ",")
+		        Var pDuplicatePlans() As Dictionary
+		        Try
+		          pDuplicatePlans = PrimaryKeyDuplicatePlan(pDatabase, pPrimaryColumns)
+		          If pDuplicatePlans.LastIndex >= 0 Then
+		            // Cleanup must not orphan children or invoke delete/insert trigger side effects.
+		            Var pDependencies As RowSet = pDatabase.SelectSQL("SELECT (SELECT COUNT(*) FROM information_schema.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = ?) + (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = DATABASE() AND EVENT_OBJECT_TABLE = ?) AS dependencies", Me.TableName, Me.TableName)
+		            Var pDependencyCount As Integer = pDependencies.ColumnAt(0).IntegerValue
+		            pDependencies.Close
+		            If pDependencyCount > 0 Then Raise New ORMException("Duplicate cleanup requires manual review of foreign keys or triggers on " + Me.TableName)
+		            Var pEngineRows As RowSet = pDatabase.SelectSQL("SELECT ENGINE FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?", Me.TableName)
+		            Var pEngine As String = pEngineRows.ColumnAt(0).StringValue
+		            pEngineRows.Close
+		            If pEngine <> "InnoDB" Then Raise New ORMException("Duplicate cleanup requires InnoDB on " + Me.TableName)
+		            Var pBackupNumber As Integer = System.Random.InRange(1, 2147483647)
+		            pBackupTable = "_orm_pk_backup_" + DateTime.Now.SQLDateTime.ReplaceAll("-", "").ReplaceAll(":", "").ReplaceAll(" ", "") + "_" + pBackupNumber.ToString
+		            // A real backup survives connection loss and MySQL's implicit DDL commits.
+		            pDatabase.ExecuteSQL("CREATE TABLE `" + pBackupTable + "` ENGINE=InnoDB AS SELECT " + pColumnList + " FROM " + pQuotedTable + " WHERE 1 = 0")
+		            pBackupCreated = True
+		          End If
+		          Var pLockSQL As String = "LOCK TABLES " + pQuotedTable + " WRITE"
+		          If pBackupCreated Then
+		            pLockSQL = pLockSQL + ", `" + pBackupTable + "` WRITE"
+		            Var pAutocommitRows As RowSet = pDatabase.SelectSQL("SELECT @@SESSION.AUTOCOMMIT")
+		            pOriginalAutocommit = pAutocommitRows.ColumnAt(0).IntegerValue
+		            pAutocommitRows.Close
+		            pDatabase.ExecuteSQL("SET autocommit = 0")
+		            pAutocommitChanged = True
+		          End If
+		          pDatabase.ExecuteSQL(pLockSQL)
+		          // Re-plan under the write lock; a concurrent edit cannot change the winner.
+		          pDuplicatePlans = PrimaryKeyDuplicatePlan(pDatabase, pPrimaryColumns)
+		          If pDuplicatePlans.LastIndex >= 0 And Not pBackupCreated Then Raise New ORMException("Concurrent duplicates appeared on " + Me.TableName + "; retry the migration.")
+		          For Each pPlan As Dictionary In pDuplicatePlans
+		            Var pParameters() As Variant = pPlan.Value("Parameters")
+		            Var pLimit As Integer = pPlan.Value("RemoveCount")
+		            Var pSelection As String = " WHERE " + pPlan.Value("WhereSQL").StringValue + pPlan.Value("OrderSQL").StringValue + " LIMIT " + pLimit.ToString
+		            pDatabase.ExecuteSQL("INSERT INTO `" + pBackupTable + "` (" + pColumnList + ") SELECT " + pColumnList + " FROM " + pQuotedTable + pSelection, pParameters)
+		          Next
+		          // Persist every recovery row before any DELETE, including before an implicit DDL commit.
+		          If pBackupCreated Then pDatabase.ExecuteSQL("COMMIT")
+		          For Each pPlan As Dictionary In pDuplicatePlans
+		            Var pParameters() As Variant = pPlan.Value("Parameters")
+		            Var pLimit As Integer = pPlan.Value("RemoveCount")
+		            Var pSelection As String = " WHERE " + pPlan.Value("WhereSQL").StringValue + pPlan.Value("OrderSQL").StringValue + " LIMIT " + pLimit.ToString
+		            pDeletedPlans.Add(pPlan)
+		            pDatabase.ExecuteSQL("DELETE FROM " + pQuotedTable + pSelection, pParameters)
+		          Next
+		          Var pKeyColumns() As String
+		          For Each pName As String In pPrimaryColumns
+		            pKeyColumns.Add("`" + pName.ReplaceAll("`", "``") + "`")
+		          Next
+		          Var pPrimarySQL As String = "ALTER TABLE " + pQuotedTable + " "
+		          If pCurrentPrimary <> "" Then pPrimarySQL = pPrimarySQL + "DROP PRIMARY KEY"
+		          If pExpectedPrimary <> "" Then
+		            If pCurrentPrimary <> "" Then pPrimarySQL = pPrimarySQL + ", "
+		            pPrimarySQL = pPrimarySQL + "ADD PRIMARY KEY (" + String.FromArray(pKeyColumns, ",") + ")"
+		          End If
+		          // An AUTO_INCREMENT column still needs a leading index if it leaves PRIMARY.
+		          For Each pEntry As DictionaryEntry In Schema
+		            Var pField As ORMField = pEntry.Value
+		            If pField.Extra <> ORMField.ExtraList.AutoIncremente Then Continue
+		            Var pAutoColumn As String = pEntry.Key.StringValue.Lowercase
+		            Var pHasAutoIndex As Boolean = pExpectedPrimary = pAutoColumn Or pExpectedPrimary.Left(pAutoColumn.Length + 1) = pAutoColumn + ","
+		            For Each pIndexEntry As DictionaryEntry In currentIndexes
+		              If pIndexEntry.Key.StringValue = "PRIMARY" Then Continue
+		              Var pIndexMeta As Dictionary = pIndexEntry.Value
+		              Var pIndexColumns As String = pIndexMeta.Lookup("Columns", "").StringValue
+		              If pIndexColumns = pAutoColumn Or pIndexColumns.Left(pAutoColumn.Length + 1) = pAutoColumn + "," Then pHasAutoIndex = True
+		            Next
+		            If Not pHasAutoIndex Then
+		              Var pAutoIndexNumber As Integer = System.Random.InRange(1, 2147483647)
+		              pPrimarySQL = pPrimarySQL + ", ADD INDEX `_orm_pk_auto_" + pAutoIndexNumber.ToString + "` (`" + pEntry.Key.StringValue.ReplaceAll("`", "``") + "`)"
+		            End If
+		          Next
+		          // Do not keep the old uniqueness: expanding PRIMARY must allow its old prefix to repeat.
+		          If pCurrentPrimary <> "" And MySQLIndexNeededByForeignKey("PRIMARY", pCurrentPrimary, currentForeignKeys) Then
+		            Var pOldKeyColumns() As String
+		            For Each pName As String In pCurrentPrimary.Split(",")
+		              pOldKeyColumns.Add("`" + pName.ReplaceAll("`", "``") + "`")
+		            Next
+		            Var pSupportNumber As Integer = System.Random.InRange(1, 2147483647)
+		            pPrimarySQL = pPrimarySQL + ", ADD INDEX `_orm_pk_support_" + pSupportNumber.ToString + "` (" + String.FromArray(pOldKeyColumns, ",") + ")"
+		          End If
+		          // Let the server reject an incompatible referenced key; never force orphaning.
+		          pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		          pDatabase.ExecuteSQL(pPrimarySQL)
+		          pPrimaryApplied = True
+		          Var pRemoved As Integer
+		          For Each pPlan As Dictionary In pDeletedPlans
+		            pRemoved = pRemoved + pPlan.Value("RemoveCount").IntegerValue
+		          Next
+		          mLogs = mLogs + "Primary key migrated on " + Me.TableName + "; older or identical duplicate rows removed: " + pRemoved.ToString + EndOfLine
+		        Catch Error As RuntimeException
+		          If Not pPrimaryApplied Then
+		            If pDeletedPlans.LastIndex >= 0 Then
+		              Try
+		                // A pre-DDL failure can still roll back; failed DDL may already have committed.
+		                pDatabase.ExecuteSQL("ROLLBACK")
+		                pDatabase.ExecuteSQL("LOCK TABLES " + pQuotedTable + " WRITE, `" + pBackupTable + "` WRITE")
+		              Catch pRecoveryLockError As RuntimeException
+		                pRestoreFailed = True
+		                mLogs = mLogs + "Recovery requires retained backup: " + pBackupTable + " - " + pRecoveryLockError.Message + EndOfLine
+		              End Try
+		            End If
+		            For Each pPlan As Dictionary In pDeletedPlans
+		              If pRestoreFailed Then Exit For
+		              Try
+		                Var pParameters() As Variant = pPlan.Value("Parameters")
+		                Var pOriginalCount As Integer = pPlan.Value("RemoveCount").IntegerValue + 1
+		                Var pRecoveryRows As RowSet = pDatabase.SelectSQL("SELECT COUNT(*) FROM " + pQuotedTable + " WHERE " + pPlan.Value("WhereSQL").StringValue, pParameters)
+		                Var pRecoveryCount As Integer = pRecoveryRows.ColumnAt(0).IntegerValue
+		                pRecoveryRows.Close
+		                // A rejected DELETE changed nothing; a committed DELETE leaves one winner.
+		                If pRecoveryCount = 1 Then
+		                  pDatabase.ExecuteSQL("INSERT INTO " + pQuotedTable + " (" + pColumnList + ") SELECT " + pColumnList + " FROM `" + pBackupTable + "` WHERE " + pPlan.Value("WhereSQL").StringValue, pParameters)
+		                  pRecoveryRows = pDatabase.SelectSQL("SELECT COUNT(*) FROM " + pQuotedTable + " WHERE " + pPlan.Value("WhereSQL").StringValue, pParameters)
+		                  pRecoveryCount = pRecoveryRows.ColumnAt(0).IntegerValue
+		                  pRecoveryRows.Close
+		                End If
+		                If pRecoveryCount <> pOriginalCount Then Raise New ORMException("Unexpected row count while recovering duplicate rows.")
+
+		              Catch pRestoreError As RuntimeException
+		                pRestoreFailed = True
+		                mLogs = mLogs + "Duplicate recovery failed; retained backup: " + pBackupTable + " - " + pRestoreError.Message + EndOfLine
+		              End Try
+		            Next
+		          End If
+		          DebugLog "PrimaryKey on  " + Me.TableName + " error : " + Error.Message
+		          mLogs = mLogs + "PrimaryKey on  " + Me.TableName + " error : " + Error.Message + EndOfLine
+		          schemaUpdateError = True
+		        Finally
+		          Try
+		            If pAutocommitChanged Then pDatabase.ExecuteSQL("COMMIT")
+		            pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		            If pBackupCreated And Not pRestoreFailed Then pDatabase.ExecuteSQL("DROP TABLE `" + pBackupTable + "`")
+		          Catch pCleanupError As RuntimeException
+		            mLogs = mLogs + "Primary key cleanup on " + Me.TableName + ": " + pCleanupError.Message + EndOfLine
+		            schemaUpdateError = True
+		          End Try
+		          If pAutocommitChanged Then pDatabase.ExecuteSQL("SET autocommit = " + pOriginalAutocommit.ToString)
+		          pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		        End Try
+		        If schemaUpdateError Then Return False
+		        // Read the actual constraint after unlocking, not a synthesized cache entry.
+		        currentIndexes = MySQLCurrentIndexes(pDatabase)
+		        Var pVerifiedColumns As String
+		        If currentIndexes.HasKey("PRIMARY") Then
+		          Var pVerifiedPrimary As Dictionary = currentIndexes.Value("PRIMARY")
+		          pVerifiedColumns = pVerifiedPrimary.Lookup("Columns", "").StringValue
+		        End If
+		        If pVerifiedColumns <> pExpectedPrimary Then
+		          mLogs = mLogs + "Primary key verification failed on " + Me.TableName + EndOfLine
+		          Return False
+		        End If
+		      End If
 		      Try
 		        pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		      Catch lockError As DatabaseException
-		        DebugLog "LOCK TABLES on " + me.TableName + " : " + lockError.Message
-		        mLogs =  mlogs + "LOCK TABLES on " + me.TableName + " : " + lockError.Message + EndOfLine
+		        mLogs = mLogs + "LOCK TABLES on " + Me.TableName + " : " + lockError.Message + EndOfLine
+		        pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		        Return False
 		      End Try
 		      try
-		        if HasPrimaryKeys then
-		          if Not MySQLIndexExists(currentIndexes, "PRIMARY") then
-		            DebugLog mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");"
-		            pDatabase.ExecuteSQL(mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ");")
-		            dim primaryMeta as new Dictionary
-		            primaryMeta.Value("Columns") = MySQLNormalizeIndexColumns(mPrimaryColumns)
-		            primaryMeta.Value("NonUnique") = false
-		            currentIndexes.Value("PRIMARY") = primaryMeta
-		          end if
-		        end if
-		      Catch Error as DatabaseException
-		        DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
-		        mLogs =  mlogs + "PrimaryKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
-		        schemaUpdateError = True
-		      end try
-		      try
 		        if HasUniqueKeys then
-		          // Existing companies can legitimately carry a non-unique legacy index.
-		          // Treat the indexed columns as present instead of forcing uniqueness on old data.
-		          if Not MySQLHasIndexColumns(currentIndexes, mUniqueColumns) then
+		          // Opted-in internal documents require a real UNIQUE constraint after number repair.
+		          // Other legacy models retain their existing index compatibility policy.
+		          if Not MySQLHasIndexColumns(currentIndexes, mUniqueColumns, SchemaRenumberDuplicateNumbers) then
+		            Var pUniqueColumns() As String = MySQLNormalizeIndexColumns(mUniqueColumns).Split(",")
+		            Var pUniqueQuoted() As String
+		            Var pNotNull() As String
+		            For Each pName As String In pUniqueColumns
+		              Var pQuoted As String = "`" + pName.ReplaceAll("`", "``") + "`"
+		              pUniqueQuoted.Add(pQuoted)
+		              pNotNull.Add(pQuoted + " IS NOT NULL")
+		            Next
+		            Var pConflicts As RowSet = pDatabase.SelectSQL("SELECT COUNT(*) FROM (SELECT 1 FROM `" + Me.TableName.ReplaceAll("`", "``") + "` WHERE " + String.FromArray(pNotNull, " AND ") + " GROUP BY " + String.FromArray(pUniqueQuoted, ",") + " HAVING COUNT(*)>1) AS unique_conflicts")
+		            Var pConflictCount As Integer = pConflicts.ColumnAt(0).IntegerValue
+		            pConflicts.Close
+		            If pConflictCount > 0 Then
+		              If Not RepairDuplicateDocumentNumbers(pDatabase, pUniqueColumns) Then Raise New ORMException("Cannot apply legacy uniqueness on " + Me.TableName + "; duplicate values require review.")
+		            End If
 		            DebugLog mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");"
 		            pDatabase.ExecuteSQL(mUniqueKeys.Left(mUniqueKeys.Length - 1) + ");")
 		            dim uniqueMeta as new Dictionary
@@ -4075,11 +4661,13 @@ Inherits QueryBuilder
 		            currentIndexes.Value(mUniqueIndexName) = uniqueMeta
 		          end if
 		        end if
-		      Catch Error as DatabaseException
+		      Catch Error As RuntimeException
+		        If Error IsA EndException Or Error IsA ThreadEndException Then Raise Error
 		        DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
 		        mLogs =  mlogs + "UniqueKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
 		        schemaUpdateError = True
 		      end try
+		      If schemaUpdateError Then Return False
 		      
 		      if SchemaUniqueIndex <> nil then
 		        for each dUnique as DictionaryEntry in SchemaUniqueIndex
@@ -4238,7 +4826,18 @@ Inherits QueryBuilder
 		      if uniqueIndexError Or schemaUpdateError then
 		        Return false
 		      end if
-		      
+		      Catch pSchemaError As RuntimeException
+		        If pSchemaError IsA EndException Or pSchemaError IsA ThreadEndException Then Raise pSchemaError
+		        mLogs = mLogs + "Schema update on " + Me.TableName + ": " + pSchemaError.Message + EndOfLine
+		        Return False
+		      Finally
+		        Try
+		          pDatabase.ExecuteSQL("UNLOCK TABLES;")
+		        Catch pUnlockError As DatabaseException
+		          mLogs = mLogs + "UNLOCK TABLES on " + Me.TableName + ": " + pUnlockError.Message + EndOfLine
+		        End Try
+		        pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = " + pOriginalForeignKeyChecks.ToString)
+		      End Try
 		    end if
 		    
 		  else
@@ -4263,6 +4862,12 @@ Inherits QueryBuilder
 		    else
 		      pDatabase.ExecuteSQL("PRAGMA legacy_alter_table=OFF;")
 		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = OFF;")
+		      Var pNeedsDocumentNumberRepair As Boolean
+		      If SchemaRenumberDuplicateNumbers Then
+		        Var pNumberConflicts As RowSet = pDatabase.SelectSQL("SELECT 1 FROM `" + Me.TableName.ReplaceAll("`", "``") + "` WHERE `numero` IS NOT NULL AND `type` IS NOT NULL GROUP BY `numero`, `type` HAVING COUNT(*)>1 LIMIT 1")
+		        pNeedsDocumentNumberRepair = Not pNumberConflicts.AfterLastRow
+		        pNumberConflicts.Close
+		      End If
 		      
 		      for each dField as DictionaryEntry in SchemaToAdd
 		        Dim sql As String
@@ -4287,42 +4892,62 @@ Inherits QueryBuilder
 		        end try
 		      next
 		      
-		      If Not schemaUpdateError And (SchemaToAlter.KeyCount > 0 Or SchemaToRemoveColumn.KeyCount > 0) Then
-		        dim selectSQL as string = "SELECT "
-		        dim collSelect as string
-		        for each dSelect as DictionaryEntry in  Schema
-		          collSelect = collSelect +"`"+ dSelect.key + "`, "
-		        next
-		        selectSQL = selectSQL + collSelect.Left(collSelect.Length -2)
-		        
-		        selectSQL = selectSQL + " FROM `" + me.TableName+"`;"
-		        dim rr as RowSet = pDatabase.SelectSQL(selectSQL)
-		        Var countrecord As Integer = rr.RowCount
-		        Var insertSQL As String = "INSERT INTO `" + Me.TableName + "_TMP` (" + collSelect.Left(collSelect.Length - 2) + ") VALUES "
-		        While Not rr.AfterLastRow
-		          insertSQL = insertSQL + "("
-		          For i As Integer = 0 To rr.LastColumnIndex
-		            Var colVal As String
-		            If rr.ColumnAt(i).Value <> Nil Then
-		              If rr.ColumnAt(i).StringValue = "true" Or rr.ColumnAt(i).StringValue = "false" Then
-		                Var z As Integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
-		                colVal = z.ToString + ","
-		              Else
-		                colVal = "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
-		              End If
-		            Else
-		              colVal = "NULL,"
-		            End If
-		            insertSQL = insertSQL + colVal
-		          Next
-		          insertSQL = insertSQL.Left(insertSQL.Length - 1) + "),"
-		          rr.MoveToNextRow
-		        Wend
-		        rr.Close
-		        If countrecord > 0 Then insertSQL = insertSQL.Left(insertSQL.Length - 1) + ";"
-		        // Include empty tables, and retain the original if any row is rejected.
+		      If Not schemaUpdateError And (SchemaToAlter.KeyCount > 0 Or SchemaToRemoveColumn.KeyCount > 0 Or pNeedsDocumentNumberRepair) Then
 		        pDatabase.ExecuteSQL("SAVEPOINT orm_schema_rebuild;")
 		        Try
+		          If SchemaRenumberDuplicateNumbers Then
+		            Var pNumberColumns() As String = Array("numero", "type")
+		            If Not RepairDuplicateDocumentNumbers(pDatabase, pNumberColumns) Then Raise New ORMException("Cannot repair internal document numbers on " + Me.TableName)
+		          End If
+		          Var pDuplicatePlans() As Dictionary = PrimaryKeyDuplicatePlan(pDatabase, pPrimaryColumns)
+		          If pDuplicatePlans.LastIndex >= 0 Then
+		            // DELETE triggers can remove unrelated history without leaving a foreign-key error.
+		            Var pDependencyRows As RowSet = pDatabase.SelectSQL("SELECT (SELECT COUNT(*) FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ?) + (SELECT COUNT(*) FROM sqlite_temp_master WHERE type = 'trigger' AND tbl_name = ?) + (SELECT COUNT(*) FROM sqlite_master AS m JOIN pragma_foreign_key_list(m.name) AS fk WHERE m.type = 'table' AND fk.`table` = ?) AS dependencies", Me.TableName, Me.TableName, Me.TableName)
+		            Var pDependencies As Integer = pDependencyRows.ColumnAt(0).IntegerValue
+		            pDependencyRows.Close
+		            If pDependencies > 0 Then Raise New ORMException("Duplicate cleanup requires manual review of foreign keys or triggers on " + Me.TableName)
+		          End If
+		          Var pRemoved As Integer
+		          For Each pPlan As Dictionary In pDuplicatePlans
+		            Var pParameters() As Variant = pPlan.Value("Parameters")
+		            Var pLimit As Integer = pPlan.Value("RemoveCount")
+		            Var pDeleteSQL As String = "DELETE FROM `" + Me.TableName.ReplaceAll("`", "``") + "` WHERE _rowid_ IN (SELECT _rowid_ FROM `" + Me.TableName.ReplaceAll("`", "``") + "` WHERE " + pPlan.Value("WhereSQL").StringValue + pPlan.Value("OrderSQL").StringValue + " LIMIT " + pLimit.ToString + ")"
+		            pDatabase.ExecuteSQL(pDeleteSQL, pParameters)
+		            pRemoved = pRemoved + pLimit
+		          Next
+		          Var selectSQL As String = "SELECT "
+		          Var collSelect As String
+		          For Each dSelect as DictionaryEntry in  Schema
+		            collSelect = collSelect +"`"+ dSelect.key + "`, "
+		          Next
+		          selectSQL = selectSQL + collSelect.Left(collSelect.Length -2)
+		        
+		          selectSQL = selectSQL + " FROM `" + me.TableName+"`;"
+		          Var rr As RowSet = pDatabase.SelectSQL(selectSQL)
+		          Var countrecord As Integer = rr.RowCount
+		          Var insertSQL As String = "INSERT INTO `" + Me.TableName + "_TMP` (" + collSelect.Left(collSelect.Length - 2) + ") VALUES "
+		          While Not rr.AfterLastRow
+		            insertSQL = insertSQL + "("
+		            For i As Integer = 0 To rr.LastColumnIndex
+		              Var colVal As String
+		              If rr.ColumnAt(i).Value <> Nil Then
+		                If rr.ColumnAt(i).StringValue = "true" Or rr.ColumnAt(i).StringValue = "false" Then
+		                  Var z As Integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
+		                  colVal = z.ToString + ","
+		                Else
+		                  colVal = "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
+		                End If
+		              Else
+		                colVal = "NULL,"
+		              End If
+		              insertSQL = insertSQL + colVal
+		            Next
+		            insertSQL = insertSQL.Left(insertSQL.Length - 1) + "),"
+		            rr.MoveToNextRow
+		          Wend
+		          rr.Close
+		          If countrecord > 0 Then insertSQL = insertSQL.Left(insertSQL.Length - 1) + ";"
+		          // Include empty tables, and retain the original if any row is rejected.
 		          // Old tables can still own index names ending in _TMP after a previous rebuild.
 		          // Keep inline constraints, then create named indexes after replacing the source.
 		          If Not CreateTable(pDatabase, "_TMP", False) Then Raise New ORMException("Cannot create replacement table for " + Me.TableName)
@@ -4334,8 +4959,14 @@ Inherits QueryBuilder
 		          pDatabase.ExecuteSQL("DROP TABLE `" + Me.TableName + "`;")
 		          pDatabase.ExecuteSQL("ALTER TABLE `" + Me.TableName + "_TMP` RENAME TO `" + Me.TableName + "`;")
 		          If Not SQLiteCreateSchemaIndexes(pDatabase) Then Raise New ORMException("Cannot create replacement indexes for " + Me.TableName)
+		          Var pForeignKeyRows As RowSet = pDatabase.SelectSQL("SELECT * FROM pragma_foreign_key_check WHERE `table` = ? OR parent = ?", Me.TableName, Me.TableName)
+		          Var pForeignKeyError As Boolean = Not pForeignKeyRows.AfterLastRow
+		          pForeignKeyRows.Close
+		          If pForeignKeyError Then Raise New ORMException("Primary key migration would invalidate foreign keys on " + Me.TableName)
+		          If pRemoved > 0 Then mLogs = mLogs + "Older or identical duplicate rows removed on " + Me.TableName + ": " + pRemoved.ToString + EndOfLine
 		        Catch error As RuntimeException
 		          pDatabase.ExecuteSQL("ROLLBACK TO SAVEPOINT orm_schema_rebuild;")
+		          If error IsA EndException Or error IsA ThreadEndException Then Raise error
 		          mLogs = mLogs + "Schema rebuild on " + Me.TableName + " error : " + error.Message + EndOfLine
 		          schemaUpdateError = True
 		        Finally
@@ -4346,6 +4977,18 @@ Inherits QueryBuilder
 		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON;")
 		      If schemaUpdateError Then Return False
 		      
+		      If SchemaRenumberDuplicateNumbers And Not SQLiteHasUniqueIndexColumns(pDatabase, "numero,type") Then
+		        // A matching column schema can still be missing the internal-number constraint.
+		        Var pNumberIndex As String = "_orm_document_numbers_" + Me.TableName
+		        Try
+		          pDatabase.ExecuteSQL("CREATE UNIQUE INDEX `" + pNumberIndex.ReplaceAll("`", "``") + "` ON `" + Me.TableName.ReplaceAll("`", "``") + "` (`numero`,`type`)")
+		        Catch pNumberIndexError As RuntimeException
+		          If pNumberIndexError IsA EndException Or pNumberIndexError IsA ThreadEndException Then Raise pNumberIndexError
+		          mLogs = mLogs + "Internal number uniqueness on " + Me.TableName + ": " + pNumberIndexError.Message + EndOfLine
+		          Return False
+		        End Try
+		        If Not SQLiteHasUniqueIndexColumns(pDatabase, "numero,type") Then Return False
+		      End If
 		      If Not SQLiteCreateSchemaIndexes(pDatabase) Then Return False
 		      
 		      dim uniqueIndexError as Boolean = false
@@ -5009,6 +5652,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaToAdd As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaRenumberDuplicateNumbers As Boolean = False
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
