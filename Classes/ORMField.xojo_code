@@ -27,17 +27,28 @@ Protected Class ORMField
 		  if pDatabase isa MySQLCommunityServer then
 		    if mDefaultValue<>"" then
 		      dim dv as String
-		      select case mDefaultValue
+		      select case mDefaultValue.Uppercase
 		      case "NULL", "NIL"
 		        dv = "NULL"
-		      case "CURRENT_TIMESTAMP"
+		      case "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()"
 		        dv = "CURRENT_TIMESTAMP"
 		      case " "
 		        dv = "''"
 		      else
-		        dv = "'"+mDefaultValue+"'"
+		        // MariaDB quotes string defaults in INFORMATION_SCHEMA.COLUMNS.
+		        If mDefaultValue.Left(1) = "'" And mDefaultValue.Right(1) = "'" Then
+		          dv = mDefaultValue
+		        Else
+		          dv = "'"+mDefaultValue+"'"
+		        End If
 		      end
 		      
+		      // MySQL requires expression defaults for text and binary large objects.
+		      // Keep explicit NULL and the model's declared value unchanged.
+		      Select Case mType
+		      Case TypeList.TEXT, TypeList.LONGTEXT, TypeList.BLOB, TypeList.LONGBLOB
+		        If dv <> "NULL" Then dv = "(" + dv + ")"
+		      End Select
 		      Return "DEFAULT " + dv
 		    else
 		      Return ""
@@ -105,12 +116,12 @@ Protected Class ORMField
 		  dim normalizedLength as String = mLength
 		  if mType = TypeList.DECIMAL then
 		    normalizedLength = normalizedLength.ReplaceAll(".", ",")
-
+		    
 		    dim decimalParts() as String = normalizedLength.Split(",")
 		    if decimalParts.LastIndex = 1 then
 		      dim precision as Integer = decimalParts(0).Trim.ToInteger
 		      dim scale as Integer = decimalParts(1).Trim.ToInteger
-
+		      
 		      if precision > 0 and scale > 0 and precision < scale then
 		        precision = scale + 1
 		        normalizedLength = precision.ToString + "," + scale.ToString
@@ -128,6 +139,19 @@ Protected Class ORMField
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function Length(pDatabase As Database) As String
+		  // Integer display widths do not change the MySQL storage type or its range.
+		  If pDatabase IsA MySQLCommunityServer Then
+		    Select Case mType
+		    Case TypeList.INTEGER, TypeList.SMALLINT
+		      Return ""
+		    End Select
+		  End If
+		  Return Me.Length
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function NotNull() As String
 		  if mNotNull then
@@ -143,6 +167,32 @@ Protected Class ORMField
 		Sub NotNull(Assigns pValue as Boolean)
 		  mNotNull = pValue
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function NotNull(pDatabase As Database) As String
+		  // MySQL makes every primary-key column NOT NULL, even if the model omits it.
+		  // SQLite keeps the declared nullability of ordinary text/composite keys.
+		  If pDatabase IsA MySQLCommunityServer And PrimaryKey Then Return "NOT NULL"
+		  Return Me.NotNull
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function SchemaDescription(pDatabase As Database) As String
+		  Var description As String = Type(pDatabase) + Length(pDatabase)
+		  Var notNullSQL As String = NotNull(pDatabase)
+		  If notNullSQL <> "" Then description = description + " " + notNullSQL
+		  Var defaultSQL As String = DefaultValue(pDatabase)
+		  // Nullable columns without an explicit default are equivalent to DEFAULT NULL.
+		  If pDatabase IsA MySQLCommunityServer And defaultSQL = "" And notNullSQL = "" Then defaultSQL = "DEFAULT NULL"
+		  If defaultSQL <> "" Then description = description + " " + defaultSQL
+		  Var extraSQL As String = Extra(pDatabase)
+		  If extraSQL <> "" Then description = description + " " + extraSQL
+		  If PrimaryKey Then description = description + " PRIMARY KEY"
+		  If Unique Then description = description + " UNIQUE"
+		  Return description
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -188,7 +238,8 @@ Protected Class ORMField
 		    end select
 		  else
 		    select case mType
-		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR
+		      // Date-only values use ISO text so SQLite metadata round-trips as TEXT.
+		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR, TypeList.DATE
 		      Return "TEXT"
 		    case TypeList.INTEGER, typelist.SMALLINT
 		      Return "INTEGER"

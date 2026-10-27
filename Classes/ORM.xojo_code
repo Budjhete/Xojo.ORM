@@ -11,7 +11,7 @@ Inherits QueryBuilder
 	#tag Event
 		Sub Open()
 		  mChanged.RemoveAll
-
+		  
 		  RaiseEvent Open
 		End Sub
 	#tag EndEvent
@@ -20,12 +20,12 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function AcquireEditLock(pDatabase As Database, context As String = "", durationMinutes As Integer = 30) As ModelORMRecordLock
 		  If Not ShouldUseRecordLock Then Return Nil
-
+		  
 		  Dim activeLock As ModelORMRecordLock = ModelORMRecordLock.AcquireForORM(pDatabase, Me, ORM.CurrentEditSessionKey, ORM.CurrentEditUtilisateurNo, ORM.CurrentEditUsername, context, durationMinutes)
 		  If activeLock <> Nil And activeLock.sessionKey.Trim <> ORM.CurrentEditSessionKey.Trim Then
 		    Raise New ORMException("La fiche " + Me.TableName + " est verrouillee par " + LockOwnerName(activeLock) + ".")
 		  End If
-
+		  
 		  Return activeLock
 		End Function
 	#tag EndMethod
@@ -1188,7 +1188,7 @@ Inherits QueryBuilder
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function CreateTable(pDatabase as Database, pSuffix as String = "") As Boolean
+		Function CreateTable(pDatabase As Database, pSuffix As String = "", pCreateSQLiteIndexes As Boolean = True) As Boolean
 		  NormalizeLegacySchemaIndexes
 		  if pDatabase isa MySQLCommunityServer then
 		    'Try
@@ -1225,7 +1225,7 @@ Inherits QueryBuilder
 		    sql = sql.left(sql.Length -1)
 		    if HasPrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
-
+		    
 		    For Each indexEntry As DictionaryEntry In SchemaIndex
 		      Var indexColumns() As String = indexEntry.Value
 		      sql = sql + ", " + EndOfLine + SQLIndexDefinition(indexEntry.Key.StringValue, New ORMIndex(indexColumns), True)
@@ -1252,6 +1252,11 @@ Inherits QueryBuilder
 		    dim HasPrimaryKeys as boolean = false
 		    dim HasUniqueKeys as Boolean = false
 		    dim CanHavePrimaryKeys as Boolean = true
+		    Var primaryKeyCount As Integer
+		    For Each fieldEntry As DictionaryEntry In Schema
+		      Var primaryField As ORMField = fieldEntry.Value
+		      If primaryField.PrimaryKey Then primaryKeyCount = primaryKeyCount + 1
+		    Next
 		    Dim mPrimaryKeys as String = "PRIMARY KEY ("
 		    Dim mUniqueKeys as String = "UNIQUE ("
 		    
@@ -1267,8 +1272,9 @@ Inherits QueryBuilder
 		      sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		      
 		      
-		      if field.Extra = ORMField.ExtraList.AutoIncremente then 
-		        if field.PrimaryKey then sql = sql + " PRIMARY KEY AUTOINCREMENT"
+		      // SQLite AUTOINCREMENT is only valid for a single INTEGER primary key.
+		      if field.Extra = ORMField.ExtraList.AutoIncremente And field.PrimaryKey And primaryKeyCount = 1 then
+		        sql = sql + " PRIMARY KEY AUTOINCREMENT"
 		        CanHavePrimaryKeys = false
 		      end if
 		      
@@ -1294,7 +1300,7 @@ Inherits QueryBuilder
 		    sql = sql.left(sql.Length -1)
 		    if HasPrimaryKeys and CanHavePrimaryKeys then sql = sql + ", "+EndOfLine +mPrimaryKeys.Left(mPrimaryKeys.Length - 1) + ")"
 		    if HasUniqueKeys then sql = sql + ", "+EndOfLine +mUniqueKeys.Left(mUniqueKeys.Length - 1) + ")"
-
+		    
 		    For Each indexEntry As DictionaryEntry In SchemaIndexes
 		      Var configuredIndex As ORMIndex = ORMIndex(indexEntry.Value)
 		      If configuredIndex.Unique Then
@@ -1313,7 +1319,8 @@ Inherits QueryBuilder
 		      DebugLog "Database error: " + error.Message
 		      Return false
 		    End Try
-		    Return true
+		    If pCreateSQLiteIndexes Then Return SQLiteCreateSchemaIndexes(pDatabase, pSuffix)
+		    Return True
 		    
 		  end if
 		End Function
@@ -1322,43 +1329,8 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function CurrentEditLock(pDatabase As Database) As ModelORMRecordLock
 		  If Not ShouldUseRecordLock Then Return Nil
-
+		  
 		  Return ModelORMRecordLock.ActiveLock(pDatabase, Me.TableName, ModelORMRecordLock.RecordKeyFor(Me))
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function SQLColumnList(pColumns() As String) As String
-		  Var result As String
-		  For Each columnName As String In pColumns
-		    If columnName.Trim = "" Then Raise New ORMException("A schema column cannot be empty.")
-		    If result <> "" Then result = result + ", "
-		    result = result + "`" + columnName.Trim + "`"
-		  Next
-
-		  If result = "" Then Raise New ORMException("A schema constraint must contain at least one column.")
-		  Return result
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function SQLForeignKeyDefinition(pName As String, pForeignKey As ORMForeignKey) As String
-		  If pForeignKey Is Nil Then Raise New ORMException("Foreign key " + pName + " has no definition.")
-		  Return "CONSTRAINT `" + pName + "` FOREIGN KEY (" + SQLColumnList(pForeignKey.Columns) + ") REFERENCES `" + pForeignKey.ReferencedTable + "` (" + SQLColumnList(pForeignKey.ReferencedColumns) + ") ON UPDATE " + pForeignKey.OnUpdate + " ON DELETE " + pForeignKey.OnDelete
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21
-		Private Function SQLIndexDefinition(pName As String, pIndex As ORMIndex, pInsideCreateTable As Boolean) As String
-		  If pIndex Is Nil Then Raise New ORMException("Index " + pName + " has no definition.")
-		  Var prefix As String
-		  If pInsideCreateTable Then
-		    prefix = If(pIndex.Unique, "UNIQUE KEY ", "KEY ")
-		  Else
-		    prefix = If(pIndex.Unique, "UNIQUE INDEX ", "INDEX ")
-		  End If
-
-		  Return prefix + "`" + pName + "` (" + SQLColumnList(pIndex.Columns) + ")"
 		End Function
 	#tag EndMethod
 
@@ -1397,32 +1369,32 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
-		Function Data(pColumn As String, pValue As Variant, pReturnSelf As Boolean = True) As ORM
-		  #Pragma Unused pReturnSelf
-
-		  Return SetData(pColumn, pValue)
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Sub Data(pColumn As String, Assigns pValue As Variant)
 		  Call SetData(pColumn, pValue)
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit))
+		Function Data(pColumn As String, pValue As Variant, pReturnSelf As Boolean = True) As ORM
+		  #Pragma Unused pReturnSelf
+		  
+		  Return SetData(pColumn, pValue)
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h21
 		Private Function DataValuesAreEqual(pLeft As Variant, pRight As Variant) As Boolean
 		  If pLeft = Nil Then Return pRight = Nil
 		  If pRight = Nil Then Return False
-
+		  
 		  Dim pLeftIsText As Boolean = pLeft.Type = Variant.TypeString Or pLeft.Type = Variant.TypeText
 		  Dim pRightIsText As Boolean = pRight.Type = Variant.TypeString Or pRight.Type = Variant.TypeText
-
+		  
 		  If pLeftIsText And pRightIsText Then
 		    Return pLeft.StringValue.Compare(pRight.StringValue, ComparisonOptions.CaseSensitive) = 0
 		  End If
-
+		  
 		  Return pLeft = pRight
 		End Function
 	#tag EndMethod
@@ -1566,36 +1538,48 @@ Inherits QueryBuilder
 		  if pCurrent is nil or pExpected is nil then
 		    Return true
 		  end if
-
-		  if pCurrent.Type <> pExpected.Type then
-		    Return true
-		  end if
-
+		  
+		  // SQLite stores VARCHAR/LONGTEXT as TEXT and SMALLINT as INTEGER.
+		  // Compare the effective database types rather than their model aliases.
+		  #If Not TargetIOS And Not TargetAndroid Then
+		    If pCurrent.Type(pDatabase) <> pExpected.Type(pDatabase) Then Return True
+		  #Else
+		    If pCurrent.Type <> pExpected.Type Then Return True
+		  #EndIf
+		  
 		  // Uniqueness belongs to an index, not to a column. It is synchronized by
 		  // the legacy ORMField.Unique block or by the named SchemaIndexes entries.
-
+		  
 		  if pCurrent.PrimaryKey <> pExpected.PrimaryKey then
 		    Return true
 		  end if
-
-		  if pCurrent.NotNull <> pExpected.NotNull then
-		    Return true
-		  end if
-
+		  
+		  #If Not TargetIOS And Not TargetAndroid Then
+		    If pCurrent.NotNull(pDatabase) <> pExpected.NotNull(pDatabase) Then Return True
+		  #Else
+		    If pCurrent.NotNull <> pExpected.NotNull Then Return True
+		  #EndIf
+		  
 		  #If Not TargetIOS And Not TargetAndroid Then
 		    if pDatabase isa MySQLCommunityServer then
-		      if pCurrent.Length <> pExpected.Length then
+		      if pCurrent.Length(pDatabase) <> pExpected.Length(pDatabase) then
 		        Return true
 		      end if
-
-		      if pCurrent.Extra <> pExpected.Extra then
+		      
+		      // CURRENT_TIMESTAMP belongs to DEFAULT, not MySQL's EXTRA metadata.
+		      Var currentAutoIncrement As Boolean = pCurrent.Extra = ORMField.ExtraList.AutoIncremente
+		      Var expectedAutoIncrement As Boolean = pExpected.Extra = ORMField.ExtraList.AutoIncremente
+		      if currentAutoIncrement <> expectedAutoIncrement then
 		        Return true
 		      end if
+		      If pExpected.Extra = ORMField.ExtraList.CurrentTimeStamp Then
+		        If pCurrent.DefaultValue(pDatabase) <> pExpected.DefaultValue(pDatabase) Then Return True
+		      End If
 		    end if
 		  #Else
 		    #Pragma Unused pDatabase
 		  #EndIf
-
+		  
 		  Return false
 		End Function
 	#tag EndMethod
@@ -1660,7 +1644,7 @@ Inherits QueryBuilder
 
 	#tag Method, Flags = &h0
 		Function FieldType(pValue as String) As ORMField.TypeList
-		  
+		  pValue = pValue.Trim.Lowercase
 		  if pValue.Contains("tinyint") then
 		    Return ORMField.TypeList.boolean
 		  elseif pValue.Contains("varchar") then
@@ -1685,83 +1669,15 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.DATETIME
 		  elseif pValue.Contains("date") then
 		    Return ORMField.TypeList.DATE
-		  elseif pValue.Contains("String") then
-		    Return ORMField.TypeList.TEXT
-		  elseif pValue.Contains("text") then
+		  elseif pValue.Contains("string") then
 		    Return ORMField.TypeList.TEXT
 		  elseif pValue.Contains("longtext") then
-		    Return ORMField.TypeList.LongTEXT
+		    Return ORMField.TypeList.LONGTEXT
+		  elseif pValue.Contains("text") then
+		    Return ORMField.TypeList.TEXT
 		  else
 		    Return ORMField.TypeList.VARCHAR
 		  end if
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
-		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
-		  If Loaded Then
-		    Raise New ORMException("Cannot call find on a loaded model.")
-		  End If
-		  
-		  If Not RaiseEvent Finding Then
-		    
-		    Dim pColumns() As Variant
-		    
-		    // Prepend table to prevent collision with join
-		    dim pColumnType as Dictionary = Me.TableColumns(pDatabase)
-		    For Each pColumn As Variant In pColumnType.Keys
-		      pColumns.Add(TableName + "." + pColumn.StringValue)
-		    Next
-		    
-		    // Add SELECT and LIMIT 1 to the query
-		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
-		    From(Me.TableName). _
-		    Limit(1). _
-		    Execute(pDatabase)
-		    
-		    // Clear any existing data
-		    mData.RemoveAll
-		    
-		    // Fetch record set
-		    If pRecordSet.RowCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
-		      
-		      For pIndex As Integer = 0 To pRecordSet.ColumnCount-1
-		        
-		        Dim pColumn As String = pRecordSet.ColumnAt(pIndex).Name
-		        
-		        if pColumnType <> nil then
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase) //DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
-		        else
-		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase)
-		        end if
-		        
-		        // @todo check if mChanged.Clear is not more appropriate
-		        If mChanged.HasKey(pColumn) And DataValuesAreEqual(mChanged.Value(pColumn), mData.Value(pColumn)) Then
-		          mChanged.Remove(pColumn)
-		        End If
-		        
-		      Next
-		      
-		      pRecordSet.Close
-		      
-		      if pFiringFoundEvent then RaiseEvent Found
-		      
-		    else
-		      
-		      pRecordSet.Close
-		      
-		      // clear existing data
-		      call me.Unload.Clear
-		      
-		      if pFiringFoundEvent then RaiseEvent NoFound
-		      
-		    End If
-		    
-		    
-		    
-		  End If
-		  Return Me
-		  
 		End Function
 	#tag EndMethod
 
@@ -1822,6 +1738,74 @@ Inherits QueryBuilder
 		      if pFiringFoundEvent then RaiseEvent Found
 		      
 		    else
+		      // clear existing data
+		      call me.Unload.Clear
+		      
+		      if pFiringFoundEvent then RaiseEvent NoFound
+		      
+		    End If
+		    
+		    
+		    
+		  End If
+		  Return Me
+		  
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
+		Function Find(pDatabase as Database, pExpiration as DateTime = Nil, pColumnsType() as DB.DataType = Nil, pFiringFoundEvent as Boolean = True) As ORM
+		  If Loaded Then
+		    Raise New ORMException("Cannot call find on a loaded model.")
+		  End If
+		  
+		  If Not RaiseEvent Finding Then
+		    
+		    Dim pColumns() As Variant
+		    
+		    // Prepend table to prevent collision with join
+		    dim pColumnType as Dictionary = Me.TableColumns(pDatabase)
+		    For Each pColumn As Variant In pColumnType.Keys
+		      pColumns.Add(TableName + "." + pColumn.StringValue)
+		    Next
+		    
+		    // Add SELECT and LIMIT 1 to the query
+		    Dim pRecordSet As Rowset = Append(new SelectQueryExpression(pColumns)). _
+		    From(Me.TableName). _
+		    Limit(1). _
+		    Execute(pDatabase)
+		    
+		    // Clear any existing data
+		    mData.RemoveAll
+		    
+		    // Fetch record set
+		    If pRecordSet.RowCount = 1 Then // Empty RecordSet are filled with NULL, which is not desirable
+		      
+		      For pIndex As Integer = 0 To pRecordSet.ColumnCount-1
+		        
+		        Dim pColumn As String = pRecordSet.ColumnAt(pIndex).Name
+		        
+		        if pColumnType <> nil then
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase) //DB.Extract(pRecordSet, pIndex, pColumnType.Value(pColumn).IntegerValue)
+		        else
+		          mData.Value(pColumn) = DB.Extract(pRecordSet, pIndex, pDatabase)
+		        end if
+		        
+		        // @todo check if mChanged.Clear is not more appropriate
+		        If mChanged.HasKey(pColumn) And DataValuesAreEqual(mChanged.Value(pColumn), mData.Value(pColumn)) Then
+		          mChanged.Remove(pColumn)
+		        End If
+		        
+		      Next
+		      
+		      pRecordSet.Close
+		      
+		      if pFiringFoundEvent then RaiseEvent Found
+		      
+		    else
+		      
+		      pRecordSet.Close
+		      
 		      // clear existing data
 		      call me.Unload.Clear
 		      
@@ -1916,17 +1900,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = false
-		Attributes( Deprecated )  Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
-		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pORM.TableName)._
-		  Where(pORM.Pks). _
-		  Where(pForeignColumn, "=", Me.Pk)._
-		  Execute(pDatabase)._
-		  Field("count").BooleanValue
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
@@ -1935,6 +1908,17 @@ Inherits QueryBuilder
 		  Where(pForeignColumn, "=", Me.Pk)._
 		  Execute(pDatabase)._
 		  Column("count").BooleanValue
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Has(pForeignColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pORM.TableName)._
+		  Where(pORM.Pks). _
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  Execute(pDatabase)._
+		  Field("count").BooleanValue
 		End Function
 	#tag EndMethod
 
@@ -1969,18 +1953,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = false
-		Attributes( Deprecated )  Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
-		  // Tells if this model is in HasManyThrough relationship
-		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
-		  From(pPivotTableName)._
-		  Where(pForeignColumn, "=", Me.Pk)._
-		  AndWhere(pFarColumn, "=", pORM.Pk)._
-		  Execute(pDatabase)._
-		  Field("count").BooleanValue
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
 		Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
 		  // Tells if this model is in HasManyThrough relationship
@@ -1993,14 +1965,26 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = false
+		Attributes( Deprecated )  Function Has(pPivotTableName As String, pForeignColumn As String, pFarColumn As String, pORM As ORM, pDatabase As Database) As Boolean
+		  // Tells if this model is in HasManyThrough relationship
+		  Return DB.Find(DB.Expression("COUNT(*) AS count"))._
+		  From(pPivotTableName)._
+		  Where(pForeignColumn, "=", Me.Pk)._
+		  AndWhere(pFarColumn, "=", pORM.Pk)._
+		  Execute(pDatabase)._
+		  Field("count").BooleanValue
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h1
 		Protected Function HasMany(pORM As ORM, pForeignColumns() As String) As ORM
 		  // pForeignColumns must be specified in the same order as PrimaryKeys
-
+		  
 		  For pIndex As Integer = 0 To Me.PrimaryKeys.LastIndex
 		    Call pORM.Where(pForeignColumns(pIndex), "=", Me.Pks.Value(Me.PrimaryKeys(pIndex)))
 		  Next
-
+		  
 		  Return pORM
 		End Function
 	#tag EndMethod
@@ -2015,7 +1999,7 @@ Inherits QueryBuilder
 		Protected Function HasMany(pORM As ORM, pForeignColumn As String) As ORM
 		  Dim pForeignColumns() As String
 		  pForeignColumns.Add(pForeignColumn)
-
+		  
 		  Return Me.HasMany(pORM, pForeignColumns)
 		End Function
 	#tag EndMethod
@@ -2351,32 +2335,32 @@ Inherits QueryBuilder
 		      Return False
 		    End If
 		  Next
-
+		  
 		  Return True
-
+		  
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
 		Sub LoadFromIOSSQLiteRecordSet(pRecordSet As iOSSQLiteRecordSet)
 		  // Initialize the ORM with values from a RecordSet
-
+		  
 		  Me.Constructor
-
+		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = pRecordSet.IdxField(pIndex).Value //DB.Extract(pRecordSet, pIndex)  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor
 		  Next
-
-
+		  
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Sub LoadFromIOSSQLiteRecordSet(pRecordSet as iOSSQLiteRecordSet, pColumnType as Dictionary)
 		  // Initialize the ORM with values from a RecordSet
-
+		  
 		  Me.Constructor
-
+		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
 		  Next
@@ -2386,37 +2370,37 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Attributes( Deprecated )  Sub LoadFromRecordSet(pRecordSet As RecordSet)
 		  // Initialize the ORM with values from a RecordSet
-
+		  
 		  Me.Constructor
-
+		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex)  // IF YOU HAVE PROBLEM WITH DATATYPE, USE RecordSet WITH pDB Parameter constructor
 		  Next
-
-
+		  
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Attributes( Deprecated )  Sub LoadFromRecordSet(pRecordSet As RecordSet, pDB as Database)
 		  // Initialize the ORM with values from a RecordSet
-
+		  
 		  Me.Constructor
-
+		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pDB)
 		  Next
-
-
+		  
+		  
 		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h1000, CompatibilityFlags = false
 		Attributes( Deprecated )  Sub LoadFromRecordSet(pRecordSet as RecordSet, pColumnType as Dictionary)
 		  // Initialize the ORM with values from a RecordSet
-
+		  
 		  Me.Constructor
-
+		  
 		  For pIndex As Integer = 1 To pRecordSet.FieldCount
 		    mData.Value(pRecordSet.IdxField(pIndex).Name) = DB.Extract(pRecordSet, pIndex, pColumnType.Value(pRecordSet.IdxField(pIndex).Name).IntegerValue )
 		  Next
@@ -2454,45 +2438,19 @@ Inherits QueryBuilder
 		  If activeLock Is Nil Then Return "un autre utilisateur"
 		  If activeLock.username.Trim <> "" Then Return activeLock.username.Trim
 		  If activeLock.utilisateurNo > 0 Then Return "utilisateur #" + activeLock.utilisateurNo.ToString
-
+		  
 		  Return "un autre utilisateur"
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Function MySQLCurrentIndexes(pDatabase as Database) As Dictionary
-		  dim indexes as new Dictionary
-
-		  Try
-		    dim sql as String = "SELECT index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns`, MIN(non_unique) AS `NonUnique` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' GROUP BY index_name;"
-		    dim rows as RowSet = pDatabase.SelectSQL(sql)
-
-		    if rows <> nil then
-		      For Each row As DatabaseRow In rows
-		        dim meta as new Dictionary
-		        meta.Value("Columns") = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
-		        meta.Value("NonUnique") = row.Column("NonUnique").IntegerValue <> 0
-		        indexes.Value(row.Column("Index").StringValue) = meta
-		      Next
-		      rows.Close
-		    end if
-		  Catch error as DatabaseException
-		    DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
-		    mLogs =  mlogs + "Error loading indexes on " + me.TableName + " : " + error.Message + EndOfLine
-		  End Try
-
-		  Return indexes
 		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Private Function MySQLCurrentForeignKeys(pDatabase as Database) As Dictionary
 		  dim foreignKeys as new Dictionary
-
+		  
 		  Try
 		    dim sql as String = "SELECT k.constraint_name AS `Constraint`, GROUP_CONCAT(k.column_name ORDER BY k.ordinal_position) AS `Columns`, k.referenced_table_name AS `ReferencedTable`, GROUP_CONCAT(k.referenced_column_name ORDER BY k.ordinal_position) AS `ReferencedColumns`, r.update_rule AS `UpdateRule`, r.delete_rule AS `DeleteRule` FROM information_schema.key_column_usage k JOIN information_schema.referential_constraints r ON r.constraint_schema = k.constraint_schema AND r.table_name = k.table_name AND r.constraint_name = k.constraint_name WHERE k.table_schema = '" + pDatabase.DatabaseName + "' AND k.table_name = '" + me.TableName + "' AND k.referenced_table_name IS NOT NULL GROUP BY k.constraint_name, k.referenced_table_name, r.update_rule, r.delete_rule;"
 		    dim rows as RowSet = pDatabase.SelectSQL(sql)
-
+		    
 		    if rows <> nil then
 		      For Each row As DatabaseRow In rows
 		        dim meta as new Dictionary
@@ -2509,8 +2467,34 @@ Inherits QueryBuilder
 		    DebugLog "Error loading foreign keys on " + me.TableName + " : " + error.Message
 		    mLogs =  mlogs + "Error loading foreign keys on " + me.TableName + " : " + error.Message + EndOfLine
 		  End Try
-
+		  
 		  Return foreignKeys
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLCurrentIndexes(pDatabase as Database) As Dictionary
+		  dim indexes as new Dictionary
+		  
+		  Try
+		    dim sql as String = "SELECT index_name AS `Index`, GROUP_CONCAT(column_name ORDER BY seq_in_index) AS `Columns`, MIN(non_unique) AS `NonUnique` FROM information_schema.statistics WHERE table_schema = '" + pDatabase.DatabaseName + "' AND table_name = '" + me.TableName + "' GROUP BY index_name;"
+		    dim rows as RowSet = pDatabase.SelectSQL(sql)
+		    
+		    if rows <> nil then
+		      For Each row As DatabaseRow In rows
+		        dim meta as new Dictionary
+		        meta.Value("Columns") = MySQLNormalizeIndexColumns(row.Column("Columns").StringValue)
+		        meta.Value("NonUnique") = row.Column("NonUnique").IntegerValue <> 0
+		        indexes.Value(row.Column("Index").StringValue) = meta
+		      Next
+		      rows.Close
+		    end if
+		  Catch error as DatabaseException
+		    DebugLog "Error loading indexes on " + me.TableName + " : " + error.Message
+		    mLogs =  mlogs + "Error loading indexes on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+		  
+		  Return indexes
 		End Function
 	#tag EndMethod
 
@@ -2518,7 +2502,7 @@ Inherits QueryBuilder
 		Private Function MySQLForeignKeyMatches(pForeignKeys As Dictionary, pName As String, pExpected As ORMForeignKey) As Boolean
 		  If pForeignKeys Is Nil Or pExpected Is Nil Then Return False
 		  If Not pForeignKeys.HasKey(pName) Then Return False
-
+		  
 		  Var meta As Dictionary = Dictionary(pForeignKeys.Value(pName))
 		  If meta Is Nil Then Return False
 		  Return meta.Lookup("Columns", "").StringValue = MySQLNormalizeIndexColumns(String.FromArray(pExpected.Columns, ",")) And _
@@ -2534,24 +2518,24 @@ Inherits QueryBuilder
 		  if pIndexes = nil then
 		    Return false
 		  end if
-
+		  
 		  dim expectedColumns as String = MySQLNormalizeIndexColumns(pColumns)
 		  if expectedColumns = "" then
 		    Return false
 		  end if
-
+		  
 		  For Each entry As DictionaryEntry In pIndexes
 		    dim meta as Dictionary = Dictionary(entry.Value)
 		    dim currentColumns as String = meta.Lookup("Columns", "")
 		    dim nonUnique as Boolean = meta.Lookup("NonUnique", true)
-
+		    
 		    if currentColumns = expectedColumns then
 		      if (Not pRequireUnique) or (nonUnique = false) then
 		        Return true
 		      end if
 		    end if
 		  Next
-
+		  
 		  Return false
 		End Function
 	#tag EndMethod
@@ -2561,7 +2545,7 @@ Inherits QueryBuilder
 		  if pIndexes = nil then
 		    Return false
 		  end if
-
+		  
 		  Return pIndexes.HasKey(pIndexName)
 		End Function
 	#tag EndMethod
@@ -2571,22 +2555,22 @@ Inherits QueryBuilder
 		  if pForeignKeys = nil then
 		    Return false
 		  end if
-
+		  
 		  dim normalizedIndexColumns as String = MySQLNormalizeIndexColumns(pIndexColumns)
-
+		  
 		  For Each entry As DictionaryEntry In pForeignKeys
 		    dim foreignKeyMeta as Dictionary = Dictionary(entry.Value)
 		    dim fkColumns as String = MySQLNormalizeIndexColumns(foreignKeyMeta.Lookup("Columns", "").StringValue)
-
+		    
 		    if entry.Key.StringValue = pIndexName then
 		      Return true
 		    end if
-
+		    
 		    if fkColumns <> "" then
 		      if normalizedIndexColumns = fkColumns then
 		        Return true
 		      end if
-
+		      
 		      if normalizedIndexColumns.Length > fkColumns.Length then
 		        if normalizedIndexColumns.Left(fkColumns.Length) = fkColumns and normalizedIndexColumns.Middle(fkColumns.Length, 1) = "," then
 		          Return true
@@ -2594,7 +2578,7 @@ Inherits QueryBuilder
 		      end if
 		    end if
 		  Next
-
+		  
 		  Return false
 		End Function
 	#tag EndMethod
@@ -2604,60 +2588,17 @@ Inherits QueryBuilder
 		  if pColumns = "" then
 		    Return ""
 		  end if
-
+		  
 		  dim normalizedColumns() as String
-
+		  
 		  For Each rawColumn As String In pColumns.Split(",")
 		    dim normalizedColumn as String = rawColumn.ReplaceAll("`", "").Trim.Lowercase
 		    if normalizedColumn <> "" then
 		      normalizedColumns.Add(normalizedColumn)
 		    end if
 		  Next
-
+		  
 		  Return String.FromArray(normalizedColumns, ",")
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Function SQLiteHasUniqueIndexColumns(pDatabase as Database, pColumns as String) As Boolean
-		  dim expectedColumns as String = MySQLNormalizeIndexColumns(pColumns)
-		  if expectedColumns = "" then
-		    Return false
-		  end if
-
-		  Try
-		    dim tableNameSQL as String = me.TableName.ReplaceAll("'", "''")
-		    dim indexes as RowSet = pDatabase.SelectSQL("PRAGMA index_list('" + tableNameSQL + "');")
-
-		    if indexes <> nil then
-		      For Each indexRow As DatabaseRow In indexes
-		        if indexRow.Column("unique").BooleanValue then
-		          dim indexName as String = indexRow.Column("name").StringValue
-		          dim indexNameSQL as String = indexName.ReplaceAll("'", "''")
-		          dim indexColumns as RowSet = pDatabase.SelectSQL("PRAGMA index_info('" + indexNameSQL + "');")
-		          dim currentColumns() as String
-
-		          if indexColumns <> nil then
-		            For Each columnRow As DatabaseRow In indexColumns
-		              currentColumns.Add(columnRow.Column("name").StringValue)
-		            Next
-		            indexColumns.Close
-		          end if
-
-		          if MySQLNormalizeIndexColumns(String.FromArray(currentColumns, ",")) = expectedColumns then
-		            indexes.Close
-		            Return true
-		          end if
-		        end if
-		      Next
-		      indexes.Close
-		    end if
-		  Catch error As DatabaseException
-		    DebugLog "Error loading SQLite indexes on " + me.TableName + " : " + error.Message
-		    mLogs = mLogs + "Error loading SQLite indexes on " + me.TableName + " : " + error.Message + EndOfLine
-		  End Try
-
-		  Return false
 		End Function
 	#tag EndMethod
 
@@ -2667,6 +2608,18 @@ Inherits QueryBuilder
 		  
 		  mRow = mRow + 1
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Sub NormalizeLegacySchemaIndexes()
+		  If SchemaIndexes Is Nil Then SchemaIndexes = New Dictionary
+		  If SchemaUniqueIndex Is Nil Then Return
+		  
+		  For Each indexEntry As DictionaryEntry In SchemaUniqueIndex
+		    Dim indexColumns() As String = indexEntry.Value
+		    If indexColumns.LastIndex >= 0 Then SchemaIndexes.Value(indexEntry.Key.StringValue) = New ORMIndex(indexColumns, True)
+		  Next
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -2847,7 +2800,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function ReleaseEditLock(pDatabase As Database) As Boolean
 		  If Not ShouldUseRecordLock Then Return True
-
+		  
 		  Return ModelORMRecordLock.ReleaseForORM(pDatabase, Me, ORM.CurrentEditSessionKey)
 		End Function
 	#tag EndMethod
@@ -3018,87 +2971,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
-		Function Replace(pDatabase As Database) As ORM
-		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
-		  
-		  
-		  If Loaded Then
-		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
-		  End
-		  
-		  If Not RaiseEvent Creating Then
-		    
-		    If Not ExternalTransaction Then pDatabase.BeginTransaction
-		    
-		    // Take a merge of mData and mChanged
-		    Dim pRaw As Dictionary = Me.Data
-		    
-		    // pData contains at least all primary keys
-		    Dim pData As Dictionary = Me.Pks
-		    
-		    // Take only columns defined in the model
-		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
-		      If pRaw.HasKey(pColumn) Then
-		        pData.Value(pColumn) = pRaw.Value(pColumn)
-		      End If
-		    Next
-		    
-		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
-		    
-		    // Merge mChanged into mData
-		    For Each pKey As Variant In mChanged.Keys()
-		      mData.Value(pKey) = mChanged.Value(pKey)
-		    Next
-		    
-		    // Clear changes, they are saved in mData
-		    Call Me.mChanged.RemoveAll
-		    
-		    // todo: check if the primary key is auto increment
-		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
-		      
-		      If pDatabase IsA SQLiteDatabase Then
-		        // Best guess for SQLite
-		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
-		        // Best guess for MySQL when available
-		        #If Not TargetIOS And Not TargetAndroid
-		      ElseIf pDatabase IsA MySQLCommunityServer Then
-		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
-		        #EndIf
-		      Else
-		        // Biggest primary key
-		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
-		        From(Me.TableName). _
-		        OrderBy(Me.PrimaryKey, "DESC"). _
-		        Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
-		      End If
-		      
-		    End If
-		    
-		    // Execute pendings relationships
-		    For Each pRelation As ORMRelation In mRemoved.Values
-		      Call pRelation.Remove(Me, pDatabase, False)
-		    Next
-		    
-		    For Each pRelation As ORMRelation In mAdded.Values
-		      Call pRelation.Add(Me, pDatabase, False)
-		    Next
-		    
-		    // Clear pending relationships
-		    mAdded.RemoveAll
-		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
-		    mRemoved.RemoveAll
-		    
-		    If Not ExternalTransaction Then pDatabase.CommitTransaction
-		    
-		    RaiseEvent Created
-		    
-		  End If
-		  
-		  Return Me
-		End Function
-	#tag EndMethod
-
 	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Attributes( Deprecated )  Function Replace(pDatabase As Database) As ORM
 		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
@@ -3171,6 +3043,87 @@ Inherits QueryBuilder
 		    mRemoved.RemoveAll
 		    
 		    pDatabase.Commit
+		    
+		    RaiseEvent Created
+		    
+		  End If
+		  
+		  Return Me
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit)) or  (TargetIOS and (Target32Bit or Target64Bit)) or  (TargetAndroid and (Target64Bit))
+		Function Replace(pDatabase As Database) As ORM
+		  // Use Save, which decides what should be called bewteen Update and Create instead of this method directly.
+		  
+		  
+		  If Loaded Then
+		    Raise new ORMException("Cannot replace " + Me.TableName + " model because it is already loaded.")
+		  End
+		  
+		  If Not RaiseEvent Creating Then
+		    
+		    If Not ExternalTransaction Then pDatabase.BeginTransaction
+		    
+		    // Take a merge of mData and mChanged
+		    Dim pRaw As Dictionary = Me.Data
+		    
+		    // pData contains at least all primary keys
+		    Dim pData As Dictionary = Me.Pks
+		    
+		    // Take only columns defined in the model
+		    For Each pColumn As Variant In Me.TableColumns(pDatabase)
+		      If pRaw.HasKey(pColumn) Then
+		        pData.Value(pColumn) = pRaw.Value(pColumn)
+		      End If
+		    Next
+		    
+		    DB.Replace(Me.TableName, pData.Keys).Values(pData.Values).Execute(pDatabase, False)
+		    
+		    // Merge mChanged into mData
+		    For Each pKey As Variant In mChanged.Keys()
+		      mData.Value(pKey) = mChanged.Value(pKey)
+		    Next
+		    
+		    // Clear changes, they are saved in mData
+		    Call Me.mChanged.RemoveAll
+		    
+		    // todo: check if the primary key is auto increment
+		    If Me.PrimaryKeys.LastIndex = 0 Then // Refetching the primary key work only with a single primary key
+		      
+		      If pDatabase IsA SQLiteDatabase Then
+		        // Best guess for SQLite
+		        Me.mData.Value(Me.PrimaryKey) = SQLiteDatabase(pDatabase).LastRowID
+		        // Best guess for MySQL when available
+		        #If Not TargetIOS And Not TargetAndroid
+		      ElseIf pDatabase IsA MySQLCommunityServer Then
+		        Me.mData.Value(Me.PrimaryKey) = MySQLCommunityServer(pDatabase).GetInsertID
+		        #EndIf
+		      Else
+		        // Biggest primary key
+		        Me.mData.Value(Me.PrimaryKey) = DB.Find(Me.PrimaryKey). _
+		        From(Me.TableName). _
+		        OrderBy(Me.PrimaryKey, "DESC"). _
+		        Execute(pDatabase).Column(Me.PrimaryKey).IntegerValue
+		      End If
+		      
+		    End If
+		    
+		    // Execute pendings relationships
+		    For Each pRelation As ORMRelation In mRemoved.Values
+		      Call pRelation.Remove(Me, pDatabase, False)
+		    Next
+		    
+		    For Each pRelation As ORMRelation In mAdded.Values
+		      Call pRelation.Add(Me, pDatabase, False)
+		    Next
+		    
+		    // Clear pending relationships
+		    mAdded.RemoveAll
+		    // FIXME #7870 AAAAAARRRRRRGGGGGGHHHHHHHH !!!!!!!
+		    mRemoved.RemoveAll
+		    
+		    If Not ExternalTransaction Then pDatabase.CommitTransaction
 		    
 		    RaiseEvent Created
 		    
@@ -3255,7 +3208,7 @@ Inherits QueryBuilder
 		Protected Sub ReportUpdateCacheProgress(pPrimaryKey As Variant, pPrimaryKeyName As String = "")
 		  If UpdateCacheThread = Nil Then Return
 		  If pPrimaryKeyName.Trim = "" Then pPrimaryKeyName = Me.PrimaryKey
-
+		  
 		  UpdateCacheThread.AddUserInterfaceUpdate("UpdateCacheCompletedPrimaryKey" : pPrimaryKeyName, "UpdateCacheCompletedRowTag" : pPrimaryKey)
 		End Sub
 	#tag EndMethod
@@ -3363,21 +3316,21 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0
 		Function SetData(pColumn As String, pValue As Variant) As ORM
 		  If Not RaiseEvent Changing(pColumn) Then
-
+		    
 		    // If it is different than the original data, it has changed
 		    If Not DataValuesAreEqual(Initial(pColumn), pValue) Then
 		      mChanged.Value(pColumn) = pValue
 		    ElseIf mChanged.HasKey(pColumn) Then
 		      mChanged.Remove(pColumn)
 		    End If
-
+		    
 		    RaiseEvent Changed(pColumn)
 		    if ParentORM<>nil then
 		      ParentORM.RaiseChange
 		    End If
-
+		    
 		  End If
-
+		  
 		  Return Me
 		End Function
 	#tag EndMethod
@@ -3389,8 +3342,136 @@ Inherits QueryBuilder
 		  If ORM.CurrentEditSessionKey.Trim = "" Then Return False
 		  If Me.TableName.Trim = "" Then Return False
 		  If Me.TableName.Trim.Lowercase = "ormrecordlock" Then Return False
-
+		  
 		  Return ModelORMRecordLock.RecordKeyFor(Me).Trim <> ""
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLColumnList(pColumns() As String) As String
+		  Var result As String
+		  For Each columnName As String In pColumns
+		    If columnName.Trim = "" Then Raise New ORMException("A schema column cannot be empty.")
+		    If result <> "" Then result = result + ", "
+		    result = result + "`" + columnName.Trim + "`"
+		  Next
+		  
+		  If result = "" Then Raise New ORMException("A schema constraint must contain at least one column.")
+		  Return result
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLForeignKeyDefinition(pName As String, pForeignKey As ORMForeignKey) As String
+		  If pForeignKey Is Nil Then Raise New ORMException("Foreign key " + pName + " has no definition.")
+		  Return "CONSTRAINT `" + pName + "` FOREIGN KEY (" + SQLColumnList(pForeignKey.Columns) + ") REFERENCES `" + pForeignKey.ReferencedTable + "` (" + SQLColumnList(pForeignKey.ReferencedColumns) + ") ON UPDATE " + pForeignKey.OnUpdate + " ON DELETE " + pForeignKey.OnDelete
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function SQLIndexDefinition(pName As String, pIndex As ORMIndex, pInsideCreateTable As Boolean) As String
+		  If pIndex Is Nil Then Raise New ORMException("Index " + pName + " has no definition.")
+		  Var prefix As String
+		  If pInsideCreateTable Then
+		    prefix = If(pIndex.Unique, "UNIQUE KEY ", "KEY ")
+		  Else
+		    prefix = If(pIndex.Unique, "UNIQUE INDEX ", "INDEX ")
+		  End If
+		  
+		  Return prefix + "`" + pName + "` (" + SQLColumnList(pIndex.Columns) + ")"
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function SQLiteCreateSchemaIndexes(pDatabase As Database, pSuffix As String = "") As Boolean
+		  // SQLite index names are shared by all tables, unlike MySQL index names.
+		  Var pTable As String = Me.TableName + pSuffix
+		  Var pExpected As New Dictionary
+		  If SchemaIndex <> Nil Then
+		    For Each pEntry As DictionaryEntry In SchemaIndex
+		      Var pColumns() As String = pEntry.Value
+		      pExpected.Value(pEntry.Key) = New ORMIndex(pColumns)
+		    Next
+		  End If
+		  If SchemaIndexes <> Nil Then
+		    For Each pEntry As DictionaryEntry In SchemaIndexes
+		      pExpected.Value(pEntry.Key) = pEntry.Value
+		    Next
+		  End If
+		  Try
+		    Var pActual As New Dictionary
+		    Var pRows As RowSet = pDatabase.SelectSQL("SELECT name, [unique] AS is_unique FROM pragma_index_list(?) WHERE partial = 0", pTable)
+		    For Each pRow As DatabaseRow In pRows
+		      Var pFields As RowSet = pDatabase.SelectSQL("SELECT name FROM pragma_index_info(?) ORDER BY seqno", pRow.Column("name").StringValue)
+		      Var pNames() As String
+		      For Each pField As DatabaseRow In pFields
+		        pNames.Add(pField.Column("name").StringValue)
+		      Next
+		      pFields.Close
+		      Var pKey As String = MySQLNormalizeIndexColumns(String.FromArray(pNames, ","))
+		      pActual.Value(If(pRow.Column("is_unique").BooleanValue, "u:", "i:") + pKey) = True
+		    Next
+		    pRows.Close
+		    For Each pEntry As DictionaryEntry In pExpected
+		      Var pIndex As ORMIndex = pEntry.Value
+		      Var pKey As String = MySQLNormalizeIndexColumns(String.FromArray(pIndex.Columns, ","))
+		      If pKey = "" Then Continue
+		      If pActual.HasKey("u:" + pKey) Then Continue
+		      If Not pIndex.Unique And pActual.HasKey("i:" + pKey) Then Continue
+		      Var pName As String = pTable + "_" + pEntry.Key.StringValue
+		      Var pSQL As String = "CREATE " + If(pIndex.Unique, "UNIQUE ", "") + "INDEX `" + pName.ReplaceAll("`", "``") + "` ON `" + pTable.ReplaceAll("`", "``") + "` (" + SQLColumnList(pIndex.Columns) + ")"
+		      pDatabase.ExecuteSQL(pSQL)
+		      pActual.Value(If(pIndex.Unique, "u:", "i:") + pKey) = True
+		    Next
+		    Return True
+		  Catch pError As DatabaseException
+		    mLogs = mLogs + "SQLite index on " + pTable + ": " + pError.Message + EndOfLine
+		    DebugLog "SQLite index on " + pTable + ": " + pError.Message
+		    Return False
+		  End Try
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function SQLiteHasUniqueIndexColumns(pDatabase as Database, pColumns as String) As Boolean
+		  dim expectedColumns as String = MySQLNormalizeIndexColumns(pColumns)
+		  if expectedColumns = "" then
+		    Return false
+		  end if
+		  
+		  Try
+		    dim tableNameSQL as String = me.TableName.ReplaceAll("'", "''")
+		    dim indexes as RowSet = pDatabase.SelectSQL("PRAGMA index_list('" + tableNameSQL + "');")
+		    
+		    if indexes <> nil then
+		      For Each indexRow As DatabaseRow In indexes
+		        if indexRow.Column("unique").BooleanValue then
+		          dim indexName as String = indexRow.Column("name").StringValue
+		          dim indexNameSQL as String = indexName.ReplaceAll("'", "''")
+		          dim indexColumns as RowSet = pDatabase.SelectSQL("PRAGMA index_info('" + indexNameSQL + "');")
+		          dim currentColumns() as String
+		          
+		          if indexColumns <> nil then
+		            For Each columnRow As DatabaseRow In indexColumns
+		              currentColumns.Add(columnRow.Column("name").StringValue)
+		            Next
+		            indexColumns.Close
+		          end if
+		          
+		          if MySQLNormalizeIndexColumns(String.FromArray(currentColumns, ",")) = expectedColumns then
+		            indexes.Close
+		            Return true
+		          end if
+		        end if
+		      Next
+		      indexes.Close
+		    end if
+		  Catch error As DatabaseException
+		    DebugLog "Error loading SQLite indexes on " + me.TableName + " : " + error.Message
+		    mLogs = mLogs + "Error loading SQLite indexes on " + me.TableName + " : " + error.Message + EndOfLine
+		  End Try
+		  
+		  Return false
 		End Function
 	#tag EndMethod
 
@@ -3511,23 +3592,34 @@ Inherits QueryBuilder
 		        DebugLog "Db " + TableName + " not exist"
 		        SchemaToCreateTable = true
 		      end try
-		      dim rowsU as rowset = pDatabase.SelectSQL("select stat.column_name from information_schema.statistics stat join information_schema.table_constraints tco on stat.table_schema = tco.table_schema and"+_
-		      " stat.table_name = tco.table_name and stat.index_name = tco.constraint_name where stat.non_unique = 0 and stat.table_schema not in ('information_schema', 'sys', 'performance_schema', 'mysql') and constraint_type = 'UNIQUE' and stat.table_name = '"+TableName+"' group by stat.table_name, stat.column_name")
-		      dim dU as new Dictionary
-		      if rowsU <> Nil then
-		        if rowsU.RowCount>0 then
+		      Var rowsU As RowSet
+		      Var dU As New Dictionary
+		      Var primaryColumns As New Dictionary
+		      // DESCRIBE can label a UNIQUE NOT NULL index PRI without a real PRIMARY KEY.
+		      Try
+		        rowsU = pDatabase.SelectSQL("SELECT COLUMN_NAME, INDEX_NAME FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND NON_UNIQUE = 0", TableName)
+		        If rowsU <> Nil Then
 		          For Each rowU As DatabaseRow In rowsU
-		            dU.Value( rowU.Column("column_name").StringValue) = true
+		            Var columnName As String = rowU.Column("COLUMN_NAME").StringValue.DefineEncoding(Encodings.UTF8)
+		            If rowU.Column("INDEX_NAME").StringValue = "PRIMARY" Then
+		              primaryColumns.Value(columnName) = True
+		            Else
+		              dU.Value(columnName) = True
+		            End If
 		          Next
-		        end if
-		      end if
-
+		        End If
+		      Catch indexError As DatabaseException
+		        Raise New ORMException("Cannot read MySQL indexes for " + TableName + ": " + indexError.Message)
+		      Finally
+		        If rowsU <> Nil Then rowsU.Close
+		      End Try
+		      
 		      If rows <> Nil Then
 		        if rows.RowCount>0 then
 		          For Each row As DatabaseRow In rows
 		            dim col as new ORMField
 		            col.Type = FieldType(row.Column("Type").StringValue)
-		            col.PrimaryKey = row.Column("Key").StringValue = "PRI"
+		            col.PrimaryKey = primaryColumns.HasKey(row.Column("Field").StringValue.DefineEncoding(Encodings.UTF8))
 		            col.NotNull = row.Column("Null").StringValue = "NO"
 		            col.Length = FieldLength(row.Column("Type").StringValue)
 		            col.DefaultValue = row.Column("Default").StringValue.DefineEncoding(Encodings.UTF8)
@@ -3544,6 +3636,20 @@ Inherits QueryBuilder
 		  else
 		    // Get table columns
 		    rows = pDatabase.TableColumns(TableName)
+		    // SQLite primary-key metadata is an ordinal: every positive position is a key part.
+		    // Read it directly instead of converting TableColumns.IsPrimary to Boolean.
+		    Var primaryKeys As New Dictionary
+		    Var primaryKeyRows As RowSet
+		    Try
+		      primaryKeyRows = pDatabase.SelectSQL("SELECT name FROM pragma_table_info(?) WHERE pk > 0", TableName)
+		      For Each primaryKeyRow As DatabaseRow In primaryKeyRows
+		        primaryKeys.Value(primaryKeyRow.Column("name").StringValue.DefineEncoding(Encodings.UTF8)) = True
+		      Next
+		    Catch primaryKeyError As DatabaseException
+		      Raise New ORMException("Cannot read SQLite primary keys for " + TableName + ": " + primaryKeyError.Message)
+		    Finally
+		      If primaryKeyRows <> Nil Then primaryKeyRows.Close
+		    End Try
 		    // Gest Table keys
 		    dim rowsU as rowset = pDatabase.SelectSQL("PRAGMA index_list("+TableName+");")
 		    dim dU as new Dictionary
@@ -3568,12 +3674,13 @@ Inherits QueryBuilder
 		      if rows.RowCount>0 then
 		        For Each row As DatabaseRow In rows
 		          dim col as new ORMField
+		          Var columnName As String = row.Column("ColumnName").StringValue.DefineEncoding(Encodings.UTF8)
 		          col.Type = FieldType(row.Column("FieldType").IntegerValue)
-		          col.PrimaryKey = row.Column("IsPrimary").BooleanValue
+		          col.PrimaryKey = primaryKeys.HasKey(columnName)
 		          col.NotNull = row.Column("NotNull").BooleanValue
 		          col.DefaultValue = row.Column("Length").StringValue.DefineEncoding(Encodings.UTF8)
-		          col.Unique = dU.Lookup(row.Column("ColumnName").StringValue, false)
-		          SchemaCurrent.value(row.Column("ColumnName").StringValue) = col
+		          col.Unique = dU.Lookup(columnName, false)
+		          SchemaCurrent.Value(columnName) = col
 		          
 		        Next
 		        rows.Close
@@ -3594,7 +3701,7 @@ Inherits QueryBuilder
 		    else
 		      dim cCurrent as ORMField = SchemaCurrent.value(dField.Key)
 		      dim cReal as ORMField = dField.Value
-
+		      
 		      // Named unique indexes are validated separately in TableUpdate.
 		      // Do not reinterpret their columns as the legacy single UNIQUE group.
 		      if cCurrent.Unique and Not cReal.Unique and SchemaUniqueIndex <> nil then
@@ -3755,18 +3862,6 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
-		Private Sub NormalizeLegacySchemaIndexes()
-		  If SchemaIndexes Is Nil Then SchemaIndexes = New Dictionary
-		  If SchemaUniqueIndex Is Nil Then Return
-
-		  For Each indexEntry As DictionaryEntry In SchemaUniqueIndex
-		    Dim indexColumns() As String = indexEntry.Value
-		    If indexColumns.LastIndex >= 0 Then SchemaIndexes.Value(indexEntry.Key.StringValue) = New ORMIndex(indexColumns, True)
-		  Next
-		End Sub
-	#tag EndMethod
-
 	#tag Method, Flags = &h0
 		Function TableName() As String
 		  Raise New ORMException("TableName must be implemented or be called from its implementation.")
@@ -3777,7 +3872,8 @@ Inherits QueryBuilder
 		Function TableUpdate(pDatabase as Database) As Boolean
 		  mInvalidIndexReport = ""
 		  NormalizeLegacySchemaIndexes
-
+		  Var schemaUpdateError As Boolean
+		  
 		  if pDatabase isa MySQLCommunityServer then
 		    if SchemaToCreateTable then
 		      if not CreateTable(pDatabase) then
@@ -3800,7 +3896,7 @@ Inherits QueryBuilder
 		      dim currentIndexes as Dictionary
 		      dim uniqueIndexError as Boolean = false
 		      dim currentForeignKeys as Dictionary
-
+		      
 		      for each schemaEntry as DictionaryEntry in Schema
 		        dim schemaField as ORMField = schemaEntry.Value
 		        
@@ -3819,6 +3915,7 @@ Inherits QueryBuilder
 		      
 		      // remove unused columns
 		      for each dField as DictionaryEntry in SchemaToRemoveColumn
+		        If schemaUpdateError Then Exit For
 		        Try
 		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Catch lockError As DatabaseException
@@ -3837,6 +3934,7 @@ Inherits QueryBuilder
 		        Catch Error as DatabaseException
 		          DebugLog "drop "+me.TableName+" DB error : " + Error.Message
 		          mLogs =  mlogs + "drop "+me.TableName+" DB error : " + Error.Message + EndOfLine
+		          schemaUpdateError = True
 		        end try
 		        
 		        Try
@@ -3849,6 +3947,7 @@ Inherits QueryBuilder
 		      
 		      // add new columns
 		      for each dField as DictionaryEntry in SchemaToAdd
+		        If schemaUpdateError Then Exit For
 		        Try
 		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
 		        Catch lockError As DatabaseException
@@ -3874,6 +3973,7 @@ Inherits QueryBuilder
 		        Catch Error as DatabaseException
 		          DebugLog "DB ADD "+me.TableName+"  error : " + Error.Message
 		          mLogs =  mlogs + "DB ADD "+me.TableName+"  error : " + Error.Message + EndOfLine
+		          schemaUpdateError = True
 		        end try
 		        
 		        Try
@@ -3886,6 +3986,7 @@ Inherits QueryBuilder
 		      
 		      // alter table's columns
 		      for each dField as DictionaryEntry in SchemaToAlter
+		        If schemaUpdateError Then Exit For
 		        
 		        Try
 		          pDatabase.ExecuteSQL("LOCK TABLES " + me.TableName + " WRITE;")
@@ -3919,6 +4020,7 @@ Inherits QueryBuilder
 		          End Try
 		          DebugLog "db alter "+me.TableName+ " : "+ error.Message
 		          mLogs =  mlogs + "db alter "+me.TableName+ " : "+ error.Message + EndOfLine
+		          schemaUpdateError = True
 		        end try
 		        
 		        Try
@@ -3929,6 +4031,10 @@ Inherits QueryBuilder
 		        End Try
 		        
 		      next
+		      If schemaUpdateError Then
+		        pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
+		        Return False
+		      End If
 		      // information_schema cannot be inspected reliably once LOCK TABLES is active.
 		      // Load the current keys first, then keep this snapshot current after each ADD.
 		      #Pragma BreakOnExceptions False
@@ -3954,6 +4060,7 @@ Inherits QueryBuilder
 		      Catch Error as DatabaseException
 		        DebugLog "PrimaryKey on  "+me.TableName+" error : " + Error.Message
 		        mLogs =  mlogs + "PrimaryKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
+		        schemaUpdateError = True
 		      end try
 		      try
 		        if HasUniqueKeys then
@@ -3971,15 +4078,16 @@ Inherits QueryBuilder
 		      Catch Error as DatabaseException
 		        DebugLog "UniqueKey on  "+me.TableName+" error : " + Error.Message
 		        mLogs =  mlogs + "UniqueKey on  "+me.TableName+" error : " + Error.Message + EndOfLine
+		        schemaUpdateError = True
 		      end try
-
+		      
 		      if SchemaUniqueIndex <> nil then
 		        for each dUnique as DictionaryEntry in SchemaUniqueIndex
 		          dim uniqueFields() as String = dUnique.Value
 		          if uniqueFields.LastIndex >= 0 then
 		            dim desiredColumns as String = MySQLNormalizeIndexColumns(String.FromArray(uniqueFields, ","))
 		            dim uniqueIndexName as String = dUnique.Key.StringValue
-
+		            
 		            if Not MySQLHasIndexColumns(currentIndexes, desiredColumns, true) then
 		              if MySQLIndexExists(currentIndexes, uniqueIndexName) then
 		                DebugLog "Unique index " + uniqueIndexName + " on " + me.TableName + " has incompatible columns or is not unique."
@@ -3991,7 +4099,7 @@ Inherits QueryBuilder
 		                  uniqueSQL = uniqueSQL + "`" + fieldName + "`,"
 		                Next
 		                uniqueSQL = uniqueSQL.Left(uniqueSQL.Length - 1) + ");"
-
+		                
 		                Try
 		                  DebugLog uniqueSQL
 		                  pDatabase.ExecuteSQL(uniqueSQL)
@@ -4037,11 +4145,12 @@ Inherits QueryBuilder
 		          Catch Error as DatabaseException
 		            DebugLog "Indexing on  "+me.TableName+" error : " + Error.Message
 		            mLogs =  mlogs + "Indexing on  "+me.TableName+" error : " + Error.Message + EndOfLine
+		            schemaUpdateError = True
 		          end try
 		        end if
 		        
 		      next
-
+		      
 		      For Each indexEntry As DictionaryEntry In SchemaIndexes
 		        // Legacy unique indexes were validated above, including equivalent names.
 		        If SchemaUniqueIndex <> Nil Then
@@ -4050,7 +4159,7 @@ Inherits QueryBuilder
 		        Var configuredIndex As ORMIndex = ORMIndex(indexEntry.Value)
 		        Var indexName As String = indexEntry.Key.StringValue
 		        Var configuredColumns As String = MySQLNormalizeIndexColumns(String.FromArray(configuredIndex.Columns, ","))
-
+		        
 		        If MySQLIndexExists(currentIndexes, indexName) Then
 		          Var currentIndex As Dictionary = Dictionary(currentIndexes.Value(indexName))
 		          Var currentColumns As String = currentIndex.Lookup("Columns", "").StringValue
@@ -4095,7 +4204,7 @@ Inherits QueryBuilder
 		        DebugLog "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message
 		        mLogs =  mlogs + "UNLOCK TABLES on " + me.TableName + " : " + unlockError.Message + EndOfLine
 		      End Try
-
+		      
 		      For Each foreignKeyEntry As DictionaryEntry In SchemaForeignKeys
 		        Var foreignKeyName As String = foreignKeyEntry.Key.StringValue
 		        Var configuredForeignKey As ORMForeignKey = ORMForeignKey(foreignKeyEntry.Value)
@@ -4126,7 +4235,7 @@ Inherits QueryBuilder
 		      Next
 		      
 		      pDatabase.ExecuteSQL("SET FOREIGN_KEY_CHECKS = 1;")
-		      if uniqueIndexError then
+		      if uniqueIndexError Or schemaUpdateError then
 		        Return false
 		      end if
 		      
@@ -4142,7 +4251,7 @@ Inherits QueryBuilder
 		      mLogs = mLogs + "Temporary table cleanup on " + me.TableName + " error: " + error.Message + EndOfLine
 		      Return False
 		    End Try
-
+		    
 		    if SchemaToCreateTable then
 		      if not CreateTable(pDatabase) then
 		        return false
@@ -4173,10 +4282,12 @@ Inherits QueryBuilder
 		          pDatabase.ExecuteSQL(sql)
 		        Catch Error as DatabaseException
 		          DebugLog "DB error : " + Error.Message
+		          mLogs = mLogs + "DB ADD " + Me.TableName + " error : " + Error.Message + EndOfLine
+		          schemaUpdateError = True
 		        end try
 		      next
 		      
-		      If SchemaToAlter.KeyCount > 0 then
+		      If Not schemaUpdateError And (SchemaToAlter.KeyCount > 0 Or SchemaToRemoveColumn.KeyCount > 0) Then
 		        dim selectSQL as string = "SELECT "
 		        dim collSelect as string
 		        for each dSelect as DictionaryEntry in  Schema
@@ -4186,66 +4297,57 @@ Inherits QueryBuilder
 		        
 		        selectSQL = selectSQL + " FROM `" + me.TableName+"`;"
 		        dim rr as RowSet = pDatabase.SelectSQL(selectSQL)
-		        if rr.RowCount>0 then
-		          
-		          dim insertSQL as String
-		          if pDatabase isa MySQLCommunityServer then
-		            insertSQL = "INSERT IGNORE INTO `"+me.TableName+"_TMP`  ("+collSelect.Left(collSelect.Length -2)+") VALUES "
-		          else
-		            insertSQL = "INSERT OR IGNORE INTO `"+me.TableName+"_TMP`  ("+collSelect.Left(collSelect.Length -2)+") VALUES "
-		          end if
-		          
-		          
-		          dim countrecord as integer = rr.RowCount
-		          While Not rr.AfterLastRow
-		            insertSQL = insertSQL + "("
-		            For i As Integer = 0 To rr.LastColumnIndex
-		              dim colVal as string
-		              if rr.ColumnAt(i).Value<>nil then
-		                if rr.ColumnAt(i).StringValue = "true" or rr.ColumnAt(i).StringValue = "false" then 
-		                  dim z as integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
-		                  colval = z.ToString + ","
-		                else
-		                  colval =  "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
-		                end if
-		              else
-		                colVal = "NULL" + ","
-		              end if
-		              insertSQL = insertSQL + colval
-		            Next
-		            insertSQL = insertSQL.Left(insertSQL.Length -1)
-		            insertSQL = insertSQL + "),"
-		            
-		            rr.MoveToNextRow
-		          Wend
-		          rr.Close
-		          insertSQL = insertSQL.Left(insertSQL.Length -1)+";"
-		          
-		          if CreateTable(pDatabase, "_TMP") then
-		            Try
-		              pDatabase.ExecuteSQL(insertSQL)
-		              dim rrtest as RowSet = pDatabase.SelectSQL("SELECT 1 FROM `" + me.TableName+"_TMP`;")
-		              if rrtest.RowCount= countrecord then
-		                pDatabase.ExecuteSQL("DROP TABLE '"+me.TableName+"';")
-		                pDatabase.ExecuteSQL("ALTER TABLE `"+me.TableName+"_TMP` RENAME TO '"+me.TableName+"';")
-		              else
-		                DebugLog "kErreur insertion données dans : " +me.TableName
-		                mLogs =  mlogs + "kErreur insertion données dans : " +me.TableName + EndOfLine
-		              end if
-		              
-		              
-		            Catch error As DatabaseException
-		              Return false
-		            End Try
-		            
-		            'pDatabase.ExecuteSQL("COMMIT;")
-		          end if
-		          
-		        end if
+		        Var countrecord As Integer = rr.RowCount
+		        Var insertSQL As String = "INSERT INTO `" + Me.TableName + "_TMP` (" + collSelect.Left(collSelect.Length - 2) + ") VALUES "
+		        While Not rr.AfterLastRow
+		          insertSQL = insertSQL + "("
+		          For i As Integer = 0 To rr.LastColumnIndex
+		            Var colVal As String
+		            If rr.ColumnAt(i).Value <> Nil Then
+		              If rr.ColumnAt(i).StringValue = "true" Or rr.ColumnAt(i).StringValue = "false" Then
+		                Var z As Integer = If(rr.ColumnAt(i).BooleanValue, 1, 0)
+		                colVal = z.ToString + ","
+		              Else
+		                colVal = "'" + rr.ColumnAt(i).StringValue.ReplaceAll("'", "''") + "',"
+		              End If
+		            Else
+		              colVal = "NULL,"
+		            End If
+		            insertSQL = insertSQL + colVal
+		          Next
+		          insertSQL = insertSQL.Left(insertSQL.Length - 1) + "),"
+		          rr.MoveToNextRow
+		        Wend
+		        rr.Close
+		        If countrecord > 0 Then insertSQL = insertSQL.Left(insertSQL.Length - 1) + ";"
+		        // Include empty tables, and retain the original if any row is rejected.
+		        pDatabase.ExecuteSQL("SAVEPOINT orm_schema_rebuild;")
+		        Try
+		          // Old tables can still own index names ending in _TMP after a previous rebuild.
+		          // Keep inline constraints, then create named indexes after replacing the source.
+		          If Not CreateTable(pDatabase, "_TMP", False) Then Raise New ORMException("Cannot create replacement table for " + Me.TableName)
+		          If countrecord > 0 Then pDatabase.ExecuteSQL(insertSQL)
+		          Var rebuiltRows As RowSet = pDatabase.SelectSQL("SELECT COUNT(*) AS row_count FROM `" + Me.TableName + "_TMP`;")
+		          Var rebuiltCount As Integer = rebuiltRows.Column("row_count").IntegerValue
+		          rebuiltRows.Close
+		          If rebuiltCount <> countrecord Then Raise New ORMException("Schema rebuild would lose rows in " + Me.TableName)
+		          pDatabase.ExecuteSQL("DROP TABLE `" + Me.TableName + "`;")
+		          pDatabase.ExecuteSQL("ALTER TABLE `" + Me.TableName + "_TMP` RENAME TO `" + Me.TableName + "`;")
+		          If Not SQLiteCreateSchemaIndexes(pDatabase) Then Raise New ORMException("Cannot create replacement indexes for " + Me.TableName)
+		        Catch error As RuntimeException
+		          pDatabase.ExecuteSQL("ROLLBACK TO SAVEPOINT orm_schema_rebuild;")
+		          mLogs = mLogs + "Schema rebuild on " + Me.TableName + " error : " + error.Message + EndOfLine
+		          schemaUpdateError = True
+		        Finally
+		          pDatabase.ExecuteSQL("RELEASE SAVEPOINT orm_schema_rebuild;")
+		        End Try
 		        
 		      end if
 		      pDatabase.ExecuteSQL("PRAGMA foreign_keys = ON;")
-
+		      If schemaUpdateError Then Return False
+		      
+		      If Not SQLiteCreateSchemaIndexes(pDatabase) Then Return False
+		      
 		      dim uniqueIndexError as Boolean = false
 		      if SchemaUniqueIndex <> nil then
 		        for each dUnique as DictionaryEntry in SchemaUniqueIndex
@@ -4258,7 +4360,7 @@ Inherits QueryBuilder
 		                uniqueSQL = uniqueSQL + "`" + fieldName + "`,"
 		              Next
 		              uniqueSQL = uniqueSQL.Left(uniqueSQL.Length - 1) + ");"
-
+		              
 		              Try
 		                DebugLog uniqueSQL
 		                pDatabase.ExecuteSQL(uniqueSQL)
@@ -4303,7 +4405,7 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function TouchEditLock(pDatabase As Database, durationMinutes As Integer = 30) As Boolean
 		  If Not ShouldUseRecordLock Then Return False
-
+		  
 		  Return ModelORMRecordLock.TouchForORM(pDatabase, Me, ORM.CurrentEditSessionKey, durationMinutes)
 		End Function
 	#tag EndMethod
@@ -4610,9 +4712,9 @@ Inherits QueryBuilder
 	#tag Method, Flags = &h21
 		Private Sub ValidateEditLock(pDatabase As Database, actionName As String)
 		  #Pragma Unused actionName
-
+		  
 		  If Not ShouldUseRecordLock Then Return
-
+		  
 		  Dim activeLock As ModelORMRecordLock = ModelORMRecordLock.LockedByOtherSession(pDatabase, Me, ORM.CurrentEditSessionKey)
 		  If activeLock <> Nil Then
 		    Raise New ORMException("La fiche " + Me.TableName + " est verrouillee par " + LockOwnerName(activeLock) + ".")
@@ -4826,11 +4928,11 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		FinishLoaded As Boolean = false
+		ExternalTransaction As Boolean = False
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		ExternalTransaction As Boolean = False
+		FinishLoaded As Boolean = false
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -4882,10 +4984,6 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
-		SchemaForeignKeys As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
 		SchemaCurrent As Dictionary
 	#tag EndProperty
 
@@ -4894,15 +4992,15 @@ Inherits QueryBuilder
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		SchemaForeignKeys As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		SchemaIndex As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		SchemaIndexes As Dictionary
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		SchemaUniqueIndex As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -4923,6 +5021,10 @@ Inherits QueryBuilder
 
 	#tag Property, Flags = &h0
 		SchemaToRemoveColumn As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		SchemaUniqueIndex As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
@@ -5042,6 +5144,14 @@ Inherits QueryBuilder
 			InitialValue=""
 			Type="String"
 			EditorType="MultiLineEditor"
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="ExternalTransaction"
+			Visible=false
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+			EditorType=""
 		#tag EndViewProperty
 	#tag EndViewBehavior
 End Class

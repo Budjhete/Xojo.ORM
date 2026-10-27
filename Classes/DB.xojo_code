@@ -37,6 +37,21 @@ Protected Module DB
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub ClearMySQLSchemaSnapshot(pDatabase As Database)
+		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If snapshotKey = "" Then Return
+		  InitializeMySQLSchemaSnapshotCache
+		  
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    If mMySQLSchemaSnapshots.HasKey(snapshotKey) Then mMySQLSchemaSnapshots.Remove(snapshotKey)
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Coalesce(pColumn() as Variant) As QueryExpression
 		  Return DB.Expression("COALESCE( " + QueryCompiler.Columns(pColumn)  + " )")
@@ -174,138 +189,6 @@ Protected Module DB
 		    
 		  End If
 		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub InitializeMySQLSession(pDatabase As Database)
-		  If Not (pDatabase IsA MySQLCommunityServer) Then Return
-
-		  pDatabase.ExecuteSQL(kMySQLSessionInitializationSQL)
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub ClearMySQLSchemaSnapshot(pDatabase As Database)
-		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
-		  If snapshotKey = "" Then Return
-		  InitializeMySQLSchemaSnapshotCache
-
-		  mMySQLSchemaSnapshotLock.Enter
-		  Try
-		    If mMySQLSchemaSnapshots.HasKey(snapshotKey) Then mMySQLSchemaSnapshots.Remove(snapshotKey)
-		  Finally
-		    mMySQLSchemaSnapshotLock.Leave
-		  End Try
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub InitializeMySQLSchemaSnapshotCache()
-		  If mMySQLSchemaSnapshots Is Nil Then mMySQLSchemaSnapshots = New Dictionary
-		  If mMySQLSchemaSnapshotLock Is Nil Then
-		    mMySQLSchemaSnapshotLock = New CriticalSection
-		    mMySQLSchemaSnapshotLock.Type = Thread.Types.Preemptive
-		  End If
-		End Sub
-	#tag EndMethod
-
-	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Private Function MySQLSchemaSnapshotKey(pDatabase As Database) As String
-		  If Not (pDatabase IsA MySQLCommunityServer) Then Return ""
-
-		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
-		  Return mysql.Host + ":" + mysql.Port.ToString + "/" + mysql.DatabaseName
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function MySQLSchemaSnapshotMatches(pDatabase As Database) As Boolean
-		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
-		  If snapshotKey = "" Then Return False
-		  InitializeMySQLSchemaSnapshotCache
-
-		  Dim snapshotMatches As Boolean
-		  mMySQLSchemaSnapshotLock.Enter
-		  Try
-		    snapshotMatches = mMySQLSchemaSnapshots.HasKey(snapshotKey)
-		  Finally
-		    mMySQLSchemaSnapshotLock.Leave
-		  End Try
-
-		  Return snapshotMatches
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Function MySQLTableSchemaSnapshot(pDatabase As Database, pTableName As String) As Dictionary
-		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
-		  If snapshotKey = "" Then Return Nil
-		  InitializeMySQLSchemaSnapshotCache
-
-		  Dim tableSnapshot As Dictionary
-		  mMySQLSchemaSnapshotLock.Enter
-		  Try
-		    Dim snapshot As Dictionary = Dictionary(mMySQLSchemaSnapshots.Lookup(snapshotKey, Nil))
-		    If snapshot <> Nil Then tableSnapshot = Dictionary(snapshot.Lookup(pTableName, Nil))
-		  Finally
-		    mMySQLSchemaSnapshotLock.Leave
-		  End Try
-
-		  Return tableSnapshot
-		End Function
-	#tag EndMethod
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
-		Sub PrepareMySQLSchemaSnapshot(pDatabase As Database)
-		  If Not (pDatabase IsA MySQLCommunityServer) Then Return
-
-		  Dim startedAt As Double = System.Microseconds
-		  Dim snapshot As New Dictionary
-		  Dim rows As RowSet
-		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
-
-		  rows = pDatabase.SelectSQL( _
-		  "SELECT c.TABLE_NAME, c.COLUMN_NAME, c.COLUMN_TYPE, c.IS_NULLABLE, c.COLUMN_KEY, " + _
-		  "c.COLUMN_DEFAULT, c.EXTRA, COALESCE(u.IS_UNIQUE, 0) AS IS_UNIQUE " + _
-		  "FROM information_schema.COLUMNS c " + _
-		  "LEFT JOIN (" + _
-		  "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, 1 AS IS_UNIQUE " + _
-		  "FROM information_schema.STATISTICS " + _
-		  "WHERE NON_UNIQUE = 0 AND INDEX_NAME <> 'PRIMARY' " + _
-		  "GROUP BY TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME" + _
-		  ") u ON u.TABLE_SCHEMA = c.TABLE_SCHEMA AND u.TABLE_NAME = c.TABLE_NAME AND u.COLUMN_NAME = c.COLUMN_NAME " + _
-		  "WHERE c.TABLE_SCHEMA = ? ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION", mysql.DatabaseName)
-
-		  If rows <> Nil Then
-		    For Each row As DatabaseRow In rows
-		      Dim tableName As String = row.Column("TABLE_NAME").StringValue
-		      Dim columns As Dictionary = Dictionary(snapshot.Lookup(tableName, Nil))
-		      If columns Is Nil Then
-		        columns = New Dictionary
-		        snapshot.Value(tableName) = columns
-		      End If
-
-		      Dim metadata As New Dictionary
-		      metadata.Value("Type") = row.Column("COLUMN_TYPE").StringValue
-		      metadata.Value("Key") = row.Column("COLUMN_KEY").StringValue
-		      metadata.Value("Null") = row.Column("IS_NULLABLE").StringValue
-		      metadata.Value("Default") = row.Column("COLUMN_DEFAULT").StringValue
-		      metadata.Value("Extra") = row.Column("EXTRA").StringValue
-		      metadata.Value("Unique") = row.Column("IS_UNIQUE").BooleanValue
-		      columns.Value(row.Column("COLUMN_NAME").StringValue) = metadata
-		    Next
-		    rows.Close
-		  End If
-
-		  InitializeMySQLSchemaSnapshotCache
-		  mMySQLSchemaSnapshotLock.Enter
-		  Try
-		    mMySQLSchemaSnapshots.Value(MySQLSchemaSnapshotKey(pDatabase)) = snapshot
-		  Finally
-		    mMySQLSchemaSnapshotLock.Leave
-		  End Try
-		  DebugLog "MySQL schema snapshot loaded | tables=" + snapshot.KeyCount.ToString + " | duration_ms=" + Format((System.Microseconds - startedAt) / 1000.0, "0.0")
-		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetIOS and (Target32Bit or Target64Bit))
@@ -789,6 +672,24 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub InitializeMySQLSchemaSnapshotCache()
+		  If mMySQLSchemaSnapshots Is Nil Then mMySQLSchemaSnapshots = New Dictionary
+		  If mMySQLSchemaSnapshotLock Is Nil Then
+		    mMySQLSchemaSnapshotLock = New CriticalSection
+		    mMySQLSchemaSnapshotLock.Type = Thread.Types.Preemptive
+		  End If
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub InitializeMySQLSession(pDatabase As Database)
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return
+		  
+		  pDatabase.ExecuteSQL(kMySQLSessionInitializationSQL)
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function Insert(pTableName As String, pColumns() As Variant) As QueryBuilder
 		  Dim pQueryBuilder As New QueryBuilder
@@ -865,9 +766,6 @@ Protected Module DB
 		End Function
 	#tag EndMethod
 
-	#tag Constant, Name = kMySQLSessionInitializationSQL, Type = String, Dynamic = False, Default = \"SET NAMES utf8mb4", Scope = Private
-	#tag EndConstant
-
 	#tag Method, Flags = &h0
 		Function Length(pColumn As Variant) As QueryExpression
 		  Return DB.Expression("LENGTH( " + QueryCompiler.Column(pColumn) + " )")
@@ -912,6 +810,107 @@ Protected Module DB
 		Function Min(pColumn as Variant, pAlias as String, pRound as integer) As QueryExpression
 		  Return DB.Alias(DB.Round(DB.Min(pColumn), pRound), pAlias)
 		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLSchemaSnapshotKey(pDatabase As Database) As String
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return ""
+		  
+		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
+		  Return mysql.Host + ":" + mysql.Port.ToString + "/" + mysql.DatabaseName
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MySQLSchemaSnapshotMatches(pDatabase As Database) As Boolean
+		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If snapshotKey = "" Then Return False
+		  InitializeMySQLSchemaSnapshotCache
+		  
+		  Dim snapshotMatches As Boolean
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    snapshotMatches = mMySQLSchemaSnapshots.HasKey(snapshotKey)
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		  
+		  Return snapshotMatches
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MySQLTableSchemaSnapshot(pDatabase As Database, pTableName As String) As Dictionary
+		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If snapshotKey = "" Then Return Nil
+		  InitializeMySQLSchemaSnapshotCache
+		  
+		  Dim tableSnapshot As Dictionary
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    Dim snapshot As Dictionary = Dictionary(mMySQLSchemaSnapshots.Lookup(snapshotKey, Nil))
+		    If snapshot <> Nil Then tableSnapshot = Dictionary(snapshot.Lookup(pTableName, Nil))
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		  
+		  Return tableSnapshot
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Sub PrepareMySQLSchemaSnapshot(pDatabase As Database)
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return
+		  
+		  Dim startedAt As Double = System.Microseconds
+		  Dim snapshot As New Dictionary
+		  Dim rows As RowSet
+		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
+		  
+		  rows = pDatabase.SelectSQL( _
+		  "SELECT c.TABLE_NAME, c.COLUMN_NAME, c.COLUMN_TYPE, c.IS_NULLABLE, " + _
+		  "c.COLUMN_DEFAULT, c.EXTRA, COALESCE(u.IS_UNIQUE, 0) AS IS_UNIQUE, COALESCE(p.SEQ_IN_INDEX, 0) AS PRIMARY_POSITION " + _
+		  "FROM information_schema.COLUMNS c " + _
+		  "LEFT JOIN (" + _
+		  "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, 1 AS IS_UNIQUE " + _
+		  "FROM information_schema.STATISTICS " + _
+		  "WHERE NON_UNIQUE = 0 AND INDEX_NAME <> 'PRIMARY' " + _
+		  "GROUP BY TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME" + _
+		  ") u ON u.TABLE_SCHEMA = c.TABLE_SCHEMA AND u.TABLE_NAME = c.TABLE_NAME AND u.COLUMN_NAME = c.COLUMN_NAME " + _
+		  "LEFT JOIN information_schema.STATISTICS p ON p.TABLE_SCHEMA = c.TABLE_SCHEMA AND p.TABLE_NAME = c.TABLE_NAME AND p.COLUMN_NAME = c.COLUMN_NAME AND p.INDEX_NAME = 'PRIMARY' " + _
+		  "WHERE c.TABLE_SCHEMA = ? ORDER BY c.TABLE_NAME, c.ORDINAL_POSITION", mysql.DatabaseName)
+		  
+		  If rows <> Nil Then
+		    For Each row As DatabaseRow In rows
+		      Dim tableName As String = row.Column("TABLE_NAME").StringValue
+		      Dim columns As Dictionary = Dictionary(snapshot.Lookup(tableName, Nil))
+		      If columns Is Nil Then
+		        columns = New Dictionary
+		        snapshot.Value(tableName) = columns
+		      End If
+		      
+		      Dim metadata As New Dictionary
+		      metadata.Value("Type") = row.Column("COLUMN_TYPE").StringValue
+		      // COLUMN_KEY can promote a UNIQUE NOT NULL index to PRI; read the physical index.
+		      metadata.Value("Key") = If(row.Column("PRIMARY_POSITION").IntegerValue > 0, "PRI", "")
+		      metadata.Value("Null") = row.Column("IS_NULLABLE").StringValue
+		      metadata.Value("Default") = row.Column("COLUMN_DEFAULT").StringValue
+		      metadata.Value("Extra") = row.Column("EXTRA").StringValue
+		      metadata.Value("Unique") = row.Column("IS_UNIQUE").BooleanValue
+		      columns.Value(row.Column("COLUMN_NAME").StringValue) = metadata
+		    Next
+		    rows.Close
+		  End If
+		  
+		  InitializeMySQLSchemaSnapshotCache
+		  mMySQLSchemaSnapshotLock.Enter
+		  Try
+		    mMySQLSchemaSnapshots.Value(MySQLSchemaSnapshotKey(pDatabase)) = snapshot
+		  Finally
+		    mMySQLSchemaSnapshotLock.Leave
+		  End Try
+		  DebugLog "MySQL schema snapshot loaded | tables=" + snapshot.KeyCount.ToString + " | duration_ms=" + Format((System.Microseconds - startedAt) / 1000.0, "0.0")
+		End Sub
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -1023,6 +1022,10 @@ Protected Module DB
 	#tag Property, Flags = &h21
 		Private mMySQLSchemaSnapshots As Dictionary
 	#tag EndProperty
+
+
+	#tag Constant, Name = kMySQLSessionInitializationSQL, Type = String, Dynamic = False, Default = \"SET NAMES utf8mb4", Scope = Private
+	#tag EndConstant
 
 
 	#tag Enum, Name = DataType, Type = Integer, Flags = &h0
