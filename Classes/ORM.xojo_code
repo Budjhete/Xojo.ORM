@@ -17,7 +17,7 @@ Inherits QueryBuilder
 	#tag EndEvent
 
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function AcquireEditLock(pDatabase As Database, context As String = "", durationMinutes As Integer = 30) As ModelORMRecordLock
 		  If Not ShouldUseRecordLock Then Return Nil
 
@@ -1294,7 +1294,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function CurrentEditLock(pDatabase As Database) As ModelORMRecordLock
 		  If Not ShouldUseRecordLock Then Return Nil
 
@@ -1383,7 +1383,6 @@ Inherits QueryBuilder
 		  end
 		  
 		  If Not RaiseEvent Deleting() Then
-		    Call ValidateEditLock(pDatabase, "delete")
 		    
 		    DB.Delete(Me.TableName).Where(Me.Pks).Execute(pDatabase, pCommit)
 		    
@@ -2390,7 +2389,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = false
 		Private Function LockOwnerName(activeLock As ModelORMRecordLock) As String
 		  If activeLock Is Nil Then Return "un autre utilisateur"
 		  If activeLock.username.Trim <> "" Then Return activeLock.username.Trim
@@ -2720,7 +2719,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function ReleaseEditLock(pDatabase As Database) As Boolean
 		  If Not ShouldUseRecordLock Then Return True
 
@@ -3258,7 +3257,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = false
 		Private Function ShouldUseRecordLock() As Boolean
 		  If Not ORM.RecordLocksEnabled Then Return False
 		  If Not Me.Loaded Then Return False
@@ -3981,7 +3980,7 @@ Inherits QueryBuilder
 		End Function
 	#tag EndMethod
 
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+	#tag Method, Flags = &h0, CompatibilityFlags = false
 		Function TouchEditLock(pDatabase As Database, durationMinutes As Integer = 30) As Boolean
 		  If Not ShouldUseRecordLock Then Return False
 
@@ -4158,7 +4157,6 @@ Inherits QueryBuilder
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
-		    Call ValidateEditLock(pDatabase, "update")
 		    
 		    If Not ExternalTransaction Then pDatabase.BeginTransaction
 		    
@@ -4172,7 +4170,7 @@ Inherits QueryBuilder
 		    Next
 		    
 		    If pChanged.KeyCount > 0 Then
-		      if app.DebugMode then DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
+		      if DebugBuild then DebugLog DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Compile
 		      DB.Update(Me.TableName).Set(pChanged).Where(Me.Pks).Execute(pDatabase, False)
 		    End If
 		    
@@ -4222,7 +4220,6 @@ Inherits QueryBuilder
 		  End If
 		  
 		  If Not RaiseEvent Updating() Then
-		    Call ValidateEditLock(pDatabase, "update")
 		    
 		    pDatabase.Begin
 		    
@@ -4286,7 +4283,7 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
-	#tag Method, Flags = &h21
+	#tag Method, Flags = &h21, CompatibilityFlags = false
 		Private Sub ValidateEditLock(pDatabase As Database, actionName As String)
 		  #Pragma Unused actionName
 
