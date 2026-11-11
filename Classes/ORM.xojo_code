@@ -1203,7 +1203,7 @@ Inherits QueryBuilder
 		    for each dField as DictionaryEntry in Schema
 		      dim field as ORMField = dField.Value
 		      sql = sql + EndOfLine + "`"+ dField.Key + "` " 
-		      sql = sql + field.Type(pDatabase) +field.Length
+		      sql = sql + field.Type(pDatabase) +field.Length + field.SQLTypeModifiers(pDatabase)
 		      sql = sql + " " + field.NotNull
 		      if field.Type(pDatabase) <> "DECIMAL" then sql = sql + " " + field.DefaultValue(pDatabase)
 		      sql = sql + " " + field.Extra(pDatabase)
@@ -1567,7 +1567,10 @@ Inherits QueryBuilder
 		  end if
 
 		  if pCurrent.Type <> pExpected.Type then
-		    Return true
+		    // Keep legacy Models compatible with previously normalized SQL types.
+		    Var legacyInteger As Boolean = pExpected.Type = ORMField.TypeList.INTEGER And pCurrent.Type = ORMField.TypeList.BIGINT
+		    Var legacyText As Boolean = pExpected.Type = ORMField.TypeList.VARCHAR And pCurrent.Type = ORMField.TypeList.CHAR
+		    If Not legacyInteger And Not legacyText Then Return True
 		  end if
 
 		  // Uniqueness belongs to an index, not to a column. It is synchronized by
@@ -1583,9 +1586,13 @@ Inherits QueryBuilder
 
 		  #If Not TargetIOS And Not TargetAndroid Then
 		    if pDatabase isa MySQLCommunityServer then
-		      if pCurrent.Length <> pExpected.Length then
+		      if pCurrent.Length <> pExpected.Length And pExpected.Type <> ORMField.TypeList.BIGINT then
 		        Return true
 		      end if
+
+		      // New modifiers are opt-in; legacy descriptors keep their existing comparison.
+		      If pExpected.IsUnsigned And Not pCurrent.IsUnsigned Then Return True
+		      If pExpected.UsesASCIIBinaryCollation And Not pCurrent.UsesASCIIBinaryCollation Then Return True
 
 		      if pCurrent.Extra <> pExpected.Extra then
 		        Return true
@@ -1666,12 +1673,14 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.VARCHAR
 		  elseif pValue.Contains("smallint") then
 		    Return ORMField.TypeList.SMALLINT
+		  elseif pValue.Contains("bigint") then
+		    Return ORMField.TypeList.BIGINT
 		  elseif pValue.Contains("int") then
 		    Return ORMField.TypeList.INTEGER
 		  elseif pValue.Contains("decimal") then
 		    Return ORMField.TypeList.DECIMAL
 		  elseif pValue.Contains("char") then
-		    Return ORMField.TypeList.VARCHAR
+		    Return ORMField.TypeList.CHAR
 		  elseif pValue.Contains("longblob") then
 		    Return ORMField.TypeList.LONGBLOB
 		  elseif pValue.Contains("blob") then
@@ -1686,10 +1695,11 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.DATE
 		  elseif pValue.Contains("String") then
 		    Return ORMField.TypeList.TEXT
+		  elseif pValue.Contains("longtext") then
+		    // Match the specific type before its TEXT suffix when reading MySQL metadata.
+		    Return ORMField.TypeList.LONGTEXT
 		  elseif pValue.Contains("text") then
 		    Return ORMField.TypeList.TEXT
-		  elseif pValue.Contains("longtext") then
-		    Return ORMField.TypeList.LongTEXT
 		  else
 		    Return ORMField.TypeList.VARCHAR
 		  end if
@@ -2489,7 +2499,7 @@ Inherits QueryBuilder
 		  dim foreignKeys as new Dictionary
 
 		  Try
-		    dim sql as String = "SELECT k.constraint_name AS `Constraint`, GROUP_CONCAT(k.column_name ORDER BY k.ordinal_position) AS `Columns`, k.referenced_table_name AS `ReferencedTable`, GROUP_CONCAT(k.referenced_column_name ORDER BY k.ordinal_position) AS `ReferencedColumns`, r.update_rule AS `UpdateRule`, r.delete_rule AS `DeleteRule` FROM information_schema.key_column_usage k JOIN information_schema.referential_constraints r ON r.constraint_schema = k.constraint_schema AND r.table_name = k.table_name AND r.constraint_name = k.constraint_name WHERE k.table_schema = '" + pDatabase.DatabaseName + "' AND k.table_name = '" + me.TableName + "' AND k.referenced_table_name IS NOT NULL GROUP BY k.constraint_name, k.referenced_table_name, r.update_rule, r.delete_rule;"
+		    dim sql as String = "SELECT k.constraint_name AS `Constraint`, GROUP_CONCAT(k.column_name ORDER BY k.ordinal_position) AS `Columns`, k.referenced_table_name AS `ReferencedTable`, GROUP_CONCAT(k.referenced_column_name ORDER BY k.ordinal_position) AS `ReferencedColumns`, r.update_rule AS `UpdateRule`, r.delete_rule AS `DeleteRule`, t.engine AS `Engine` FROM information_schema.key_column_usage k JOIN information_schema.referential_constraints r ON r.constraint_schema = k.constraint_schema AND r.table_name = k.table_name AND r.constraint_name = k.constraint_name JOIN information_schema.tables t ON t.table_schema = k.table_schema AND t.table_name = k.table_name WHERE k.table_schema = '" + pDatabase.DatabaseName + "' AND k.table_name = '" + me.TableName + "' AND k.referenced_table_name IS NOT NULL GROUP BY k.constraint_name, k.referenced_table_name, r.update_rule, r.delete_rule, t.engine;"
 		    dim rows as RowSet = pDatabase.SelectSQL(sql)
 
 		    if rows <> nil then
@@ -2500,6 +2510,7 @@ Inherits QueryBuilder
 		        meta.Value("ReferencedColumns") = MySQLNormalizeIndexColumns(row.Column("ReferencedColumns").StringValue)
 		        meta.Value("UpdateRule") = row.Column("UpdateRule").StringValue.Uppercase
 		        meta.Value("DeleteRule") = row.Column("DeleteRule").StringValue.Uppercase
+		        meta.Value("Engine") = row.Column("Engine").StringValue.DefineEncoding(Encodings.UTF8).Uppercase
 		        foreignKeys.Value(row.Column("Constraint").StringValue) = meta
 		      Next
 		      rows.Close
@@ -2520,11 +2531,22 @@ Inherits QueryBuilder
 
 		  Var meta As Dictionary = Dictionary(pForeignKeys.Value(pName))
 		  If meta Is Nil Then Return False
+		  Var currentUpdate As String = meta.Lookup("UpdateRule", "").StringValue.Trim.Uppercase
+		  Var currentDelete As String = meta.Lookup("DeleteRule", "").StringValue.Trim.Uppercase
+		  Var expectedUpdate As String = pExpected.OnUpdate.Trim.Uppercase
+		  Var expectedDelete As String = pExpected.OnDelete.Trim.Uppercase
+		  // InnoDB enforces NO ACTION immediately, exactly like RESTRICT.
+		  // Keep other engines strict: NDB can defer NO ACTION until commit.
+		  If meta.Lookup("Engine", "").StringValue.Uppercase = "INNODB" Then
+		    If currentUpdate = ORMForeignKey.ActionNoAction Then currentUpdate = ORMForeignKey.ActionRestrict
+		    If currentDelete = ORMForeignKey.ActionNoAction Then currentDelete = ORMForeignKey.ActionRestrict
+		    If expectedUpdate = ORMForeignKey.ActionNoAction Then expectedUpdate = ORMForeignKey.ActionRestrict
+		    If expectedDelete = ORMForeignKey.ActionNoAction Then expectedDelete = ORMForeignKey.ActionRestrict
+		  End If
 		  Return meta.Lookup("Columns", "").StringValue = MySQLNormalizeIndexColumns(String.FromArray(pExpected.Columns, ",")) And _
 		  meta.Lookup("ReferencedTable", "").StringValue = pExpected.ReferencedTable.Lowercase And _
 		  meta.Lookup("ReferencedColumns", "").StringValue = MySQLNormalizeIndexColumns(String.FromArray(pExpected.ReferencedColumns, ",")) And _
-		  meta.Lookup("UpdateRule", "").StringValue = pExpected.OnUpdate.Uppercase And _
-		  meta.Lookup("DeleteRule", "").StringValue = pExpected.OnDelete.Uppercase
+		  currentUpdate = expectedUpdate And currentDelete = expectedDelete
 		End Function
 	#tag EndMethod
 
@@ -3451,6 +3473,7 @@ Inherits QueryBuilder
 		          Dim columnType As String = metadata.Lookup("Type", "").StringValue
 		          Dim col As New ORMField
 		          col.Type = FieldType(columnType)
+		          col.IsUnsigned = columnType.Lowercase.IndexOf("unsigned") >= 0
 		          col.PrimaryKey = metadata.Lookup("Key", "").StringValue = "PRI"
 		          col.NotNull = metadata.Lookup("Null", "YES").StringValue = "NO"
 		          col.Length = FieldLength(columnType)
@@ -3483,6 +3506,7 @@ Inherits QueryBuilder
 		          For Each row As DatabaseRow In rows
 		            dim col as new ORMField
 		            col.Type = FieldType(row.Column("Type").StringValue)
+		            col.IsUnsigned = row.Column("Type").StringValue.Lowercase.IndexOf("unsigned") >= 0
 		            col.PrimaryKey = row.Column("Key").StringValue = "PRI"
 		            col.NotNull = row.Column("Null").StringValue = "NO"
 		            col.Length = FieldLength(row.Column("Type").StringValue)
@@ -3541,6 +3565,32 @@ Inherits QueryBuilder
 		  
 		  
 		  
+		  #If Not TargetIOS And Not TargetAndroid Then
+		    If pDatabase IsA MySQLCommunityServer And Not SchemaToCreateTable Then
+		      Var requiresASCIICollation As Boolean
+		      For Each expectedField As DictionaryEntry In Schema
+		        If ORMField(expectedField.Value).UsesASCIIBinaryCollation Then
+		          requiresASCIICollation = True
+		          Exit For
+		        End If
+		      Next
+		      If requiresASCIICollation Then
+		        Var collationRows As RowSet = pDatabase.SelectSQL("SELECT COLUMN_NAME, COLLATION_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?", TableName)
+		        Try
+		          For Each collationRow As DatabaseRow In collationRows
+		            Var columnName As String = collationRow.Column("COLUMN_NAME").StringValue.DefineEncoding(Encodings.UTF8)
+		            If SchemaCurrent.HasKey(columnName) Then
+		              Var currentField As ORMField = ORMField(SchemaCurrent.Value(columnName))
+		              currentField.UsesASCIIBinaryCollation = collationRow.Column("COLLATION_NAME").StringValue.DefineEncoding(Encodings.UTF8).Lowercase = "ascii_bin"
+		            End If
+		          Next
+		        Finally
+		          If collationRows <> Nil Then collationRows.Close
+		        End Try
+		      End If
+		    End If
+		  #EndIf
+
 		  SchemaToAdd = new Dictionary
 		  SchemaToAlter = new Dictionary
 		  
@@ -3774,7 +3824,7 @@ Inherits QueryBuilder
 		        
 		        dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
-		        sql = sql + field.Type(pDatabase) +field.Length
+		        sql = sql + field.Type(pDatabase) +field.Length + field.SQLTypeModifiers(pDatabase)
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        if field.Extra = ORMField.ExtraList.AutoIncremente then
 		          sql = sql + " " + field.Extra(pdatabase)  +  " , ADD PRIMARY KEY (`" + dField.Key + "`)"
@@ -3814,7 +3864,7 @@ Inherits QueryBuilder
 		        dim field as ORMField = dField.Value
 		        sql = sql + "`"+ dField.Key + "` " 
 		        sql = sql + "`"+ dField.Key + "` " 
-		        sql = sql + field.Type(pDatabase) +field.Length
+		        sql = sql + field.Type(pDatabase) +field.Length + field.SQLTypeModifiers(pDatabase)
 		        sql = sql + " " + field.NotNull + " " + field.DefaultValue(pDatabase)
 		        sql = sql + " " + field.Extra(pdatabase)  +";"
 		        DebugLog sql

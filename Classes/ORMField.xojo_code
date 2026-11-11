@@ -167,6 +167,10 @@ Protected Class ORMField
 		      Return "TEXT"
 		    case TypeList.INTEGER
 		      Return "INT"
+		    Case TypeList.BIGINT
+		      Return "BIGINT"
+		    Case TypeList.CHAR
+		      Return "CHAR"
 		    Case TypeList.SMALLINT
 		      Return "SMALLINT"
 		    case TypeList.BLOB
@@ -188,9 +192,9 @@ Protected Class ORMField
 		    end select
 		  else
 		    select case mType
-		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR
+		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR, TypeList.CHAR
 		      Return "TEXT"
-		    case TypeList.INTEGER, typelist.SMALLINT
+		    case TypeList.INTEGER, typelist.SMALLINT, TypeList.BIGINT
 		      Return "INTEGER"
 		    case TypeList.BLOB, TypeList.LONGBLOB
 		      Return "BLOB"
@@ -205,6 +209,39 @@ Protected Class ORMField
 		End Function
 	#tag EndMethod
 
+
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
+		Function SQLTypeModifiers(pDatabase As Database) As String
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return ""
+		  Var modifiers As String
+		  If IsUnsigned Then
+		    Select Case mType
+		    Case TypeList.INTEGER, TypeList.SMALLINT, TypeList.BIGINT
+		      modifiers = " UNSIGNED"
+		    Else
+		      Raise New ORMException("Unsigned requires an integer ORM field.")
+		    End Select
+		  End If
+		  If UsesASCIIBinaryCollation Then
+		    Select Case mType
+		    Case TypeList.VARCHAR, TypeList.CHAR
+		      modifiers = modifiers + " CHARACTER SET ascii COLLATE ascii_bin"
+		    Else
+		      Raise New ORMException("ASCII binary collation requires a character ORM field.")
+		    End Select
+		  End If
+		  Return modifiers
+		End Function
+	#tag EndMethod
+
+	#tag Property, Flags = &h0
+		IsUnsigned As Boolean = False
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		UsesASCIIBinaryCollation As Boolean = False
+	#tag EndProperty
 
 	#tag Property, Flags = &h21
 		Private mDefaultValue As String
@@ -254,6 +291,8 @@ Protected Class ORMField
 		  LONGBLOB
 		  DATE
 		SMALLINT
+		BIGINT
+		CHAR
 	#tag EndEnum
 
 

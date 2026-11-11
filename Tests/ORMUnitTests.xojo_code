@@ -561,6 +561,31 @@ Inherits TestGroup
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
+		Sub IdentityFieldTypesTest()
+		  Var model As New UserTest
+		  Var bigInteger As New ORMField
+		  bigInteger.Type = ORMField.TypeList.BIGINT
+		  Var fixedText As New ORMField
+		  fixedText.Type = ORMField.TypeList.CHAR
+		  fixedText.Length = "64"
+		  Var mysql As New MySQLCommunityServer
+		  Assert.AreEqual("BIGINT", bigInteger.Type(mysql))
+		  Assert.AreEqual("CHAR", fixedText.Type(mysql))
+		  Assert.AreEqual("(64)", fixedText.Length)
+		  Assert.IsTrue(model.FieldType("bigint(20)") = ORMField.TypeList.BIGINT)
+		  Assert.IsTrue(model.FieldType("char(64)") = ORMField.TypeList.CHAR)
+		  Assert.IsTrue(model.FieldType("varchar(512)") = ORMField.TypeList.VARCHAR)
+		  Assert.IsTrue(model.FieldType("int(11)") = ORMField.TypeList.INTEGER)
+		  Assert.IsTrue(model.FieldType("longtext") = ORMField.TypeList.LONGTEXT)
+		  Assert.IsTrue(model.FieldType("text") = ORMField.TypeList.TEXT)
+		  Assert.IsTrue(model.FieldType("longblob") = ORMField.TypeList.LONGBLOB)
+		  Assert.IsTrue(model.FieldType("blob") = ORMField.TypeList.BLOB)
+		  Assert.AreEqual("INTEGER", bigInteger.Type(ORMTestDatabase))
+		  Assert.AreEqual("TEXT", fixedText.Type(ORMTestDatabase))
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
 		Sub XMLValueTest()
 		  Dim pUserTest As New UserTest
 		  
