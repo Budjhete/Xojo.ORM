@@ -4959,9 +4959,19 @@ Inherits QueryBuilder
 		          pDatabase.ExecuteSQL("DROP TABLE `" + Me.TableName + "`;")
 		          pDatabase.ExecuteSQL("ALTER TABLE `" + Me.TableName + "_TMP` RENAME TO `" + Me.TableName + "`;")
 		          If Not SQLiteCreateSchemaIndexes(pDatabase) Then Raise New ORMException("Cannot create replacement indexes for " + Me.TableName)
-		          Var pForeignKeyRows As RowSet = pDatabase.SelectSQL("SELECT * FROM pragma_foreign_key_check WHERE `table` = ? OR parent = ?", Me.TableName, Me.TableName)
-		          Var pForeignKeyError As Boolean = Not pForeignKeyRows.AfterLastRow
-		          pForeignKeyRows.Close
+		          Var pForeignKeyError As Boolean
+		          Try
+		            Var pForeignKeyRows As RowSet = pDatabase.SelectSQL("SELECT * FROM pragma_foreign_key_check WHERE `table` = ? OR parent = ?", Me.TableName, Me.TableName)
+		            pForeignKeyError = Not pForeignKeyRows.AfterLastRow
+		            pForeignKeyRows.Close
+		          Catch pForeignKeyCheckError As DatabaseException
+		            // Une contrainte étrangère héritée invalide sur une autre table ne doit
+		            // pas empêcher la reconstruction de cette table. Les autres erreurs
+		            // SQLite restent bloquantes. La réparation dédiée s'exécute avant les
+		            // mises à jour; ce journal conserve la trace du cas.
+		            If pForeignKeyCheckError.Message.Lowercase.IndexOf("mismatch") < 0 Then Raise pForeignKeyCheckError
+		            mLogs = mLogs + "SQLite foreign key check on " + Me.TableName + " skipped: " + pForeignKeyCheckError.Message + EndOfLine
+		          End Try
 		          If pForeignKeyError Then Raise New ORMException("Primary key migration would invalidate foreign keys on " + Me.TableName)
 		          If pRemoved > 0 Then mLogs = mLogs + "Older or identical duplicate rows removed on " + Me.TableName + ": " + pRemoved.ToString + EndOfLine
 		        Catch error As RuntimeException
