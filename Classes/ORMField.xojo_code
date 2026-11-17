@@ -43,11 +43,14 @@ Protected Class ORMField
 		        End If
 		      end
 		      
-		      // MySQL requires expression defaults for text and binary large objects.
-		      // Keep explicit NULL and the model's declared value unchanged.
+		      // MySQL 8.0.13+ and MariaDB 10.2.1+ accept BLOB/TEXT defaults; MySQL needs an expression.
+		      // Older servers, including MySQL 5.7, cannot store a non-NULL default for these types.
 		      Select Case mType
 		      Case TypeList.TEXT, TypeList.LONGTEXT, TypeList.BLOB, TypeList.LONGBLOB
-		        If dv <> "NULL" Then dv = "(" + dv + ")"
+		        If dv <> "NULL" Then
+		          If Not DB.MySQLSupportsExpressionDefaults(pDatabase) Then Return ""
+		          dv = "(" + dv + ")"
+		        End If
 		      End Select
 		      Return "DEFAULT " + dv
 		    else

@@ -2933,6 +2933,19 @@ Inherits QueryBuilder
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h1
+		Protected Function RaiseEventDeleting() As Boolean
+		  // Les classes derivees passent par le declarant de l'evenement.
+		  Return RaiseEvent Deleting()
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h1
+		Protected Sub RaiseEventDeleted()
+		  RaiseEvent Deleted()
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function ReleaseEditLock(pDatabase As Database) As Boolean
 		  If Not ShouldUseRecordLock Then Return True

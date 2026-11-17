@@ -822,6 +822,98 @@ Protected Module DB
 	#tag EndMethod
 
 	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MySQLSupportsExpressionDefaults(pDatabase As Database) As Boolean
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return False
+		  
+		  Dim mysql As MySQLCommunityServer = MySQLCommunityServer(pDatabase)
+		  // A disconnected descriptor has no server version; keep the modern SQL for formatting.
+		  If Not mysql.IsConnected Then Return True
+		  
+		  Dim cacheKey As String = MySQLSchemaSnapshotKey(pDatabase)
+		  If mMySQLServerCapabilities Is Nil Then mMySQLServerCapabilities = New Dictionary
+		  If mMySQLServerCapabilityLock Is Nil Then
+		    mMySQLServerCapabilityLock = New CriticalSection
+		    mMySQLServerCapabilityLock.Type = Thread.Types.Preemptive
+		  End If
+		  
+		  Dim cached As Boolean
+		  Dim cachedValue As Boolean
+		  mMySQLServerCapabilityLock.Enter
+		  Try
+		    cached = mMySQLServerCapabilities.HasKey(cacheKey)
+		    If cached Then cachedValue = mMySQLServerCapabilities.Value(cacheKey).BooleanValue
+		  Finally
+		    mMySQLServerCapabilityLock.Leave
+		  End Try
+		  If cached Then Return cachedValue
+		  
+		  Dim version As String = MySQLServerVersion(pDatabase)
+		  // Do not cache a failed probe; a later call can retry after LOCK TABLES is released.
+		  If version = "" Then Return False
+		  Dim supported As Boolean = MySQLVersionSupportsExpressionDefaults(version)
+		  mMySQLServerCapabilityLock.Enter
+		  Try
+		    mMySQLServerCapabilities.Value(cacheKey) = supported
+		  Finally
+		    mMySQLServerCapabilityLock.Leave
+		  End Try
+		  Return supported
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Function MySQLVersionSupportsExpressionDefaults(pVersion As String) As Boolean
+		  If pVersion.Lowercase.Contains("mariadb") Then
+		    // MariaDB 10.2.1 introduced BLOB/TEXT defaults and expression defaults.
+		    Return MySQLVersionAtLeast(pVersion, 10, 2, 1)
+		  End If
+		  // MySQL 8.0.13 introduced expression defaults for BLOB/TEXT.
+		  Return MySQLVersionAtLeast(pVersion, 8, 0, 13)
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Private Function MySQLServerVersion(pDatabase As Database) As String
+		  Dim version As String
+		  Dim rows As RowSet
+		  Try
+		    rows = pDatabase.SelectSQL("SELECT VERSION() AS server_version")
+		    If rows <> Nil And Not rows.AfterLastRow Then
+		      version = rows.Column("server_version").StringValue
+		    End If
+		  Catch
+		    version = ""
+		  Finally
+		    If rows <> Nil Then rows.Close
+		  End Try
+		  Return version
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h21
+		Private Function MySQLVersionAtLeast(pVersion As String, pMajor As Integer, pMinor As Integer, pPatch As Integer) As Boolean
+		  Dim version As String = pVersion.Trim
+		  If version = "" Then Return False
+		  // Some MariaDB builds prefix the real version with 5.5.5 for compatibility.
+		  If version.Lowercase.Contains("mariadb") And version.BeginsWith("5.5.5-") Then
+		    version = version.Right(version.Length - 6)
+		  End If
+		  
+		  Dim parts() As String = version.Split(".")
+		  If parts.LastIndex < 1 Then Return False
+		  
+		  Dim actualMajor As Integer = Val(parts(0))
+		  Dim actualMinor As Integer = Val(parts(1))
+		  Dim actualPatch As Integer = 0
+		  If parts.LastIndex >= 2 Then actualPatch = Val(parts(2))
+		  
+		  If actualMajor <> pMajor Then Return actualMajor > pMajor
+		  If actualMinor <> pMinor Then Return actualMinor > pMinor
+		  Return actualPatch >= pPatch
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
 		Function MySQLSchemaSnapshotMatches(pDatabase As Database) As Boolean
 		  Dim snapshotKey As String = MySQLSchemaSnapshotKey(pDatabase)
 		  If snapshotKey = "" Then Return False
@@ -1021,6 +1113,14 @@ Protected Module DB
 
 	#tag Property, Flags = &h21
 		Private mMySQLSchemaSnapshots As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mMySQLServerCapabilities As Dictionary
+	#tag EndProperty
+
+	#tag Property, Flags = &h21
+		Private mMySQLServerCapabilityLock As CriticalSection
 	#tag EndProperty
 
 
