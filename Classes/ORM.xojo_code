@@ -1568,7 +1568,10 @@ Inherits QueryBuilder
 		  end if
 
 		  if pCurrent.Type <> pExpected.Type then
-		    Return true
+		    // Keep legacy Models compatible with previously normalized SQL types.
+		    Var legacyInteger As Boolean = pExpected.Type = ORMField.TypeList.INTEGER And pCurrent.Type = ORMField.TypeList.BIGINT
+		    Var legacyText As Boolean = pExpected.Type = ORMField.TypeList.VARCHAR And pCurrent.Type = ORMField.TypeList.CHAR
+		    If Not legacyInteger And Not legacyText Then Return True
 		  end if
 
 		  // Uniqueness belongs to an index, not to a column. It is synchronized by
@@ -1584,7 +1587,7 @@ Inherits QueryBuilder
 
 		  #If Not TargetIOS And Not TargetAndroid Then
 		    if pDatabase isa MySQLCommunityServer then
-		      if pCurrent.Length <> pExpected.Length then
+		      if pCurrent.Length <> pExpected.Length And pExpected.Type <> ORMField.TypeList.BIGINT then
 		        Return true
 		      end if
 
@@ -1667,12 +1670,14 @@ Inherits QueryBuilder
 		    Return ORMField.TypeList.VARCHAR
 		  elseif pValue.Contains("smallint") then
 		    Return ORMField.TypeList.SMALLINT
+		  elseif pValue.Contains("bigint") then
+		    Return ORMField.TypeList.BIGINT
 		  elseif pValue.Contains("int") then
 		    Return ORMField.TypeList.INTEGER
 		  elseif pValue.Contains("decimal") then
 		    Return ORMField.TypeList.DECIMAL
 		  elseif pValue.Contains("char") then
-		    Return ORMField.TypeList.VARCHAR
+		    Return ORMField.TypeList.CHAR
 		  elseif pValue.Contains("longblob") then
 		    Return ORMField.TypeList.LONGBLOB
 		  elseif pValue.Contains("blob") then
@@ -2266,7 +2271,7 @@ Inherits QueryBuilder
 		    case 6
 		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v.DoubleValue
 		    case 8, 37
-		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v.StringValue
+		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v.StringValue.DefineEncoding(Encodings.UTF8)
 		    else
 		      pJSONItem.Value(pColumn.DefineEncoding(Encodings.UTF8)) = v
 		    End Select

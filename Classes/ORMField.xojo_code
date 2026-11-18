@@ -132,6 +132,9 @@ Protected Class ORMField
 		Function NotNull() As String
 		  if mNotNull then
 		    Return "NOT NULL"
+		  ElseIf mType = TypeList.TIMESTAMP Then
+		    // Legacy MySQL/MariaDB TIMESTAMP columns require explicit NULL.
+		    Return "NULL"
 		  else
 		    return ""
 		    
@@ -167,6 +170,10 @@ Protected Class ORMField
 		      Return "TEXT"
 		    case TypeList.INTEGER
 		      Return "INT"
+		    Case TypeList.BIGINT
+		      Return "BIGINT"
+		    Case TypeList.CHAR
+		      Return "CHAR"
 		    Case TypeList.SMALLINT
 		      Return "SMALLINT"
 		    case TypeList.BLOB
@@ -188,9 +195,9 @@ Protected Class ORMField
 		    end select
 		  else
 		    select case mType
-		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR
+		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR, TypeList.CHAR
 		      Return "TEXT"
-		    case TypeList.INTEGER, typelist.SMALLINT
+		    case TypeList.INTEGER, typelist.SMALLINT, TypeList.BIGINT
 		      Return "INTEGER"
 		    case TypeList.BLOB, TypeList.LONGBLOB
 		      Return "BLOB"
@@ -254,6 +261,8 @@ Protected Class ORMField
 		  LONGBLOB
 		  DATE
 		SMALLINT
+		BIGINT
+		CHAR
 	#tag EndEnum
 
 
