@@ -105,12 +105,12 @@ Protected Class ORMField
 		  dim normalizedLength as String = mLength
 		  if mType = TypeList.DECIMAL then
 		    normalizedLength = normalizedLength.ReplaceAll(".", ",")
-
+		    
 		    dim decimalParts() as String = normalizedLength.Split(",")
 		    if decimalParts.LastIndex = 1 then
 		      dim precision as Integer = decimalParts(0).Trim.ToInteger
 		      dim scale as Integer = decimalParts(1).Trim.ToInteger
-
+		      
 		      if precision > 0 and scale > 0 and precision < scale then
 		        precision = scale + 1
 		        normalizedLength = precision.ToString + "," + scale.ToString
@@ -143,6 +143,30 @@ Protected Class ORMField
 		Sub NotNull(Assigns pValue as Boolean)
 		  mNotNull = pValue
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
+		Function SQLTypeModifiers(pDatabase As Database) As String
+		  If Not (pDatabase IsA MySQLCommunityServer) Then Return ""
+		  Var modifiers As String
+		  If IsUnsigned Then
+		    Select Case mType
+		    Case TypeList.INTEGER, TypeList.SMALLINT, TypeList.BIGINT
+		      modifiers = " UNSIGNED"
+		    Else
+		      Raise New ORMException("Unsigned requires an integer ORM field.")
+		    End Select
+		  End If
+		  If UsesASCIIBinaryCollation Then
+		    Select Case mType
+		    Case TypeList.VARCHAR, TypeList.CHAR
+		      modifiers = modifiers + " CHARACTER SET ascii COLLATE ascii_bin"
+		    Else
+		      Raise New ORMException("ASCII binary collation requires a character ORM field.")
+		    End Select
+		  End If
+		  Return modifiers
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -210,37 +234,8 @@ Protected Class ORMField
 	#tag EndMethod
 
 
-
-	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
-		Function SQLTypeModifiers(pDatabase As Database) As String
-		  If Not (pDatabase IsA MySQLCommunityServer) Then Return ""
-		  Var modifiers As String
-		  If IsUnsigned Then
-		    Select Case mType
-		    Case TypeList.INTEGER, TypeList.SMALLINT, TypeList.BIGINT
-		      modifiers = " UNSIGNED"
-		    Else
-		      Raise New ORMException("Unsigned requires an integer ORM field.")
-		    End Select
-		  End If
-		  If UsesASCIIBinaryCollation Then
-		    Select Case mType
-		    Case TypeList.VARCHAR, TypeList.CHAR
-		      modifiers = modifiers + " CHARACTER SET ascii COLLATE ascii_bin"
-		    Else
-		      Raise New ORMException("ASCII binary collation requires a character ORM field.")
-		    End Select
-		  End If
-		  Return modifiers
-		End Function
-	#tag EndMethod
-
 	#tag Property, Flags = &h0
 		IsUnsigned As Boolean = False
-	#tag EndProperty
-
-	#tag Property, Flags = &h0
-		UsesASCIIBinaryCollation As Boolean = False
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -271,6 +266,10 @@ Protected Class ORMField
 		Unique As Boolean = False
 	#tag EndProperty
 
+	#tag Property, Flags = &h0
+		UsesASCIIBinaryCollation As Boolean = False
+	#tag EndProperty
+
 
 	#tag Enum, Name = ExtraList, Type = Integer, Flags = &h0
 		None
@@ -290,8 +289,8 @@ Protected Class ORMField
 		  LONGTEXT
 		  LONGBLOB
 		  DATE
-		SMALLINT
-		BIGINT
+		  SMALLINT
+		  BIGINT
 		CHAR
 	#tag EndEnum
 
@@ -347,6 +346,22 @@ Protected Class ORMField
 		#tag EndViewProperty
 		#tag ViewProperty
 			Name="Unique"
+			Visible=false
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="IsUnsigned"
+			Visible=false
+			Group="Behavior"
+			InitialValue="False"
+			Type="Boolean"
+			EditorType=""
+		#tag EndViewProperty
+		#tag ViewProperty
+			Name="UsesASCIIBinaryCollation"
 			Visible=false
 			Group="Behavior"
 			InitialValue="False"
