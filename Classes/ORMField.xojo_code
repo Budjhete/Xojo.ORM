@@ -27,17 +27,31 @@ Protected Class ORMField
 		  if pDatabase isa MySQLCommunityServer then
 		    if mDefaultValue<>"" then
 		      dim dv as String
-		      select case mDefaultValue
+		      select case mDefaultValue.Uppercase
 		      case "NULL", "NIL"
 		        dv = "NULL"
-		      case "CURRENT_TIMESTAMP"
+		      case "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()"
 		        dv = "CURRENT_TIMESTAMP"
 		      case " "
 		        dv = "''"
 		      else
-		        dv = "'"+mDefaultValue+"'"
+		        // MariaDB quotes string defaults in INFORMATION_SCHEMA.COLUMNS.
+		        If mDefaultValue.Left(1) = "'" And mDefaultValue.Right(1) = "'" Then
+		          dv = mDefaultValue
+		        Else
+		          dv = "'"+mDefaultValue+"'"
+		        End If
 		      end
 		      
+		      // MySQL 8.0.13+ and MariaDB 10.2.1+ accept BLOB/TEXT defaults; MySQL needs an expression.
+		      // Older servers, including MySQL 5.7, cannot store a non-NULL default for these types.
+		      Select Case mType
+		      Case TypeList.TEXT, TypeList.LONGTEXT, TypeList.BLOB, TypeList.LONGBLOB
+		        If dv <> "NULL" Then
+		          If Not DB.MySQLSupportsExpressionDefaults(pDatabase) Then Return ""
+		          dv = "(" + dv + ")"
+		        End If
+		      End Select
 		      Return "DEFAULT " + dv
 		    else
 		      Return ""
@@ -105,12 +119,12 @@ Protected Class ORMField
 		  dim normalizedLength as String = mLength
 		  if mType = TypeList.DECIMAL then
 		    normalizedLength = normalizedLength.ReplaceAll(".", ",")
-
+		    
 		    dim decimalParts() as String = normalizedLength.Split(",")
 		    if decimalParts.LastIndex = 1 then
 		      dim precision as Integer = decimalParts(0).Trim.ToInteger
 		      dim scale as Integer = decimalParts(1).Trim.ToInteger
-
+		      
 		      if precision > 0 and scale > 0 and precision < scale then
 		        precision = scale + 1
 		        normalizedLength = precision.ToString + "," + scale.ToString
@@ -128,13 +142,40 @@ Protected Class ORMField
 		End Sub
 	#tag EndMethod
 
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function Length(pDatabase As Database) As String
+		  // Integer display widths do not change the MySQL storage type or its range.
+		  If pDatabase IsA MySQLCommunityServer Then
+		    Select Case mType
+		    Case TypeList.INTEGER, TypeList.SMALLINT
+		      Return ""
+		    End Select
+		  End If
+		  Return Me.Length
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or (TargetWeb and (Target32Bit or Target64Bit)) or (TargetDesktop and (Target32Bit or Target64Bit))
+		Function MigrationLength(pDatabase As Database, pCurrent As ORMField) As String
+		  Var pExpectedLength As String = Me.Length(pDatabase)
+		  // A deployed VARCHAR may hold legacy values beyond the model's input limit.
+		  // Never reduce its capacity, even when another column attribute needs an ALTER.
+		  If pDatabase IsA MySQLCommunityServer And pCurrent <> Nil Then
+		    If Me.Type = TypeList.VARCHAR And pCurrent.Type = TypeList.VARCHAR Then
+		      Var pCurrentLength As String = pCurrent.Length(pDatabase)
+		      Var pExpectedWidth As Integer = pExpectedLength.ReplaceAll("(", "").ReplaceAll(")", "").ToInteger
+		      Var pCurrentWidth As Integer = pCurrentLength.ReplaceAll("(", "").ReplaceAll(")", "").ToInteger
+		      If pExpectedWidth > 0 And pCurrentWidth > pExpectedWidth Then Return pCurrentLength
+		    End If
+		  End If
+		  Return pExpectedLength
+		End Function
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Function NotNull() As String
 		  if mNotNull then
 		    Return "NOT NULL"
-		  ElseIf mType = TypeList.TIMESTAMP Then
-		    // Legacy MySQL/MariaDB TIMESTAMP columns require explicit NULL.
-		    Return "NULL"
 		  else
 		    return ""
 		    
@@ -146,6 +187,34 @@ Protected Class ORMField
 		Sub NotNull(Assigns pValue as Boolean)
 		  mNotNull = pValue
 		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function NotNull(pDatabase As Database) As String
+		  // MySQL makes every primary-key column NOT NULL, even if the model omits it.
+		  // SQLite keeps the declared nullability of ordinary text/composite keys.
+		  If pDatabase IsA MySQLCommunityServer And PrimaryKey Then Return "NOT NULL"
+		  // Legacy MySQL/MariaDB TIMESTAMP columns require explicit NULL.
+		  If pDatabase IsA MySQLCommunityServer And mType = TypeList.TIMESTAMP And Not mNotNull Then Return "NULL"
+		  Return Me.NotNull
+		End Function
+	#tag EndMethod
+
+	#tag Method, Flags = &h0, CompatibilityFlags = (TargetConsole and (Target32Bit or Target64Bit)) or  (TargetWeb and (Target32Bit or Target64Bit)) or  (TargetDesktop and (Target32Bit or Target64Bit))
+		Function SchemaDescription(pDatabase As Database) As String
+		  Var description As String = Type(pDatabase) + Length(pDatabase)
+		  Var notNullSQL As String = NotNull(pDatabase)
+		  If notNullSQL <> "" Then description = description + " " + notNullSQL
+		  Var defaultSQL As String = DefaultValue(pDatabase)
+		  // Nullable columns without an explicit default are equivalent to DEFAULT NULL.
+		  If pDatabase IsA MySQLCommunityServer And defaultSQL = "" And (notNullSQL = "" Or notNullSQL = "NULL") Then defaultSQL = "DEFAULT NULL"
+		  If defaultSQL <> "" Then description = description + " " + defaultSQL
+		  Var extraSQL As String = Extra(pDatabase)
+		  If extraSQL <> "" Then description = description + " " + extraSQL
+		  If PrimaryKey Then description = description + " PRIMARY KEY"
+		  If Unique Then description = description + " UNIQUE"
+		  Return description
+		End Function
 	#tag EndMethod
 
 	#tag Method, Flags = &h0
@@ -195,7 +264,8 @@ Protected Class ORMField
 		    end select
 		  else
 		    select case mType
-		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR, TypeList.CHAR
+		      // Date-only values use ISO text so SQLite metadata round-trips as TEXT.
+		    case TypeList.TEXT, TypeList.LONGTEXT, TypeList.VARCHAR, TypeList.CHAR, TypeList.DATE
 		      Return "TEXT"
 		    case TypeList.INTEGER, typelist.SMALLINT, TypeList.BIGINT
 		      Return "INTEGER"
